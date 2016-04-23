@@ -45,7 +45,7 @@ int main(int argc,char **argv) {
 	}
 
 	int umc = socket(AF_INET,SOCK_STREAM,0);
-	if(connect(umc,(void*)&nucleoAddress,sizeof(nucleoAddress)) != 0) {
+	if(connect(umc,(void*)&umcAddress,sizeof(umcAddress)) != 0) {
 		perror("No se pudo conectar a la umc.");
 		return EXIT_FAILURE;
 	}
