@@ -16,8 +16,11 @@
 #include<netinet/ip.h>
 #include<unistd.h>
 #include<parser/parser.h>
+#include <parser/sintax.h>
+#include <parser/metadata_program.h>
 #include "../../COMUNES/nsockets.h"
 #include "../../COMUNES/estructurasControl.h"
+#include "primitivas.h"
 
 /* El programa recibe la IP y puerto del nucleo como primer y segundo parametros
  * y como tercer y cuarto parametros la direccion IP y puerto de la umc.
@@ -31,11 +34,11 @@ int main(int argc,char **argv) {
 	}
 
 	int maxfd = 3;				// Indice de maximo FD
-	char buffer[100];			// Bufer para send/recv
+//	char buffer[100];			// Bufer para send/recv
 
-	struct timeval tv;			// Estructura para select()
-	tv.tv_sec = 2;
-	tv.tv_usec = 500000;
+//	struct timeval tv;			// Estructura para select()
+//	tv.tv_sec = 2;
+//	tv.tv_usec = 500000;
 
 	fd_set readfds,masterfds;	// Estructuras para select()
 	FD_ZERO(&readfds);
@@ -70,7 +73,24 @@ int main(int argc,char **argv) {
 	FD_SET(umc,&masterfds);		// Se agrega socket a la lista de fds
 
 	t_pcb pcb;					//Declaracion e inicializacion del PCB
-	bzero(&pcb);
+	bzero(&pcb,sizeof(pcb));
+
+	AnSISOP_kernel primitivas_kernel;
+	primitivas_kernel.AnSISOP_signal = (void*)&signal;
+	primitivas_kernel.AnSISOP_wait = (void*)&wait;
+
+	AnSISOP_funciones primitivas;
+	primitivas.AnSISOP_asignar = (void*)&asignar;
+	primitivas.AnSISOP_asignarValorCompartida = (void*)&asignarValorCompartida;
+	primitivas.AnSISOP_definirVariable = (void*)&definirVariable;
+	primitivas.AnSISOP_dereferenciar = (void*)&dereferenciar;
+	primitivas.AnSISOP_entradaSalida = (void*)&entradaSalida;
+	primitivas.AnSISOP_imprimir = (void*)&imprimir;
+	primitivas.AnSISOP_imprimirTexto = (void*)&imprimirTexto;
+	primitivas.AnSISOP_irAlLabel = (void*)&irAlLabel;
+	primitivas.AnSISOP_obtenerPosicionVariable = (void*)&obtenerPosicionVariable;
+	primitivas.AnSISOP_obtenerValorCompartida = (void*)&obtenerValorCompartida;
+	primitivas.AnSISOP_retornar = (void*)&retornar;
 
 	while(1) {
 //		readfds = masterfds;	// Copio el struct con fds al auxiliar para read
@@ -83,6 +103,7 @@ int main(int argc,char **argv) {
 //
 //		}
 		recv(nucleo,&pcb,sizeof(pcb),0);		// El CPU nos envia una copia del PCB o nos envia su direccion en la UMC?
+		analizadorLinea("a = b + c",&primitivas,&primitivas_kernel);
 
 	}
 
