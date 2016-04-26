@@ -11,51 +11,11 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <sys/fcntl.h>
-
-
-
-
-#include <sys/types.h>
-
-#include <sys/un.h>
-
-#include <netdb.h>
-
-
+#include "nsockets.h"
 #include <errno.h>
 
 
 #define SOCKET_ERROR -1
-
-
-
-typedef struct{
-	int32_t id;
-	int32_t size;
-	void* data;
-}t_header;
-
-//Prototypes
-int32_t enviar_paquete(int32_t enlace,t_header header_a_enviar);
-int32_t recibir_paquete(int32_t enlace, t_header* header_a_recibir);
-int32_t escribir_socket (int32_t nuevo_socket, char *datos, size_t longitud);
-int32_t leer_socket (int32_t nuevo_socket, char *buffer, size_t size);
-
-
-int32_t abrir_servidor (int puerto, int max_conexiones);//
-
-int32_t aceptar_cliente (int descriptor);
-
-int32_t cerrar_socket (int descriptor);
-
-int32_t liberar_puerto (int descriptor);
-
-int32_t set_nonblocking(int descriptor);
-
-signed int cliente(char *ip_server, int puerto);
-int32_t servidor (int puerto);
-
-
 
 
 //Librerar datos
