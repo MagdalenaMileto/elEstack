@@ -15,10 +15,12 @@
 #include <netinet/in.h>
 #include<netinet/ip.h>
 #include<unistd.h>
+#include<parser/parser.h>
+#include "../../COMUNES/nsockets.h"
+#include "../../COMUNES/estructurasControl.h"
 
-/* El programa recibe la IP del nucleo como primer y segundo parametros
- * la direccion y puerto del nucleo y como tercer y cuarto parametros
- * la direccion y puerto de la umc.
+/* El programa recibe la IP y puerto del nucleo como primer y segundo parametros
+ * y como tercer y cuarto parametros la direccion IP y puerto de la umc.
  */
 
 int main(int argc,char **argv) {
@@ -37,6 +39,7 @@ int main(int argc,char **argv) {
 
 	fd_set readfds,masterfds;	// Estructuras para select()
 	FD_ZERO(&readfds);
+	FD_ZERO(&masterfds);
 
 	struct sockaddr_in nucleoAddress;
 	nucleoAddress.sin_family = AF_INET;
@@ -66,16 +69,21 @@ int main(int argc,char **argv) {
 	}
 	FD_SET(umc,&masterfds);		// Se agrega socket a la lista de fds
 
-	while(1) {
-		readfds = masterfds;	// Copio el struct con fds al auxiliar para read
-		select(maxfd+1,&readfds,NULL,NULL,&tv);
-		if (FD_ISSET(nucleo, &readfds))		// Si el nucleo envio algo
-		{
-			recv(nucleo,buffer,100,0);
-			printf("El nucleo informa lo siguiente: %s\nMensaje enviado a la UMC.\n",buffer);
-			send(umc,buffer,100,0);
+	t_pcb pcb;					//Declaracion e inicializacion del PCB
+	bzero(&pcb);
 
-		}
+	while(1) {
+//		readfds = masterfds;	// Copio el struct con fds al auxiliar para read
+//		select(maxfd+1,&readfds,NULL,NULL,&tv);
+//		if (FD_ISSET(nucleo, &readfds))		// Si el nucleo envio algo
+//		{
+//			recv(nucleo,buffer,100,0);
+//			printf("El nucleo informa lo siguiente: %s\nMensaje enviado a la UMC.\n",buffer);
+//			send(umc,buffer,100,0);
+//
+//		}
+		recv(nucleo,&pcb,sizeof(pcb),0);		// El CPU nos envia una copia del PCB o nos envia su direccion en la UMC?
+
 	}
 
 	close(nucleo);
