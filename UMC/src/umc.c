@@ -9,6 +9,9 @@
 #include <stdio.h>
 #include <arpa/inet.h>
 #include <sys/socket.h>
+#include <stdlib.h>
+#include <sys/types.h>
+#include <unistd.h>
 
 int main(void) {
 	struct sockaddr_in direccionServidor;
