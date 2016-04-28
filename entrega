@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+
 gcc NUCLEO/TESTS/testcpu.c -o testcpu
 gcc CONSOLA/src/consola.c -o testconsola
 gcc NUCLEO/TESTS/testumc.c -o testumc

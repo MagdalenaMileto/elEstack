@@ -23,13 +23,15 @@ int main(void) {
 		return 1;
 	}
 
-	while (1) {
-		char mensaje[100];
-		scanf("%s", mensaje);
+	//while (1) {
+		char mensaje[100]="Entrega 30/4 \n";
+		//scanf("%s\n", mensaje);
 
 		send(cliente, mensaje, sizeof(char)*100, 0);
-		puts("envio");
-	}
+
+		puts("CONSOLA: envio");
+		
+	//}
 
 	return 0;
 }
