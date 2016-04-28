@@ -13,6 +13,7 @@
 
 void intHandler(int dummy);
 int socketCliente,servidorSocket;
+char mensaje[100];
 
 
 void main(void){
@@ -36,6 +37,11 @@ int a;
 while(1){
 
 
+
+	if(leer_socket (socketCliente, mensaje, sizeof(mensaje))>0) printf("UMC: Recibi %s",mensaje); ;
+
+
+/*
 	a=recibir_paquete(socketCliente,&header);
 		if(a==-1){
 //
@@ -52,7 +58,8 @@ while(1){
 }
 
 
-
+*/
+}
 
 
 	//return 0;

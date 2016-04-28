@@ -15,7 +15,7 @@
 #define PACKAGESIZE 1024	// Define cual va a ser el size maximo del paquete a enviar
 
 #include <signal.h>
-
+char mensaje[100];
 int serverSocket;
 void intHandler(int dummy);
 int main(){
@@ -27,7 +27,7 @@ int a;
 serverSocket = cliente("127.0.0.1",1202);
 
 	if(serverSocket==0){
-		printf("CPU No encontre NUCLEO me cierro :'( \n",&serverSocket);
+		printf("CPU No encontre NUCLEO me cierro :'( \n");
 	  exit (EXIT_FAILURE);
 	}
 	
@@ -40,7 +40,7 @@ serverSocket = cliente("127.0.0.1",1202);
 
 	while(1){
 
-
+/*
 	a=recibir_paquete(serverSocket,&header);
 		if(a==-1){
 //
@@ -53,6 +53,13 @@ serverSocket = cliente("127.0.0.1",1202);
          	  		}
          	  	}
 
+*/
+
+
+
+
+         	  	if(leer_socket (serverSocket, mensaje, sizeof(mensaje))>0) printf("CPU: Recibi %s",mensaje); ;
+					
 
 }
 

@@ -23,11 +23,15 @@ int main(){
 //	sleep(2);
  signal(SIGINT, intHandler);
 
-char valorAEnviar [30]="Entrega 30/4 \n\0";
+//char valorAEnviar [30]="Entrega 30/4 \n\0";
+
+char mensaje[100]="Entrega 30/4 \n";
+
+
 serverSocket = cliente("127.0.0.1",1201);
 
 	if(serverSocket==0){
-		printf("CONSOLA: No encontre NUCLEO me cierro :'( \n",&serverSocket);
+		printf("CONSOLA: No encontre NUCLEO me cierro :'( \n");
 	  exit (EXIT_FAILURE);
 	}
 	
@@ -36,26 +40,19 @@ serverSocket = cliente("127.0.0.1",1201);
 	char message[PACKAGESIZE];
 	t_header header;
 
-	printf("Conectado al servidor. Bienvenido al sistema, ya puede enviar mensajes. Escriba 'exit' para salir\n");
 
-	//while(enviar){
-		//fgets(message, PACKAGESIZE, stdin);			// Lee una linea en el stdin (lo que escribimos en la consola) hasta encontrar un \n (y lo incluye) o llegar a PACKAGESIZE.
-
-
-	//if (!strcmp(message,"exit\n")) enviar = 0;			// Chequeo que el usuario no quiera salir
-
-		
+		/* No usamos header
 		header.id = 101;
 		header.size = strlen(valorAEnviar) + 1;
 		header.data = valorAEnviar;
+		*/
+		printf("CONSOLA: envie %s",mensaje);
+		
+		escribir_socket (serverSocket, mensaje, sizeof(mensaje));
 
-		printf("CONSOLA: envie %s",valorAEnviar);
-		enviar_paquete(serverSocket, header);
+		//enviar_paquete(serverSocket, header);
 
 
-
-		//if (enviar) send(serverSocket, message, strlen(message) + 1, 0); 	// Solo envio si el usuario no quiere salir.
-	//}
 
 
 

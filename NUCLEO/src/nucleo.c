@@ -10,12 +10,13 @@
 
 int listenningSocket,socketCliente,servidorSocket,servidorCPU,clienteSocket,losClientes,clientesCPU,umc,ultimoCPU;
 
+char mensaje[100];
+
 int main(){
 
 
 	printf("NUCLEO: INICIÓ\n");
-	//sleep(1);
-	   signal(SIGINT, intHandler);
+  signal(SIGINT, intHandler);
 	pthread_t thCONSOLA, thCPU;
 
 
@@ -108,20 +109,27 @@ void *hilo_CPU(void *arg){
             else
               { //hay evento
 
-               	retorno= recibir_paquete(i, &header);
+               	//retorno= recibir_paquete(i, &header);
+                retorno = leer_socket (i, mensaje, sizeof(mensaje));
               	if(retorno==-1){
               		//El evento fue que el socket cliente se cerro
               	 	close( i );
               	 	FD_CLR (i, &active_fd_set);
                     
               	}else{ 
-              		if(header.id == 101){
+              		printf("NUCLEO: Recibi %s",mensaje);FD_CLR(i,&active_fd_set);
+
+                  escribir_socket (umc, mensaje, sizeof(mensaje));
+                  escribir_socket (ultimoCPU, mensaje, sizeof(mensaje));
+                  /*
+                  if(header.id == 101){
               			printf("Recibi %s",(char*)header.data);
                     enviar_paquete(umc, header);
                     enviar_paquete(ultimoCPU, header);
 
               			free(header.data);//Libero esto que me genero recibir paquete
          	  		}
+                */
 
          		}
 
