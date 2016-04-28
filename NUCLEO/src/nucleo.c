@@ -13,7 +13,8 @@ int listenningSocket,socketCliente,servidorSocket,servidorCPU,clienteSocket,losC
 int main(){
 
 
-
+	printf("NUCLEO: INICIÓ\n");
+	//sleep(1);
 	   signal(SIGINT, intHandler);
 	pthread_t thCONSOLA, thCPU;
 
@@ -22,11 +23,11 @@ int main(){
 
 
 
-
+	//printf("NUCLEO: No encontre UMC me cierro :'( \n");
 
 	umc = cliente("127.0.0.1",1200);
 	if(umc==0){
-		printf("No encontre UMC me cierro :'( %d\n",(int)&umc);
+		printf("NUCLEO: No encontre UMC me cierro :'( \n");
 	  exit (EXIT_FAILURE);
 	}
 
@@ -35,6 +36,7 @@ int main(){
 
 
 
+	//printf("NUCLEO: No encontre UMC me cierro :'( \n");
 
 	pthread_create(&thCONSOLA, NULL, hilo_CONSOLA, NULL);
 	pthread_create(&thCPU, NULL, hilo_CPU, NULL);
@@ -58,7 +60,7 @@ void *hilo_CPU(void *arg){
 
 	//Timeout del select
 	struct timeval tv;			// Estructura para select()
-	tv.tv_sec = 2;
+	tv.tv_sec = 5;
 	tv.tv_usec = 500000;
 
 	
@@ -79,6 +81,7 @@ void *hilo_CPU(void *arg){
       read_fd_set = active_fd_set;
       if (select (FD_SETSIZE, &read_fd_set, NULL, NULL, &tv) < 0)
         {
+    	  printf("Error: probablemente el puerto esta ocupado\n");
           exit (EXIT_FAILURE);
         }
 
@@ -96,6 +99,7 @@ void *hilo_CPU(void *arg){
                               &size);
                 if (new < 0)
                   {
+                	  printf("Problema con el select 2\n");
                     exit (EXIT_FAILURE);
                   }
               
@@ -213,7 +217,10 @@ void intHandler(int dummy) {
 	
 	//close(clienteSocket);
 	close(servidorSocket);
+	close(servidorCPU);
+	close(umc);
 
+printf("NUCLEO: CERRÓ\n");
   printf("cierro Todo...\n\n");
   exit(0);
 }

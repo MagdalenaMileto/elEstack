@@ -19,13 +19,15 @@
 int serverSocket;
 void intHandler(int dummy);
 int main(){
+	printf("CPU: INICIÓ\n");
+//	sleep(2);
  signal(SIGINT, intHandler);
 int a;
 
 serverSocket = cliente("127.0.0.1",1202);
 
 	if(serverSocket==0){
-		printf("No encontre NUCLEO me cierro :'( %d",&serverSocket);
+		printf("CPU No encontre NUCLEO me cierro :'( \n",&serverSocket);
 	  exit (EXIT_FAILURE);
 	}
 	
@@ -46,7 +48,7 @@ serverSocket = cliente("127.0.0.1",1202);
               	}else{ 
 
               		if(header.id == 101){
-              			printf("Recibi %s",header.data);
+              			printf("CPU: Recibi %s",(char*)header.data);
               			free(header.data);//Libero esto que me genero recibir paquete
          	  		}
          	  	}
