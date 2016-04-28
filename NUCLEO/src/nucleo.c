@@ -5,50 +5,28 @@
  *      Author: nico
  */
 
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netdb.h>
-#include <unistd.h>
-#include <pthread.h>
+#include "nucleo.h"
 
 
-
-#include <signal.h>
-
-
- #include "../../COMUNES/nsockets.c"
-
-
-
-#define PUERTO "9997"
-#define BACKLOG 5			// Define cuantas conexiones vamos a mantener pendientes al mismo tiempo
-#define PACKAGESIZE 1024	// Define cual va a ser el size maximo del paquete a enviar
-
-
-void intHandler(int dummy);
-void *hilo_CONSOLA(void *arg);
-void *hilo_CPU(void *arg);
-
-	int listenningSocket,socketCliente,servidorSocket,servidorCPU,clienteSocket,losClientes,clientesCPU,umc,ultimoCPU;
+int listenningSocket,socketCliente,servidorSocket,servidorCPU,clienteSocket,losClientes,clientesCPU,umc,ultimoCPU;
 
 int main(){
+
+
 
 	   signal(SIGINT, intHandler);
 	pthread_t thCONSOLA, thCPU;
 
 
 
-	int enviar = 1;
-	char message[PACKAGESIZE];
-	t_header header;
+
+
+
 
 
 	umc = cliente("127.0.0.1",1200);
 	if(umc==0){
-		printf("No encontre UMC me cierro :'( %d\n",&umc);
+		printf("No encontre UMC me cierro :'( %d\n",(int)&umc);
 	  exit (EXIT_FAILURE);
 	}
 
@@ -134,7 +112,7 @@ void *hilo_CPU(void *arg){
                     
               	}else{ 
               		if(header.id == 101){
-              			printf("Recibi %s",header.data);
+              			printf("Recibi %s",(char*)header.data);
                     enviar_paquete(umc, header);
                     enviar_paquete(ultimoCPU, header);
 

@@ -38,7 +38,7 @@ signed int cliente(char *ip_server, int puerto)
     socklen_t len;
 
    
-
+    status=0;
 
 	// Seteo IP y Puerto
 	their_addr.sin_family = AF_INET;  					// Ordenación de bytes de la máquina
