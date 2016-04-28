@@ -76,16 +76,16 @@ int main(int argc,char **argv) {
 	}
 
 	if ((mensajeUmc = recv(new_lst, buffer, sizeof(buffer), 0)) <= 0) {
-								if (mensajeUmc == 0) {
-									// Conexión cerrada
-									printf("Select: La UMC %d se ha desconectado\n", new_lst);
-								} else {
-									perror("recv");
-								}
-								printf("El mensaje:  %s\n de la UMC a llegado al Swap.\n",buffer);
+		if (mensajeUmc == 0) {
+			// Conexión cerrada
+			printf("Select: La UMC %d se ha desconectado\n", new_lst);
+			} else {
+				perror("recv");
+			}
+			printf("El mensaje:  %s\n de la UMC a llegado al Swap.\n",buffer);
 
 
-							}
+		}
 	return EXIT_SUCCESS;
 }
 
