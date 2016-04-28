@@ -19,7 +19,7 @@
 #include <signal.h>
 
 
- #include "../../COMUNES/nsockets.h"
+ #include "../../COMUNES/nsockets.c"
 
 
 
