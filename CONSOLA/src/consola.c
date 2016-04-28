@@ -15,7 +15,7 @@ int main(void) {
 	struct sockaddr_in direccionServidor;
 	direccionServidor.sin_family = AF_INET;
 	direccionServidor.sin_addr.s_addr = inet_addr("127.0.0.1");
-	direccionServidor.sin_port = htons(8080);
+	direccionServidor.sin_port = htons(1201);
 
 	int cliente = socket(AF_INET, SOCK_STREAM, 0);
 	if (connect(cliente, (void*) &direccionServidor, sizeof(direccionServidor)) != 0) {
@@ -27,7 +27,7 @@ int main(void) {
 		char mensaje[100];
 		scanf("%s", mensaje);
 
-		send(cliente, mensaje, strlen(mensaje), 0);
+		send(cliente, mensaje, sizeof(char)*100, 0);
 		puts("envio");
 	}
 
