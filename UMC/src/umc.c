@@ -21,7 +21,7 @@
 // Puerto para escuchar
 int main(int argc,char **argv)
 {
-	if (argc != 7) {
+	if (argc != 3) {
 			perror("No se ingreso la cantidad de parametros correspondientes");
 			return EXIT_FAILURE;
 		}
@@ -29,68 +29,104 @@ int main(int argc,char **argv)
 	fd_set master; 	// Conjunto maestro de descriptores de fichero
 	fd_set read_fds; // Conjunto temporal de descriptores de fichero
 
-	struct sockaddr_in direccionServidor; // Dirección del servidor
+	const int nucleoport = 1200;
+	const int cpuport = 1203;
 
 	struct sockaddr_in direccionNucleo;
 	direccionNucleo.sin_family = AF_INET;
-	direccionNucleo.sin_addr.s_addr = inet_addr(argv[1]);
-	direccionNucleo.sin_port = htons(atoi(argv[2]));
+	direccionNucleo.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
+	direccionNucleo.sin_port = htons(nucleoport);
 
 	struct sockaddr_in direccionCPU;
 	direccionCPU.sin_family = AF_INET;
-	direccionCPU.sin_addr.s_addr = inet_addr(argv[3]);
-	direccionCPU.sin_port = htons(atoi(argv[4]));
+	direccionCPU.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
+	direccionCPU.sin_port = htons(cpuport);
 
 
 	struct sockaddr_in direccionSwap;
 	direccionSwap.sin_family = AF_INET;
-	direccionSwap.sin_addr.s_addr = inet_addr(argv[5]);
-	direccionSwap.sin_port = htons(atoi(argv[6]));
+	direccionSwap.sin_addr.s_addr = inet_addr(argv[1]);
+	direccionSwap.sin_port = htons(atoi(argv[2]));
 
 
 
-	int fdmax;	// Número máximo de descriptores de fichero
-	int listener;	// Descriptor de socket a la escucha
-	int nucleofd,cpufd;	// Descriptor de socket de nueva conexión aceptada
+	int fdmax = 3;	// Número máximo de descriptores de fichero
+	int listenernucleo, listenercpu;	// Descriptor de socket a la escucha
+	int nucleofd,cpufd,swapfd;	// Descriptor de socket de nueva conexión aceptada
 	char buf[256];	// Buffer para datos del cliente
 	int mensajeNucleo, mensajeCPU;
 	int yes=1;	// Para setsockopt() SO_REUSEADDR, más abajo
-	int addrlen = sizeof(struct sockaddr_in);
+	unsigned int addrlen = sizeof(struct sockaddr_in);
 	FD_ZERO(&master);	// Borra los conjuntos maestro y temporal
 	FD_ZERO(&read_fds);	// Obtener socket a la escucha
-	if ((listener = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
+
+	if ((listenernucleo = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
+		perror("socket");
+		exit(1);
+	}
+
+	if ((listenercpu = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
+		perror("socket");
+		exit(1);
+	}
+
+	if ((swapfd = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
 		perror("socket");
 		exit(1);
 	}
 
 	// Obviar el mensaje "address already in use"
-	if (setsockopt(listener, SOL_SOCKET, SO_REUSEADDR, &yes,sizeof(int)) == -1) {
+	if (setsockopt(listenernucleo, SOL_SOCKET, SO_REUSEADDR, &yes,sizeof(int)) == -1) {
 		perror("setsockopt");
 		exit(1);
 	}
 
-	// Enlazar
-	direccionServidor.sin_family = AF_INET;
-	direccionServidor.sin_addr.s_addr = INADDR_ANY;
-	direccionServidor.sin_port = htons(PORT);
-	memset(&(direccionServidor.sin_zero), '\0', 8);
-	if (bind(listener, (struct sockaddr*)&direccionSwap, sizeof(direccionServidor)) == -1) {
+	if (setsockopt(listenercpu, SOL_SOCKET, SO_REUSEADDR, &yes,sizeof(int)) == -1) {
+		perror("setsockopt");
+		exit(1);
+	}
+
+	if (setsockopt(swapfd, SOL_SOCKET, SO_REUSEADDR, &yes,sizeof(int)) == -1) {
+		perror("setsockopt");
+		exit(1);
+	}
+
+//	memset(&(direccionServidor.sin_zero), '\0', 8);
+	if (bind(listenernucleo, (struct sockaddr*)&direccionNucleo, sizeof(direccionNucleo)) == -1) {
+		perror("bind");
+
+		exit(1);
+	}
+
+	if (bind(listenercpu, (struct sockaddr*)&direccionCPU, sizeof(direccionCPU)) == -1) {
 		perror("bind");
 
 		exit(1);
 	}
 
 	// Escuchar
-	if (listen(listener, 10) == -1) {
+	if (listen(listenernucleo, 10) == -1) {
+		perror("listen");
+		exit(1);
+	}
+
+	if (listen(listenercpu, 10) == -1) {
 		perror("listen");
 		exit(1);
 	}
 
 	// Añadir listener al conjunto maestro
-	FD_SET(listener, &master);
+	FD_SET(listenernucleo, &master);
+	FD_SET(listenercpu, &master);
 
 	// Seguir la pista del descriptor de fichero mayor
-	fdmax = listener;
+	if (listenernucleo > fdmax)
+	{
+		if (listenernucleo > listenercpu)
+			fdmax = listenernucleo;
+		else
+			fdmax = listenercpu;
+	}
 
 	// Bucle principal, todavía no es necesario
 /*	for(;;) {
@@ -100,21 +136,21 @@ int main(int argc,char **argv)
 			exit(1);
 		}  */
 
-	int swap = socket(AF_INET,SOCK_STREAM,0);
-		if (swap>fdmax)
-			fdmax = swap;			// Actualizar el maximo
-		if(connect(swap,(void*)&direccionSwap,sizeof(direccionSwap)) != 0) {
+	swapfd = socket(AF_INET,SOCK_STREAM,0);
+		if (swapfd>fdmax)
+			fdmax = swapfd;			// Actualizar el maximo
+		if(connect(swapfd,(void*)&direccionSwap,sizeof(direccionSwap)) != 0) {
 			perror("No se pudo conectar al swap.");
 			return EXIT_FAILURE;
 		}
 
-		FD_SET(swap,&master);		// Añadir swap al conjunto maestro
+		FD_SET(swapfd,&master);		// Añadir swap al conjunto maestro
 
 
 	// Gestionar las conexiones
 				// Gestionar conexion del nucleo
 
-					if ((nucleofd = accept(listener, (struct sockaddr*)&direccionNucleo, &addrlen)) == -1)
+					if ((nucleofd = accept(listenernucleo, (struct sockaddr*)&direccionNucleo, &addrlen)) == -1)
 					{
 						perror("accept");
 					} else {
@@ -139,14 +175,14 @@ int main(int argc,char **argv)
 						}
 
 					printf("El mensaje:  %s\n del nucleo ha sido enviado al Swap.\n",buf);
-					send(swap,buf,256,0);
+					send(swapfd,buf,256,0);
 
 						FD_CLR(nucleofd, &master); // Eliminar del conjunto maestro
 						bzero(&buf,256);            // Vaciar buffer
 
 				// Gestionar conexion del cpu
 
-						if ((cpufd = accept(listener, (struct sockaddr*)&direccionCPU, &addrlen)) == -1)
+						if ((cpufd = accept(listenercpu, (struct sockaddr*)&direccionCPU, &addrlen)) == -1)
 											{
 												perror("accept");
 											} else {
@@ -171,7 +207,7 @@ int main(int argc,char **argv)
 												}
 
 											printf("El mensaje:  %s\n de la cpu ha sido enviado al Swap.\n",buf);
-											send(swap,buf,256,0);
+											send(swapfd,buf,256,0);
 
 												FD_CLR(nucleofd, &master);  // Eliminar del conjunto maestro
 												bzero(&buf,256);             // Vaciar buffer
