@@ -44,7 +44,7 @@ int main(int argc,char **argv) {
 	int yes=1;
 	int mensajeUmc;
 	char buffer[256];
-	int sin_size = sizeof(struct sockaddr_in);
+	unsigned int sin_size = sizeof(struct sockaddr_in);
 
 	if ((sock_lst = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
 		perror("socket");
