@@ -58,7 +58,18 @@ serverSocket = cliente("127.0.0.1",1202);
 
 
 
-         	  	if(leer_socket (serverSocket, mensaje, sizeof(mensaje))>0) printf("CPU: Recibi %s",mensaje); ;
+         	  	if(leer_socket (serverSocket, mensaje, sizeof(mensaje))>0) {printf("CPU: Recibi %s",mensaje); ;
+
+
+
+     printf("CPU: Cierro\n");
+                  close(serverSocket);
+                  
+                  
+                   exit (1);
+
+
+         	  }
 					
 
 }

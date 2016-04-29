@@ -121,6 +121,13 @@ void *hilo_CPU(void *arg){
 
                   escribir_socket (umc, mensaje, sizeof(mensaje));
                   escribir_socket (ultimoCPU, mensaje, sizeof(mensaje));
+                  printf("NUCLEO: Cierro\n");
+                  close(servidorSocket);
+                  close(servidorCPU);
+                  close(umc); 
+                  
+                   exit (1);
+
                   /*
                   if(header.id == 101){
               			printf("Recibi %s",(char*)header.data);

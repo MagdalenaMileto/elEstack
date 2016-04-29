@@ -38,7 +38,17 @@ while(1){
 
 
 
-	if(leer_socket (socketCliente, mensaje, sizeof(mensaje))>0) printf("UMC: Recibi %s",mensaje); ;
+	if(leer_socket (socketCliente, mensaje, sizeof(mensaje))>0) {printf("UMC: Recibi %s",mensaje); ;
+
+
+     printf("UMC: Cierro\n");
+                  close(socketCliente);
+                  close(servidorSocket);
+                
+                  
+                   exit (1);
+
+}
 
 
 /*
