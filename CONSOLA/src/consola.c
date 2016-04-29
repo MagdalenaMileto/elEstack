@@ -19,6 +19,8 @@
 #include<unistd.h>
 
 int main(void) {
+
+
 	struct sockaddr_in direccionServidor;
 	direccionServidor.sin_family = AF_INET;
 	direccionServidor.sin_addr.s_addr = inet_addr("127.0.0.1");
@@ -34,6 +36,9 @@ int main(void) {
 
 	char mensaje[100]="Entrega 30/4 \n";
 
+	printf("****%d**",sizeof(mensaje));
+
+	
 	send(consola, mensaje, sizeof(char)*100, 0);
 		
 	printf("CONSOLA: envio %s",mensaje);

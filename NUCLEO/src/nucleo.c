@@ -15,6 +15,8 @@ char mensaje[100];
 int main(){
 
 
+
+
 	printf("NUCLEO: INICIÓ\n");
   signal(SIGINT, intHandler);
 	pthread_t thCONSOLA, thCPU;
@@ -121,7 +123,7 @@ void *hilo_CPU(void *arg){
               	}else{ 
               		printf("NUCLEO: Recibi %s",mensaje);FD_CLR(i,&active_fd_set);
 
-                  //escribir_socket (umc, mensaje, sizeof(mensaje));
+                  escribir_socket (umc, mensaje, sizeof(mensaje));
                   escribir_socket (ultimoCPU, mensaje, sizeof(mensaje));
                   printf("NUCLEO: Cierro\n");
                   close(servidorSocket);
