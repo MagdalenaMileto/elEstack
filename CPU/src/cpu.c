@@ -21,6 +21,7 @@
 #include "../../COMUNES/nsockets.h"
 #include "../../COMUNES/estructurasControl.h"
 #include "primitivas.h"
+#include "../../COMUNES/handshake.h"
 
 /* El programa recibe la IP y puerto del nucleo como primer y segundo parametros
  * y como tercer y cuarto parametros la direccion IP y puerto de la umc.
@@ -61,6 +62,12 @@ int main(int argc,char **argv) {
 		perror("No se pudo conectar al nucleo.");
 		return EXIT_FAILURE;
 	}
+	if(handshakeOut('c','n',nucleo))
+	{
+		perror("No me conecte con un nucleo\n");
+		close(nucleo);
+		return 1;
+	}
 	FD_SET(nucleo,&masterfds);	// Se agrega socket a la lista de fds
 
 	int umc = socket(AF_INET,SOCK_STREAM,0);
@@ -69,6 +76,12 @@ int main(int argc,char **argv) {
 	if(connect(umc,(void*)&umcAddress,sizeof(umcAddress)) != 0) {
 		perror("No se pudo conectar a la umc.");
 		return EXIT_FAILURE;
+	}
+	if(handshakeOut('c','u',umc))
+	{
+		perror("No me conecte con la UMC\n");
+		close(umc);
+		return 1;
 	}
 	FD_SET(umc,&masterfds);		// Se agrega socket a la lista de fds
 
