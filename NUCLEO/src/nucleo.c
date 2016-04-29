@@ -5,50 +5,30 @@
  *      Author: nico
  */
 
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netdb.h>
-#include <unistd.h>
-#include <pthread.h>
+#include "nucleo.h"
 
 
+int listenningSocket,socketCliente,servidorSocket,servidorCPU,clienteSocket,losClientes,clientesCPU,umc,ultimoCPU;
 
-#include <signal.h>
-
-
- #include "../../COMUNES/nsockets.h"
-
-
-
-#define PUERTO "9997"
-#define BACKLOG 5			// Define cuantas conexiones vamos a mantener pendientes al mismo tiempo
-#define PACKAGESIZE 1024	// Define cual va a ser el size maximo del paquete a enviar
-
-
-void intHandler(int dummy);
-void *hilo_CONSOLA(void *arg);
-void *hilo_CPU(void *arg);
-
-	int listenningSocket,socketCliente,servidorSocket,servidorCPU,clienteSocket,losClientes,clientesCPU,umc,ultimoCPU;
+char mensaje[100];
 
 int main(){
 
-	   signal(SIGINT, intHandler);
+
+	printf("NUCLEO: INICIÓ\n");
+  signal(SIGINT, intHandler);
 	pthread_t thCONSOLA, thCPU;
 
 
 
-	int enviar = 1;
-	char message[PACKAGESIZE];
-	t_header header;
 
+
+
+	//printf("NUCLEO: No encontre UMC me cierro :'( \n");
 
 	umc = cliente("127.0.0.1",1200);
 	if(umc==0){
-		printf("No encontre UMC me cierro :'( %d\n",&umc);
+		printf("NUCLEO: No encontre UMC me cierro :'( \n");
 	  exit (EXIT_FAILURE);
 	}
 
@@ -57,6 +37,7 @@ int main(){
 
 
 
+	//printf("NUCLEO: No encontre UMC me cierro :'( \n");
 
 	pthread_create(&thCONSOLA, NULL, hilo_CONSOLA, NULL);
 	pthread_create(&thCPU, NULL, hilo_CPU, NULL);
@@ -80,7 +61,7 @@ void *hilo_CPU(void *arg){
 
 	//Timeout del select
 	struct timeval tv;			// Estructura para select()
-	tv.tv_sec = 2;
+	tv.tv_sec = 5;
 	tv.tv_usec = 500000;
 
 	
@@ -101,6 +82,7 @@ void *hilo_CPU(void *arg){
       read_fd_set = active_fd_set;
       if (select (FD_SETSIZE, &read_fd_set, NULL, NULL, &tv) < 0)
         {
+    	  printf("Error: probablemente el puerto esta ocupado\n");
           exit (EXIT_FAILURE);
         }
 
@@ -118,6 +100,7 @@ void *hilo_CPU(void *arg){
                               &size);
                 if (new < 0)
                   {
+                	  printf("Problema con el select 2\n");
                     exit (EXIT_FAILURE);
                   }
               
@@ -126,20 +109,27 @@ void *hilo_CPU(void *arg){
             else
               { //hay evento
 
-               	retorno= recibir_paquete(i, &header);
+               	//retorno= recibir_paquete(i, &header);
+                retorno = leer_socket (i, mensaje, sizeof(mensaje));
               	if(retorno==-1){
               		//El evento fue que el socket cliente se cerro
               	 	close( i );
               	 	FD_CLR (i, &active_fd_set);
                     
               	}else{ 
-              		if(header.id == 101){
-              			printf("Recibi %s",header.data);
+              		printf("NUCLEO: Recibi %s",mensaje);FD_CLR(i,&active_fd_set);
+
+                  escribir_socket (umc, mensaje, sizeof(mensaje));
+                  escribir_socket (ultimoCPU, mensaje, sizeof(mensaje));
+                  /*
+                  if(header.id == 101){
+              			printf("Recibi %s",(char*)header.data);
                     enviar_paquete(umc, header);
                     enviar_paquete(ultimoCPU, header);
 
               			free(header.data);//Libero esto que me genero recibir paquete
          	  		}
+                */
 
          		}
 
@@ -235,7 +225,10 @@ void intHandler(int dummy) {
 	
 	//close(clienteSocket);
 	close(servidorSocket);
+	close(servidorCPU);
+	close(umc);
 
+printf("NUCLEO: CERRÓ\n");
   printf("cierro Todo...\n\n");
   exit(0);
 }

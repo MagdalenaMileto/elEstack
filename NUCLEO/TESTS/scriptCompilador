@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+gcc testcpu.c -o testcpu 
+gcc testconsola.c -o testconsola
+gcc testumc.c -o testumc
+gcc ../src/nucleo.c -o ../src/nucleo -lpthread
+

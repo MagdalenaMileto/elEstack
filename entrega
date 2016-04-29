@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+
+gcc NUCLEO/TESTS/testcpu.c -o testcpu
+gcc CONSOLA/src/consola.c -o testconsola
+gcc NUCLEO/TESTS/testumc.c -o testumc
+gcc NUCLEO/src/nucleo.c -o testnucleo -lpthread
+echo "##fin compilacion"
+./testumc &
+pid[0]=$!
+sleep 1
+./testnucleo &
+pid[1]=$!
+sleep 2
+./testcpu &
+pid[2]=$!
+sleep 1
+./testconsola
+pid[3]=$!
+trap "kill ${pid[0]} ${pid[1]} ${pid[2]} ${pid[3]}; exit 1" INT
+wait

@@ -26,10 +26,10 @@ signed int cliente(char *ip_server, int puerto)
 	struct sockaddr_in their_addr; 	// Información sobre mi dirección
 
 
- 	int status;
+
 
     struct timeval  timeout;
-    timeout.tv_sec = 2;
+    timeout.tv_sec = 1;
     timeout.tv_usec = 0;
 
     fd_set set;
@@ -51,7 +51,7 @@ signed int cliente(char *ip_server, int puerto)
 	// Pido socket
 	if ((iSocket = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
 		//log_error(logger, "socket: %s", strerror(errno));
-		return EXIT_FAILURE;
+		return 0;
 	}
 
   
@@ -68,7 +68,7 @@ signed int cliente(char *ip_server, int puerto)
 	//return iSocket;
 	FD_ZERO(&set);
     FD_SET(iSocket, &set);
-	status = select(iSocket+1, NULL, &set, NULL, &timeout);
+	select(iSocket+1, NULL, &set, NULL, &timeout);
 
 	len = sizeof(so_error);
 	getsockopt(iSocket, SOL_SOCKET, SO_ERROR, &so_error, &len);
