@@ -14,7 +14,7 @@
 #include <netinet/in.h>
 #include<netinet/ip.h>
 #include<unistd.h>
-#define Puerto 1992
+#define Puerto 1202
 
 
 int main(int argc,char **argv) {
