@@ -33,7 +33,7 @@ int main(){
 	}
 
 
-printf("NUCLEO: PASE POR ACA\n");
+//printf("NUCLEO: PASE POR ACA\n");
 
 
 

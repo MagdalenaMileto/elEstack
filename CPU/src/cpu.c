@@ -35,11 +35,11 @@ int main(int argc,char **argv) {
 	}
 
 	int maxfd = 3;				// Indice de maximo FD
-//	char buffer[100];			// Bufer para send/recv
+	char buffer[100];			// Bufer para send/recv
 
-//	struct timeval tv;			// Estructura para select()
-//	tv.tv_sec = 2;
-//	tv.tv_usec = 500000;
+struct timeval tv;			// Estructura para select()
+tv.tv_sec = 2;
+	tv.tv_usec = 500000;
 
 	fd_set readfds,masterfds;	// Estructuras para select()
 	FD_ZERO(&readfds);
@@ -59,8 +59,9 @@ int main(int argc,char **argv) {
 	if (nucleo>maxfd)
 		maxfd = nucleo;			// Se actualiza el indice de maximo fd
 	if(connect(nucleo,(void*)&nucleoAddress,sizeof(nucleoAddress)) != 0) {
-		perror("No se pudo conectar al nucleo.");
+		perror("CPU: No se pudo conectar al nucleo.");
 		return EXIT_FAILURE;
+
 	}
 //	if(handshakeOut('c','n',nucleo))
 //	{
@@ -74,8 +75,8 @@ int main(int argc,char **argv) {
 	if (umc>maxfd)
 		maxfd = umc;			// Se actualiza el indice de maximo fd
 	if(connect(umc,(void*)&umcAddress,sizeof(umcAddress)) != 0) {
-		perror("No se pudo conectar a la umc.");
-		return EXIT_FAILURE;
+		perror("CPU: No se pudo conectar a la umc.");
+		//return EXIT_FAILURE;
 	}
 //	if(handshakeOut('c','u',umc))
 //	{
@@ -106,17 +107,31 @@ int main(int argc,char **argv) {
 	primitivas.AnSISOP_retornar = (void*)&retornar;
 
 	while(1) {
-//		readfds = masterfds;	// Copio el struct con fds al auxiliar para read
-//		select(maxfd+1,&readfds,NULL,NULL,&tv);
-//		if (FD_ISSET(nucleo, &readfds))		// Si el nucleo envio algo
-//		{
-//			recv(nucleo,buffer,100,0);
-//			printf("El nucleo informa lo siguiente: %s\nMensaje enviado a la UMC.\n",buffer);
-//			send(umc,buffer,100,0);
-//
-//		}
-		recv(nucleo,&pcb,sizeof(pcb),0);		// El CPU nos envia una copia del PCB o nos envia su direccion en la UMC?
-		analizadorLinea("a = b + c",&primitivas,&primitivas_kernel);
+	readfds = masterfds;	// Copio el struct con fds al auxiliar para read
+		select(maxfd+1,&readfds,NULL,NULL,&tv);
+		if (FD_ISSET(nucleo, &readfds))		// Si el nucleo envio algo
+		{
+		recv(nucleo,buffer,sizeof(buffer)+1,MSG_DONTWAIT);
+		printf("CPU: El nucleo informa lo siguiente: %s\nMensaje enviado a la UMC.\n",buffer);
+		
+
+		/*********************
+
+
+		creo que yo no deberia hacer hacer el FD_CLR y lo deberia hacer el recv pero si no lo hago se queda como que siempre esta recibiendo mensaje
+		y aparece el mismo mensaje miles de veces en la pantalla en el caso de un loop (si sacas el return exit y dejas que loopee sin el fdclear)
+
+		***********************/
+		FD_CLR(nucleo,&masterfds);
+		close(nucleo);
+		close(umc);
+		printf("CPU: Cierra");
+		return EXIT_SUCCESS;
+			//send(umc,buffer,100,0);
+
+	}
+		//recv(nucleo,&pcb,sizeof(pcb),0);		// El CPU nos envia una copia del PCB o nos envia su direccion en la UMC?
+		//analizadorLinea("a = b + c",&primitivas,&primitivas_kernel);
 
 	}
 
