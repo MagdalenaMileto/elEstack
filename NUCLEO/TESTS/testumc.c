@@ -25,6 +25,13 @@ void main(void){
 
 	servidorSocket=servidor(1200);
 
+	if(servidorSocket==-1){
+
+	printf("UMC: Error en el socket, me cierro\n");
+	close(servidorSocket);
+	exit(1);
+
+	}
 
 	listen(servidorSocket,5);		// IMPORTANTE: listen() es una syscall BLOQUEANTE.
 	struct sockaddr_in addr;			// Esta estructura contendra los datos de la conexion del cliente. IP, puerto, etc.

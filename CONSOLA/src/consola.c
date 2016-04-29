@@ -26,7 +26,8 @@ int main(void) {
 
 	int consola = socket(AF_INET, SOCK_STREAM, 0);
 	if (connect(consola, (void*) &direccionServidor, sizeof(direccionServidor)) != 0) {
-		perror("No se pudo conectar");
+		perror("CONSOLA: No se pudo conectar/ cerrando...");
+		close(consola);
 		return 1;
 	}
 
@@ -40,4 +41,3 @@ int main(void) {
 	close(consola);
 	return 0;
 }
-

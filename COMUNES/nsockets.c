@@ -29,7 +29,7 @@ signed int cliente(char *ip_server, int puerto)
 
 
     struct timeval  timeout;
-    timeout.tv_sec = 1;
+    timeout.tv_sec = 10;
     timeout.tv_usec = 0;
 
     fd_set set;
@@ -51,6 +51,7 @@ signed int cliente(char *ip_server, int puerto)
 	// Pido socket
 	if ((iSocket = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
 		//log_error(logger, "socket: %s", strerror(errno));
+		perror("NSOCKETS: No se pudo conectar cliente\n");
 		return 0;
 	}
 
@@ -63,6 +64,7 @@ signed int cliente(char *ip_server, int puerto)
 	if (connect(iSocket, (struct sockaddr *) &their_addr, sizeof their_addr) == -1) {
 		//log_error(logger, "connect: %s", strerror(errno));
 		//puts("error");
+
 		//return 0;
 	}
 	//return iSocket;
@@ -108,7 +110,14 @@ int32_t servidor (int puerto){
 	//Se prueba usando LOCALHOST : 127.0.0.1
 	direccion.sin_addr.s_addr = inet_addr("127.0.0.1");
 
+int enable = 1;
+if (setsockopt(descriptor, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(int)) < 0)
+    error("setsockopt(SO_REUSEADDR) failed");
+
+
 	if (bind (descriptor, (struct sockaddr *)&direccion, sizeof(direccion)) == SOCKET_ERROR){
+		perror("NSOCKETS: No se pudo blindear\n");
+		
 		close (descriptor);
 		return SOCKET_ERROR;
 	}
