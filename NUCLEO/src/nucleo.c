@@ -26,14 +26,14 @@ int main(){
 
 	//printf("NUCLEO: No encontre UMC me cierro :'( \n");
 
-/*
+
 
 	umc = cliente("127.0.0.1",1200);
 	if(umc==0){
 		printf("NUCLEO: No encontre UMC me cierro :'( \n");
 	  exit (EXIT_FAILURE);
 	}
-*/
+
 
 //printf("NUCLEO: PASE POR ACA\n");
 

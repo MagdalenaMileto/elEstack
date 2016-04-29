@@ -30,7 +30,7 @@ int main(int argc,char **argv)
 	fd_set read_fds; // Conjunto temporal de descriptores de fichero
 
 	const int nucleoport = 1200;
-	const int cpuport = 1203;
+	const int cpuport = 1205;
 
 	struct sockaddr_in direccionNucleo;
 	direccionNucleo.sin_family = AF_INET;
@@ -53,7 +53,7 @@ int main(int argc,char **argv)
 	int fdmax = 3;	// Número máximo de descriptores de fichero
 	int listenernucleo, listenercpu;	// Descriptor de socket a la escucha
 	int nucleofd,cpufd,swapfd;	// Descriptor de socket de nueva conexión aceptada
-	char buf[256];	// Buffer para datos del cliente
+	char buf[100];	// Buffer para datos del cliente
 	int mensajeNucleo, mensajeCPU;
 	int yes=1;	// Para setsockopt() SO_REUSEADDR, más abajo
 	unsigned int addrlen = sizeof(struct sockaddr_in);
@@ -158,7 +158,7 @@ int main(int argc,char **argv)
 						if (nucleofd > fdmax) {    	// Actualizar el máximo
 							fdmax = nucleofd;
 						}
-						printf("Nueva conexion desde %s en "
+						printf("UMC: Nueva conexion desde %s en "
 								"socket %d\n", inet_ntoa(direccionNucleo.sin_addr),nucleofd);
 					}
 
@@ -169,16 +169,16 @@ int main(int argc,char **argv)
 						// Error o conexión cerrada por el cliente
 						if (mensajeNucleo == 0) {
 							// Conexión cerrada
-							printf("Select: El nucleo %d se ha desconectado\n", nucleofd);
+							printf("UMC: Select: El nucleo %d se ha desconectado\n", nucleofd);
 						} else {
 							perror("recv");
 						}
 
-					printf("El mensaje:  %s\n del nucleo ha sido enviado al Swap.\n",buf);
-					send(swapfd,buf,256,0);
+					printf("UMC: El mensaje:  %s\n del nucleo ha sido enviado al Swap.\n",buf);
+					send(swapfd,buf,sizeof(buf),0);
 
 						FD_CLR(nucleofd, &master); // Eliminar del conjunto maestro
-						bzero(&buf,256);            // Vaciar buffer
+						bzero(&buf,sizeof(buf));            // Vaciar buffer
 
 				// Gestionar conexion del cpu
 
@@ -190,7 +190,7 @@ int main(int argc,char **argv)
 												if (cpufd > fdmax) {    	// Actualizar el máximo
 													fdmax = cpufd;
 												}
-												printf("Nueva conexion desde %s en "
+												printf("UMC: Nueva conexion desde %s en "
 														"socket %d\n", inet_ntoa(direccionCPU.sin_addr),cpufd);
 											}
 
@@ -201,12 +201,12 @@ int main(int argc,char **argv)
 												// Error o conexión cerrada por el cliente
 												if (mensajeCPU == 0) {
 													// Conexión cerrada
-													printf("Select: La CPU %d se ha desconectado\n", cpufd);
+													printf("UMC: Select: La CPU %d se ha desconectado\n", cpufd);
 												} else {
 													perror("recv");
 												}
 
-											printf("El mensaje:  %s\n de la cpu ha sido enviado al Swap.\n",buf);
+											printf("UMC: El mensaje:  %s\n de la cpu ha sido enviado al Swap.\n",buf);
 											send(swapfd,buf,256,0);
 
 												FD_CLR(nucleofd, &master);  // Eliminar del conjunto maestro

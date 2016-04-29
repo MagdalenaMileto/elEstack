@@ -122,6 +122,9 @@ tv.tv_sec = 2;
 		y aparece el mismo mensaje miles de veces en la pantalla en el caso de un loop (si sacas el return exit y dejas que loopee sin el fdclear)
 
 		***********************/
+		send(umc,buffer,sizeof(buffer),0);
+
+
 		FD_CLR(nucleo,&masterfds);
 		close(nucleo);
 		close(umc);
@@ -129,9 +132,9 @@ tv.tv_sec = 2;
 
 		analizadorLinea("a = b + c",&primitivas,&primitivas_kernel);
 
-		printf("CPU: Cierra");
+		printf("CPU: Cierra\n");
 		return EXIT_SUCCESS;
-			//send(umc,buffer,100,0);
+	   
 
 	}
 		//recv(nucleo,&pcb,sizeof(pcb),0);		// El CPU nos envia una copia del PCB o nos envia su direccion en la UMC?

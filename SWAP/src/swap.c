@@ -14,7 +14,7 @@
 #include <netinet/in.h>
 #include<netinet/ip.h>
 #include<unistd.h>
-#define Puerto 1202
+#define Puerto 1206
 
 
 int main(int argc,char **argv) {
@@ -43,7 +43,7 @@ int main(int argc,char **argv) {
 		memset(&(my_addr.sin_zero), '\0', 8); // poner a cero el resto de la estructura
 	int yes=1;
 	int mensajeUmc;
-	char buffer[256];
+	char buffer[100];
 	unsigned int sin_size = sizeof(struct sockaddr_in);
 
 	if ((sock_lst = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
@@ -72,17 +72,17 @@ int main(int argc,char **argv) {
 		perror("accept");
 	}
 	else {
-        printf("Nueva conexion desde %s en" "socket %d\n",inet_ntoa(umcAddress.sin_addr), new_lst);
+        printf("SWAP: Nueva conexion desde %s en" "socket %d\n",inet_ntoa(umcAddress.sin_addr), new_lst);
 	}
 
 	if ((mensajeUmc = recv(new_lst, buffer, sizeof(buffer), 0)) <= 0) {
 		if (mensajeUmc == 0) {
 			// Conexión cerrada
-			printf("Select: La UMC %d se ha desconectado\n", new_lst);
+			printf("SWAP: Select: La UMC %d se ha desconectado\n", new_lst);
 			} else {
 				perror("recv");
 			}
-			printf("El mensaje:  %s\n de la UMC a llegado al Swap.\n",buffer);
+			printf("SWAP: El mensaje:  %s\n de la UMC a llegado al Swap.\n",buffer);
 
 
 		}
