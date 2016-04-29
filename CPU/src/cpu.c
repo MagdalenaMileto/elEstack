@@ -111,7 +111,7 @@ tv.tv_sec = 2;
 		select(maxfd+1,&readfds,NULL,NULL,&tv);
 		if (FD_ISSET(nucleo, &readfds))		// Si el nucleo envio algo
 		{
-		recv(nucleo,buffer,sizeof(buffer)+1,MSG_DONTWAIT);
+		recv(nucleo,buffer,sizeof(buffer),MSG_DONTWAIT);
 		printf("CPU: El nucleo informa lo siguiente: %s\nMensaje enviado a la UMC.\n",buffer);
 		
 
@@ -125,14 +125,17 @@ tv.tv_sec = 2;
 		FD_CLR(nucleo,&masterfds);
 		close(nucleo);
 		close(umc);
+
+
+		analizadorLinea("a = b + c",&primitivas,&primitivas_kernel);
+
 		printf("CPU: Cierra");
 		return EXIT_SUCCESS;
 			//send(umc,buffer,100,0);
 
 	}
 		//recv(nucleo,&pcb,sizeof(pcb),0);		// El CPU nos envia una copia del PCB o nos envia su direccion en la UMC?
-		//analizadorLinea("a = b + c",&primitivas,&primitivas_kernel);
-
+	
 	}
 
 	close(nucleo);

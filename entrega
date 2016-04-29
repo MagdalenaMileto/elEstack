@@ -1,16 +1,16 @@
 #!/usr/bin/env bash
 
 #gcc NUCLEO/TESTS/testcpu.c -o testcpu
-gcc CPU/src/cpu.c CPU/src/primitivas.c -o testcpu -lparser-ansisop
+gcc CPU/src/cpu.c CPU/src/primitivas.c -o testcpu -lparser-ansisop -lcommons
 gcc CONSOLA/src/consola.c -o testconsola
 gcc NUCLEO/TESTS/testumc.c -o testumc
 gcc NUCLEO/src/nucleo.c -o testnucleo -lpthread
 
 
 echo "##fin compilacion"
-./testumc &
-pid[0]=$!
-sleep 2
+#./testumc &
+#pid[0]=$!
+#sleep 2
 ./testnucleo &
 pid[1]=$!
 sleep 2

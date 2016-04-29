@@ -36,8 +36,9 @@ int main(void) {
 
 	send(consola, mensaje, sizeof(char)*100, 0);
 		
-	puts("CONSOLA: envio");
+	printf("CONSOLA: envio %s",mensaje);
 
 	close(consola);
+	printf("CONSOLA: Cierro\n");
 	return 0;
 }

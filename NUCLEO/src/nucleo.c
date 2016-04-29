@@ -26,12 +26,14 @@ int main(){
 
 	//printf("NUCLEO: No encontre UMC me cierro :'( \n");
 
+/*
+
 	umc = cliente("127.0.0.1",1200);
 	if(umc==0){
 		printf("NUCLEO: No encontre UMC me cierro :'( \n");
 	  exit (EXIT_FAILURE);
 	}
-
+*/
 
 //printf("NUCLEO: PASE POR ACA\n");
 
@@ -119,7 +121,7 @@ void *hilo_CPU(void *arg){
               	}else{ 
               		printf("NUCLEO: Recibi %s",mensaje);FD_CLR(i,&active_fd_set);
 
-                  escribir_socket (umc, mensaje, sizeof(mensaje));
+                  //escribir_socket (umc, mensaje, sizeof(mensaje));
                   escribir_socket (ultimoCPU, mensaje, sizeof(mensaje));
                   printf("NUCLEO: Cierro\n");
                   close(servidorSocket);
