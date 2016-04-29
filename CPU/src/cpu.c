@@ -62,12 +62,12 @@ int main(int argc,char **argv) {
 		perror("No se pudo conectar al nucleo.");
 		return EXIT_FAILURE;
 	}
-	if(handshakeOut('c','n',nucleo))
-	{
-		perror("No me conecte con un nucleo\n");
-		close(nucleo);
-		return 1;
-	}
+//	if(handshakeOut('c','n',nucleo))
+//	{
+//		perror("No me conecte con un nucleo\n");
+//		close(nucleo);
+//		return 1;
+//	}
 	FD_SET(nucleo,&masterfds);	// Se agrega socket a la lista de fds
 
 	int umc = socket(AF_INET,SOCK_STREAM,0);
@@ -77,12 +77,12 @@ int main(int argc,char **argv) {
 		perror("No se pudo conectar a la umc.");
 		return EXIT_FAILURE;
 	}
-	if(handshakeOut('c','u',umc))
-	{
-		perror("No me conecte con la UMC\n");
-		close(umc);
-		return 1;
-	}
+//	if(handshakeOut('c','u',umc))
+//	{
+//		perror("No me conecte con la UMC\n");
+//		close(umc);
+//		return 1;
+//	}
 	FD_SET(umc,&masterfds);		// Se agrega socket a la lista de fds
 
 	t_pcb pcb;					//Declaracion e inicializacion del PCB
