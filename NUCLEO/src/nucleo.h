@@ -22,7 +22,7 @@
 #include <signal.h>
 
 
- #include "../../COMUNES/nsockets.c"
+ #include "../../COMUNES/nsockets.h"
 
 
 
