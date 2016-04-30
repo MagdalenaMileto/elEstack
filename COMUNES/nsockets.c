@@ -112,7 +112,7 @@ int32_t servidor (int puerto){
 
 int enable = 1;
 if (setsockopt(descriptor, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(int)) < 0)
-    error("setsockopt(SO_REUSEADDR) failed");
+    perror("setsockopt(SO_REUSEADDR) failed");
 
 
 	if (bind (descriptor, (struct sockaddr *)&direccion, sizeof(direccion)) == SOCKET_ERROR){
