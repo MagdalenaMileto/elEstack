@@ -8,11 +8,17 @@
 #ifndef HANDSHAKE_H_
 #include "handshake.h"
 #endif
+#ifndef	_SYS_SOCKET_H
+#include <sys/socket.h>
+#endif
+#ifndef	_SYS_TYPES_H
+#include <sys/types.h>
+#endif
 
 int handshakeOut(char yo,char el,int socket)
 {
 	char buffer;
-	send(socket,yo,sizeof(yo),0);
+	send(socket,&yo,sizeof(yo),0);
 	recv(socket,&buffer,sizeof(buffer),0);
 	if (buffer == el)
 		return 0;
@@ -20,11 +26,11 @@ int handshakeOut(char yo,char el,int socket)
 		return 1;
 }
 
-handshakeIn(char yo,char el1,char el2,int socket)
+int handshakeIn(char yo,char el1,char el2,int socket)
 {
 	char buffer;
 	recv(socket,&buffer,sizeof(buffer),0);
-	send(socket,yo,sizeof(yo),0);
+	send(socket,&yo,sizeof(yo),0);
 	if (buffer == el1 || buffer == el2)
 		return 0;
 	else
