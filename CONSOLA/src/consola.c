@@ -36,7 +36,7 @@ int main(void) {
 
 	char mensaje[100]="Entrega 30/4 \n";
 
-	printf("****%d**",sizeof(mensaje));
+	//printf("****%d**",sizeof(mensaje));
 
 	
 	send(consola, mensaje, sizeof(char)*100, 0);

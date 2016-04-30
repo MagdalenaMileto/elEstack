@@ -18,6 +18,7 @@
 
 
 int main(int argc,char **argv) {
+	printf("SWAP: INICIO\n");
 //
 //	struct sockaddr_in umcAddress;
 //		umcAddress.sin_family = AF_INET;
@@ -82,10 +83,13 @@ int main(int argc,char **argv) {
 			} else {
 				perror("recv");
 			}
-			printf("SWAP: El mensaje:  %s\n de la UMC a llegado al Swap.\n",buffer);
+			//printf("SWAP: El mensaje:  %s\n de la UMC a llegado al Swap.\n",buffer);
 
 
 		}
+		printf("SWAP: El mensaje:  %s de la UMC a llegado al Swap.\n",buffer);
+
+		printf("SWAP: me cierro\n");
 	return EXIT_SUCCESS;
 }
 
