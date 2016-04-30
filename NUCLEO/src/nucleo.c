@@ -60,7 +60,7 @@ void *hilo_CPU(void *arg){
 
 	fd_set active_fd_set, read_fd_set; size_t size;
 	int i;int32_t retorno;
-	t_header header;
+//	t_header header;
 
 
 	//Timeout del select
