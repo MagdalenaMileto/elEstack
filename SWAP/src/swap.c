@@ -44,7 +44,6 @@ int main(int argc,char **argv) {
 			}
 		}
 		printf("SWAP: El mensaje:  %s\n de la UMC a llegado al Swap.\n",buffer);
-
 		close(umc);
 
 		printf("SWAP: me cierro\n");
@@ -52,6 +51,7 @@ int main(int argc,char **argv) {
 
 //
 // ESTO SE HIZO PARA LA ENTREGA 1
+//
 //	int sock_lst, new_lst;  // Escuchar sobre sock_lst, nuevas conexiones sobre new_lst
 //	struct sockaddr_in my_addr;    // información sobre mi dirección
 //	struct sockaddr_in umcAddress; // información sobre la dirección del cliente
