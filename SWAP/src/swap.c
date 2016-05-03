@@ -25,20 +25,33 @@ int main(int argc,char **argv) {
 		umcAddress.sin_addr.s_addr = inet_addr(argv[1]);
 		umcAddress.sin_port = htons(atoi(argv[2]));
 
-
+		int mensajeUmc;
+		char buffer[100];
 
 		int umc = socket(AF_INET,SOCK_STREAM,0);
-			if(connect(umc,(void*)&umcAddress,sizeof(umcAddress)) != 0) {
-				perror("No se pudo conectar a la UMC.");
-				return EXIT_FAILURE;
+		if(connect(umc,(void*)&umcAddress,sizeof(umcAddress)) != 0) {
+			perror("No se pudo conectar a la UMC.");
+			return EXIT_FAILURE;
+		}
+		// si el mensaje es mas chico que 0 significa que de alguna manera fallo.
+		if ((mensajeUmc = recv(umc, buffer, sizeof(buffer), 0)) <= 0) {
+			if (mensajeUmc == 0) {
+				// UMC Cerro la conexion
+				printf("SWAP: Select: La UMC %d se ha desconectado\n");
+			} else {
+				//Hubo un error en la conexion
+				perror("recv");
 			}
+		}
+		printf("SWAP: El mensaje:  %s\n de la UMC a llegado al Swap.\n",buffer);
+
 		close(umc);
 
 		printf("SWAP: me cierro\n");
 		return EXIT_SUCCESS;
 
 //
-//
+// ESTO SE HIZO PARA LA ENTREGA 1
 //	int sock_lst, new_lst;  // Escuchar sobre sock_lst, nuevas conexiones sobre new_lst
 //	struct sockaddr_in my_addr;    // información sobre mi dirección
 //	struct sockaddr_in umcAddress; // información sobre la dirección del cliente
