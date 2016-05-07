@@ -5,7 +5,7 @@ gcc CPU/src/cpu.c CPU/src/primitivas.c -o testcpu -lparser-ansisop -lcommons
 gcc CONSOLA/src/consola.c -o testconsola
 #gcc UMC/src/umc.c -o testumc
 gcc NUCLEO/TESTS/testumc.c -o testumc  -lpthread
-gcc NUCLEO/src/nucleo.c -o testnucleo -lpthread
+gcc NUCLEO/src/nucleo.c COMUNES/nsockets.c -o testnucleo -lpthread
 gcc SWAP/src/swap.c -o testswap
 
 echo "##fin compilacion"
