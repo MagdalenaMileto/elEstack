@@ -16,11 +16,19 @@
 
 // Estructura para el PCB
 // Faltan el indice de codigo y el indice de etiquetas
-typedef struct {
+
+
+typedef struct __attribute__((packed)){
 	int pid;
 	unsigned int pc;
 	unsigned int codePages;
 	t_puntero sc;
 }t_pcb;
+
+
+
+
+
+
 
 #endif /* ESTRUCTURASCONTROL_H_ */

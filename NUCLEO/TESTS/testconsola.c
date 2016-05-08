@@ -28,7 +28,7 @@ int main(){
 char mensaje[100]="Entrega 30/4 \n";
 
 
-serverSocket = cliente("127.0.0.1",1201);
+serverSocket = cliente("127.0.0.1",1200);
 
 	if(serverSocket==0){
 		printf("CONSOLA: No encontre NUCLEO me cierro :'( \n");
@@ -48,13 +48,13 @@ serverSocket = cliente("127.0.0.1",1201);
 		*/
 		printf("CONSOLA: envie %s",mensaje);
 		
-		escribir_socket (serverSocket, mensaje, sizeof(mensaje));
+	//	escribir_socket (serverSocket, mensaje, sizeof(mensaje));
 
 		//enviar_paquete(serverSocket, header);
 
 
 
-
+while(1){}
 
 
 

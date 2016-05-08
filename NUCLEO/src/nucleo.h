@@ -24,6 +24,8 @@
 
  #include "../../COMUNES/nsockets.h"
 
+ #include "../../COMUNES/estructurasControl.h"
+
 
 
 #define PUERTO "9997"
@@ -32,7 +34,19 @@
 
 
 void intHandler(int dummy);
-void *hilo_CONSOLA(void *arg);
-void *hilo_CPU(void *arg);
+
+void conectarUmc(void);
+
+void *hilo_PLP(void *arg);
+void *hilo_PCP(void *arg);
+
+void *hilo_CONEXION_CONSOLA(void *arg);
+
+
+
+void *hilo_CONEXIONES_CPU(void *arg);
+void *hilo_CONEXIONES_CONSOLA(void *arg);
+
+
 
 #endif /* NUCLEO_H_ */
