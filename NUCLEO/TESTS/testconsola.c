@@ -48,17 +48,18 @@ serverSocket = cliente("127.0.0.1",1200);
 		*/
 		printf("CONSOLA: envie %s",mensaje);
 		
-	//	escribir_socket (serverSocket, mensaje, sizeof(mensaje));
+		escribir_socket (serverSocket, mensaje, sizeof(mensaje));
 
 		//enviar_paquete(serverSocket, header);
 
 
-
-while(1){}
+sleep(10);
+//while(1){}
 
 
 
 	close(serverSocket);
+	printf("CONSOLA: cerre\n");
 	return 0;
 
 	
