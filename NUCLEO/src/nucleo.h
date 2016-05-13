@@ -18,6 +18,11 @@
 #include <pthread.h>
 
 
+#include <commons/collections/node.h>
+#include <commons/collections/queue.h>
+#include <commons/collections/list.h>
+ #include <commons/config.h>
+
 
 #include <signal.h>
 

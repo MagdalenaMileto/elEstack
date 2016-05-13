@@ -41,16 +41,16 @@ serverSocket = cliente("127.0.0.1",1200);
 	t_header header;
 
 
-		/* No usamos header
+		// No usamos header
 		header.id = 101;
-		header.size = strlen(valorAEnviar) + 1;
-		header.data = valorAEnviar;
-		*/
+		header.size = strlen(mensaje);
+		header.data = mensaje;
+		
 		printf("CONSOLA: envie %s",mensaje);
 		
-		escribir_socket (serverSocket, mensaje, sizeof(mensaje));
+		//escribir_socket (serverSocket, mensaje, sizeof(mensaje));
 
-		//enviar_paquete(serverSocket, header);
+		enviar_paquete(serverSocket, header);
 
 
 sleep(10);

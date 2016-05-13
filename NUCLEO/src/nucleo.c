@@ -11,6 +11,34 @@
 /* VARIABLES GLOBALES */
 
 
+
+
+
+//Colas PLP
+t_queue* cola_new;
+t_queue* cola_exit;
+
+//Colas PCP
+t_queue* cola_exec;
+t_queue* cola_ready;
+t_queue* cola_block;
+
+
+
+
+
+pthread_mutex_t mutex_cola_new;
+
+
+
+
+
+// Listas que maneja el PCP
+t_queue* cola_CPU_libres;
+
+
+
+
  struct arg_struct {
   int socket;
 
@@ -42,6 +70,24 @@ int main(){
 	printf("NUCLEO: INICIÓ\n");
 
   signal(SIGINT, intHandler);
+
+
+
+
+
+    cola_new =queue_create();
+
+   cola_exec =queue_create();
+   cola_ready = queue_create();
+   cola_block = queue_create();
+   cola_exit = queue_create();
+
+
+   cola_CPU_libres = queue_create();
+
+
+  pthread_mutex_init(&mutex_cola_new,NULL);
+
 
 
   //conectarUmc();
@@ -100,20 +146,69 @@ void *hilo_PCP(void *arg){
 
 }
 
+
+t_proceso* crearPrograma(void){
+
+t_proceso* procesoNuevo;
+
+procesoNuevo=malloc(sizeof(t_proceso));
+
+return procesoNuevo;
+
+}
+
+
 void *hilo_CONEXION_CONSOLA(void *arg){
 
     struct arg_struct *args = (struct arg_struct *)arg;
     int estado;
+    t_proceso* proceso;
+
+    proceso = crearPrograma();
+
+
 
     while(1){
 
-          estado=leer_socket (args->socket, mensaje, sizeof(mensaje));
-          if(estado==0){
+        t_header estructuraARecibir;
+
+
+
+          estado=recibir_paquete(args->socket,&estructuraARecibir);
+
+
+          printf("estado %d \n",estado);
+          if(estado==-1){
                printf("Nucleo: Cerro Socket consola\n");
                break;
-               //Aca deberia eliminar el programa pcb blablabla si ejecuta cpu decile ya fue man UMC
+               //Aca deberia eliminar el programa pcb cerrar socket blablabla si ejecuta cpu decile ya fue man UMC
           }
-          printf("NUCLEO: Recibi CONSOLA %s\n",mensaje);
+
+          
+          if(estructuraARecibir.id=101){
+
+
+
+pthread_mutex_lock(&mutex_cola_new);
+
+
+            queue_push(cola_new, proceso);
+
+pthread_mutex_unlock(&mutex_cola_new);
+
+
+
+
+
+
+            printf("NUCLEO: Recibi CONSOLA %s\n",(char*)estructuraARecibir.data);
+
+
+          }
+          //printf("estado %d \n",estado);
+          estructuraARecibir.id=0;
+          free(estructuraARecibir.data);
+          
      }
 
 }
