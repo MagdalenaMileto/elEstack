@@ -43,8 +43,8 @@ else
 	return 1;
 }*/
 
-		if (config_has_property(configuracion,"PUERTO_SWAP"))
-			PUERTO_SWAP = config_get_int_value(configuracion,PUERTO_SWAP);
+	if (config_has_property(configuracion,"PUERTO_SWAP"))
+		PUERTO_SWAP = config_get_int_value(configuracion,PUERTO_SWAP);
 		else
 		{
 			perror("No esta configurado el puerto del swap");
@@ -53,11 +53,11 @@ else
 
 	if (config_has_property(configuracion,"PUERTO_NUCLEO"))
 		PUERTO_NUCLEO = config_get_int_value(configuracion,PUERTO_NUCLEO);
-	else
-	{
-		perror("No esta configurado el puerto del nucleo");
-		return 1;
-	}
+		else
+		{
+			perror("No esta configurado el puerto del nucleo");
+			return 1;
+		}
 
 	if (config_has_property(configuracion,"PUERTO_CPU"))
 		PUERTO_CPU = config_get_int_value(configuracion,PUERTO_CPU);
@@ -68,42 +68,69 @@ else
 	}
 
 	int cantidadPaginas, tamanioPagina;
-	typedef int tipoPagina;
-	tipoPagina memoria = malloc(cantidadPaginas*tamanioPagina); // Memoria total
+	typedef int tipoPaginaMemoria;
+	// tipoPaginaMemoria memoria[MARCOS*MARCO_SIZE] = malloc(cantidadPaginas*tamanioPagina); // Memoria total
 	int tablaDePaginas[cantidadPaginas];
 
 	typedef struct{
 		int offset[tamanioPagina];
-	}tipo_pagina;
+	}t_pagina;
 
 	typedef struct{
 		int idPrograma;
-		tipo_pagina pagina;
+		t_pagina pagina;
 	}regPrograma;
 
 	regPrograma direccionesLogicas[cantidadPaginas];
 
 	void inicializarDireccionesLogicas(void){
 		int i = 0;
-		for(;i++;i<=cantidadPaginas){
+		for(;i <= (cantidadPaginas - 1); i++){
 			direccionesLogicas[i].idPrograma = 0;
 			int c = 0;
-			for(;c++;c<=tamanioPagina){
+			for(;c <= (tamanioPagina - 1); c++){
 				direccionesLogicas[i].pagina.offset[c] = c;
 			}
 		}
 	}
 
+	void inicializarTablaDePaginas(void){
+		int i = 0;
+		for(;i<=cantidadPaginas; i++){
+			tablaDePaginas[i] = 0;
+	}
+
 	void inicializarPrograma(int idProg, int paginasRequeridas)
 	{
 		int c = 0;
-		while(direccionesLogicas[c].idPrograma == 0)
-		{c++;}
-		for(; c++; c<= (c + paginasRequeridas))
+		while(direccionesLogicas[c].idPrograma == 0){
+			c++;
+		}
+		int limite = c + paginasRequeridas;
+		for(; c<= limite; c++)
 		{
 			direccionesLogicas[c].idPrograma = idProg;
 		}
-		// void informarSwap(int paginasRequeridas){}
+		// void informarInicializacionASwap(int paginasRequeridas){}
+	}
+
+/*	void almacenarBytes(int pagina, int offset, int tamanioBuffer, int buffer[tamanioBuffer]){
+
+	}
+
+	void solicitarBytes(int pagina, int offset, int cantidadBytes){
+
+		}
+
+	void cambioDeProcesoActivo(int idProg){
+	}
+
+	void finalizarPrograma(int idProg){
+
+		// falta terminar
+		// void informarFinalizacionASwap(int idProg){}
+	}
+*/
 
 
 		fd_set master; 	// Conjunto maestro de descriptores de fichero
