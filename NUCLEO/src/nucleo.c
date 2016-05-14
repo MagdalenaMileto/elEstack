@@ -185,7 +185,7 @@ void *hilo_CONEXION_CONSOLA(void *arg){
           }
 
           
-          if(estructuraARecibir.id=101){
+          if(estructuraARecibir.id==101){
 
 
 
