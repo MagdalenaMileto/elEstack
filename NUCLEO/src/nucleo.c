@@ -11,6 +11,20 @@
 /* VARIABLES GLOBALES */
 
 
+typedef struct {
+  int puerto_programas;
+  int puerto_cpus;
+  char* ip_umv;
+  int puerto_umv;
+  int quantum;
+  int sizePagina;
+
+}CONF_KERNEL;
+
+CONF_KERNEL *config_kernel;
+
+
+
 //Colas PLP
 t_queue* cola_new;
 t_queue* cola_exit;
@@ -59,6 +73,14 @@ int main(){
       signal(SIGINT, intHandler);
 
       printf("NUCLEO: INICIÓ\n");
+
+
+      config_kernel = malloc(sizeof(CONF_KERNEL));
+
+
+
+      config_kernel->sizePagina=10;
+
 
      
       //Inicializaciones -> lo podriamos meter en una funcion externa
@@ -137,6 +159,67 @@ t_proceso* crearPrograma(void){
 }
 
 
+void mandarCodigoAUmc(char* codigo,int size){
+
+  int cuantasPaginas, estado,i;
+  t_header header;
+
+  cuantasPaginas = (size + (config_kernel->sizePagina / 2)) / config_kernel->sizePagina;
+
+  
+  //Codigo de AMEO TENE X CANTIDAD DE PAGINAS?
+
+    header.id = 301;
+    header.size = sizeof(cuantasPaginas);
+    header.data = &cuantasPaginas;
+
+    estado=enviar_paquete(umc, header);
+
+    //Verificar error envio (desconexion)
+
+    estado=recibir_paquete(umc,&header);
+
+        //Verificar error recepcion(desconexion)
+
+    if(header.id==302){
+      if((int)header.data==1){
+        //Hay espacio, mando paginas
+        for(i=0;i<cuantasPaginas;i++){
+
+
+           header.id = 304;
+           header.size = config_kernel->sizePagina;
+           header.data = codigo+i*(config_kernel->sizePagina);
+
+           estado=enviar_paquete(umc, header);
+
+
+
+        }
+
+      }else{
+        //No hay espacio, retorno error
+
+      }
+
+    }else{
+      //no me deberia haber mandado esto
+
+    }
+
+
+
+
+
+
+
+
+//(char*)codigo
+
+
+}
+
+
 
 /********************************************************************************
 *********************************************************************************
@@ -168,11 +251,11 @@ void *hilo_CONEXION_CONSOLA(void *arg){
       
             if(estructuraARecibir.id==101){
             
-                  pthread_mutex_lock(&mutex_cola_new);
-                  queue_push(cola_new, proceso);
-                  pthread_mutex_unlock(&mutex_cola_new);
-
-                  printf("NUCLEO: Recibi CONSOLA %s\n",(char*)estructuraARecibir.data);
+                  //pthread_mutex_lock(&mutex_cola_new);
+                  //queue_push(cola_new, proceso);
+                  //pthread_mutex_unlock(&mutex_cola_new);
+                  mandarCodigoAUmc(estructuraARecibir.data,estructuraARecibir.size);
+                  //printf("NUCLEO: Recibi CONSOLA %s\n",(char*)estructuraARecibir.data);
             }
 
           
@@ -278,6 +361,7 @@ void *hilo_HANDLER_CONEXIONES_CPU(void *arg){
      listen(servidorSocket,5);  //Aca maximas conexiones, ver de cambiar?
 
      while(1){
+
           socketCliente = accept(servidorSocket, (struct sockaddr *) &addr, &addrlen);
 
           
@@ -294,8 +378,6 @@ void *hilo_HANDLER_CONEXIONES_CPU(void *arg){
 
 
 
-
-}
 void intHandler(int dummy) {
 	//clrscr();
 

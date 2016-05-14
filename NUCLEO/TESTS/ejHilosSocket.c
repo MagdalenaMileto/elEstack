@@ -46,7 +46,7 @@ int main(){
   	pthread_create(&thHandler_Conexiones, NULL, hilo_Handler_Conexiones, NULL);
 
 
-  	sleep(2); //Espero a que los hilos levanten
+    sleep(2); //Espero a que los hilos levanten
 
 
   	//Creo un cliente y lo conecto
@@ -91,8 +91,8 @@ int main(){
 	printf("Envie %s\n",mensaje);
 
 	enviar_paquete(cliente2, header);
-		enviar_paquete(cliente2, header);
-			enviar_paquete(cliente2, header);
+	enviar_paquete(cliente2, header);
+	enviar_paquete(cliente2, header);
 	close(cliente2);
 
 
@@ -106,7 +106,12 @@ int main(){
 
 
 
+void mandarCodigoAUmc((char*)codigo){
 
+printf("caca %s\n",codigo);
+
+
+}
 
 
 void *hilo_Conexion(void *arg){
@@ -133,7 +138,8 @@ void *hilo_Conexion(void *arg){
 
           
           if(estructuraARecibir.id==101){									//Puedo enviar varios paquetes, PCB, handshake, etc. con esto identifico cual es
-            	printf("Recibi %s\n",(char*)estructuraARecibir.data);  
+            	//printf("Recibi %s\n",(char*)estructuraARecibir.data);  
+                mandarCodigoAUmc(&estructuraARecibir.data);
           }
 
 
