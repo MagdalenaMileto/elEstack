@@ -45,12 +45,15 @@ void conectarUmc(void);
 void *hilo_PLP(void *arg);
 void *hilo_PCP(void *arg);
 
+
+
+
+void *hilo_CONEXION_CONSOLA(void *arg);
 void *hilo_CONEXION_CONSOLA(void *arg);
 
 
-
-void *hilo_CONEXIONES_CPU(void *arg);
-void *hilo_CONEXIONES_CONSOLA(void *arg);
+void *hilo_HANDLER_CONEXIONES_CPU(void *arg);
+void *hilo_HANDLER_CONEXIONES_CONSOLA(void *arg);
 
 
 

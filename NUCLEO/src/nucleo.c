@@ -158,6 +158,16 @@ return procesoNuevo;
 }
 
 
+
+/********************************************************************************
+*********************************************************************************
+*********************************************************************************
+************************CONSOLA STUFF********************************************
+*********************************************************************************
+*********************************************************************************
+*********************************************************************************
+*/
+
 void *hilo_CONEXION_CONSOLA(void *arg){
 
     struct arg_struct *args = (struct arg_struct *)arg;
@@ -215,12 +225,12 @@ pthread_mutex_unlock(&mutex_cola_new);
 
 
 
-void *hilo_CONEXIONES_CONSOLA(void *arg){
+void *hilo_HANDLER_CONEXIONES_CONSOLA(void *arg){
 
      int servidorSocket,socketCliente;
      struct sockaddr_in addr;      // Esta estructura contendra los datos de la conexion del cliente. IP, puerto, etc.
      socklen_t addrlen = sizeof(addr);
-
+      struct arg_struct *args; //Probar de sacar afuera esto?
 
      servidorSocket=servidor(1200);
 
@@ -231,12 +241,12 @@ void *hilo_CONEXIONES_CONSOLA(void *arg){
           exit(1);
      }
      
-     listen(servidorSocket,5);   // IMPORTANTE: listen() es una syscall BLOQUEANTE.
+     listen(servidorSocket,5);   
 
      while(1){
           socketCliente = accept(servidorSocket, (struct sockaddr *) &addr, &addrlen);
 
-          struct arg_struct *args; //Probar de sacar afuera esto?
+          
           args = malloc(sizeof(struct arg_struct));//cuando se termine el proceso hacer un free de esto
           args->socket=socketCliente;
 
@@ -249,175 +259,90 @@ void *hilo_CONEXIONES_CONSOLA(void *arg){
 }
 
 
+/********************************************************************************
+*********************************************************************************
+*********************************************************************************
+************************CPU STUFF************************************************
+*********************************************************************************
+*********************************************************************************
+*********************************************************************************
+*/
 
-void caca (void){
+void *hilo_CONEXION_CPU(void *arg){
 
-//Codigo viejo con select. Borrar cuando este seguro que lo otro funca bien.
+    struct arg_struct *args = (struct arg_struct *)arg;
+    int estado;
+    t_proceso* proceso;
+
+  while(1){
+
+          t_header estructuraARecibir;
+          estado=recibir_paquete(args->socket,&estructuraARecibir);
+
+          if(estado==-1){
+               printf("Nucleo: Cerro Socket cpu\n");
+               break;
+               //Aca deberia eliminar el programa pcb cerrar socket blablabla si ejecuta cpu decile ya fue man UMC
+          }
+
+          
+          if(estructuraARecibir.id==101){
+
+          }
+          estructuraARecibir.id=0;
+          free(estructuraARecibir.data);
+          
+     }
+
+}
+
+
+
+
+
+
+
+
+void *hilo_HANDLER_CONEXIONES_CPU(void *arg){
+
+     struct arg_struct *args; //Probar de sacar afuera esto?
+     int servidorSocket,socketCliente;
+     struct sockaddr_in addr;      // Esta estructura contendra los datos de la conexion del cliente. IP, puerto, etc.
+     socklen_t addrlen = sizeof(addr);
+
+
+     servidorSocket=servidor(1201);
+
+
+     if(servidorSocket==-1){
+          printf("NUCLEO: No puedo crear socket escucha 1201, me cierro\n");//cambiar a p error
+          close(servidorSocket);
+          exit(1);
+     }
      
-  fd_set active_fd_set, read_fd_set; size_t size;
-  int i;int32_t retorno;
-//  t_header header;
+     listen(servidorSocket,5);  
 
+     while(1){
+          socketCliente = accept(servidorSocket, (struct sockaddr *) &addr, &addrlen);
 
-  //Timeout del select
-  struct timeval tv;      // Estructura para select()
-  tv.tv_sec = 5;
-  tv.tv_usec = 500000;
+          
+          args = malloc(sizeof(struct arg_struct));//cuando se termine el proceso hacer un free de esto
+          args->socket=socketCliente;
 
-  
+          pthread_t thCONEXION_CPU;
+          pthread_create(&thCONEXION_CPU, NULL, hilo_CONEXION_CPU, (void *)args);
 
-  servidorSocket=servidor(1201);  //Creo servidor escucha en puerto 1233
-
-  //Config del select
-
-  FD_ZERO (&active_fd_set);
-  FD_SET (servidorSocket, &active_fd_set);
+          printf("acepte%d\n",socketCliente);
+     }
 
 
 
-  
-  while (1)
-  {
-      /* Block until input arrives on one or more active sockets. */
-    read_fd_set = active_fd_set;
-    if (select (FD_SETSIZE, &read_fd_set, NULL, NULL, &tv) < 0)
-    {
-      printf("Error: probablemente el puerto esta ocupado\n");
-      exit (EXIT_FAILURE);
- }
-
-      /* Service all the sockets with input pending. */
- for (i = 0; i < FD_SETSIZE; ++i)
-      if (FD_ISSET (i, &read_fd_set))
-      {
-        if (i == servidorSocket)
-        {
-                /* Connection request on original socket. */
-          int new;
-          size = sizeof (losClientes);
-          new = accept (servidorSocket,
-            (struct sockaddr *) &losClientes,
-            &size);
-          if (new < 0)
-          {
-            printf("Problema con el select 2\n");
-            exit (EXIT_FAILURE);
-       }
-
-       FD_SET (new, &active_fd_set);
-  }
-  else
-              { //hay evento
-
-                //retorno= recibir_paquete(i, &header);
-                retorno = leer_socket (i, mensaje, sizeof(mensaje));
-                if(retorno==-1){
-                  //El evento fue que el socket cliente se cerro
-                  close( i );
-                  FD_CLR (i, &active_fd_set);
-
-             }else{ 
-                  printf("NUCLEO: Recibi %s",mensaje);FD_CLR(i,&active_fd_set);
-
-                  escribir_socket (umc, mensaje, sizeof(mensaje));
-                  escribir_socket (ultimoCPU, mensaje, sizeof(mensaje));
-                  printf("NUCLEO: Cierro\n");
-                  close(servidorSocket);
-                  close(servidorCPU);
-                  close(umc); 
-
-                  exit (1);
-
-                  /*
-                  if(header.id == 101){
-                    printf("Recibi %s",(char*)header.data);
-                    enviar_paquete(umc, header);
-                    enviar_paquete(ultimoCPU, header);
-
-                    free(header.data);//Libero esto que me genero recibir paquete
-                }
-                */
-
-           }
-
-      }
- }
-}
-
-
-}
-
-void *hilo_CONEXIONES_CPU(void *arg){
-
-   fd_set active_fd_set, read_fd_set; size_t size;
-   int i;int32_t retorno;
-   t_header header;
-
-
-  //Timeout del select
-  struct timeval tv;      // Estructura para select()
-  tv.tv_sec = 2;
-  tv.tv_usec = 500000;
-
-  
-
-  servidorCPU=servidor(1202);  //Creo servidor escucha en puerto 1233
-
-  //Config del select
-
-  FD_ZERO (&active_fd_set);
-  FD_SET (servidorCPU, &active_fd_set);
 
 
 
-  
-  while (1)
-  {
-      /* Block until input arrives on one or more active sockets. */
-    read_fd_set = active_fd_set;
-    if (select (FD_SETSIZE, &read_fd_set, NULL, NULL, &tv) < 0)
-    {
-      exit (EXIT_FAILURE);
- }
 
-      /* Service all the sockets with input pending. */
- for (i = 0; i < FD_SETSIZE; ++i)
-      if (FD_ISSET (i, &read_fd_set))
-      {
-        if (i == servidorCPU)
-        {
-                /* Connection request on original socket. */
-          int new;
-          size = sizeof (clientesCPU);
-          new = accept (servidorCPU,
-            (struct sockaddr *) &clientesCPU,
-            &size);
-          ultimoCPU=new;
-          if (new < 0)
-          {
-            exit (EXIT_FAILURE);
-       }
 
-       FD_SET (new, &active_fd_set);
-  }
-  else
-              { //hay evento
 
-                retorno= recibir_paquete(i, &header);
-                if(retorno==-1){
-                  //El evento fue que el socket cliente se cerro
-                  close( i );
-                  FD_CLR (i, &active_fd_set);
-
-             }else{ 
-                  if(header.id == 101){
-                  //recibo paquete cpus
-                  }
-
-             }
-
-        }
-   }
 }
 
 

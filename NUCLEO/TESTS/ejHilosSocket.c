@@ -91,6 +91,8 @@ int main(){
 	printf("Envie %s\n",mensaje);
 
 	enviar_paquete(cliente2, header);
+		enviar_paquete(cliente2, header);
+			enviar_paquete(cliente2, header);
 	close(cliente2);
 
 
@@ -116,7 +118,7 @@ void *hilo_Conexion(void *arg){
     while(1){
 
         t_header estructuraARecibir;
-
+        sleep(1);
 
           estado=recibir_paquete(args->socket,&estructuraARecibir);
 
