@@ -17,6 +17,7 @@
 #include<netinet/in.h>
 #include<commons/config.h>
 #include "../../COMUNES/handshake.h"
+#include<pthread.h>
 #define PORT 1992
 
 int main(int argc,char **argv)
@@ -43,8 +44,8 @@ else
 	return 1;
 }*/
 
-		if (config_has_property(configuracion,"PUERTO_SWAP"))
-			PUERTO_SWAP = config_get_int_value(configuracion,PUERTO_SWAP);
+	if (config_has_property(configuracion,"PUERTO_SWAP"))
+		PUERTO_SWAP = config_get_int_value(configuracion,PUERTO_SWAP);
 		else
 		{
 			perror("No esta configurado el puerto del swap");
@@ -53,11 +54,11 @@ else
 
 	if (config_has_property(configuracion,"PUERTO_NUCLEO"))
 		PUERTO_NUCLEO = config_get_int_value(configuracion,PUERTO_NUCLEO);
-	else
-	{
-		perror("No esta configurado el puerto del nucleo");
-		return 1;
-	}
+		else
+		{
+			perror("No esta configurado el puerto del nucleo");
+			return 1;
+		}
 
 	if (config_has_property(configuracion,"PUERTO_CPU"))
 		PUERTO_CPU = config_get_int_value(configuracion,PUERTO_CPU);
@@ -68,42 +69,96 @@ else
 	}
 
 	int cantidadPaginas, tamanioPagina;
-	typedef int tipoPagina;
-	tipoPagina memoria = malloc(cantidadPaginas*tamanioPagina); // Memoria total
+	typedef int tipoPaginaMemoria;
+	// tipoPaginaMemoria memoria[MARCOS*MARCO_SIZE] = malloc(cantidadPaginas*tamanioPagina); // Memoria total
 	int tablaDePaginas[cantidadPaginas];
 
 	typedef struct{
 		int offset[tamanioPagina];
-	}tipo_pagina;
+	}t_pagina;
 
 	typedef struct{
 		int idPrograma;
-		tipo_pagina pagina;
+		t_pagina pagina;
 	}regPrograma;
 
 	regPrograma direccionesLogicas[cantidadPaginas];
 
 	void inicializarDireccionesLogicas(void){
 		int i = 0;
-		for(;i++;i<=cantidadPaginas){
+		for(;i <= (cantidadPaginas - 1); i++){
 			direccionesLogicas[i].idPrograma = 0;
 			int c = 0;
-			for(;c++;c<=tamanioPagina){
+			for(;c <= (tamanioPagina - 1); c++){
 				direccionesLogicas[i].pagina.offset[c] = c;
 			}
 		}
 	}
 
+	void inicializarTablaDePaginas(void){
+		int i = 0;
+		for(;i<=cantidadPaginas; i++){
+			tablaDePaginas[i] = 0;
+	}
+
 	void inicializarPrograma(int idProg, int paginasRequeridas)
 	{
 		int c = 0;
-		while(direccionesLogicas[c].idPrograma == 0)
-		{c++;}
-		for(; c++; c<= (c + paginasRequeridas))
+		while(direccionesLogicas[c].idPrograma == 0){
+			c++;
+		}
+		int limite = c + paginasRequeridas;
+		for(; c<= limite; c++)
 		{
 			direccionesLogicas[c].idPrograma = idProg;
 		}
-		// void informarSwap(int paginasRequeridas){}
+		// void informarInicializacionASwap(int paginasRequeridas){}
+		sleep(1);
+	}
+
+/*	void almacenarBytes(int pagina, int offset, int tamanioBuffer, int buffer[tamanioBuffer]){
+
+	}
+
+	void solicitarBytes(int pagina, int offset, int cantidadBytes){
+
+		}
+
+	void cambioDeProcesoActivo(int idProg){
+	}
+
+// Conexion con el nucleo dice que finalice programa
+
+	int idProg = lo recibo
+    pthread_t hilo1;
+    char *arg1 = "thr1";
+    int r1;
+
+	r1 = pthread_create( &hilo1, NULL, finalizarPrograma, (idProg) arg1);
+
+	pthread_join( hilo1, NULL);
+
+// Conexion con el nucleo dice que inicialice programa
+
+	int idProg = lo recibo
+	int pagRequeridas = lo recibo
+    pthread_t hilo2;
+    char *arg1 = "thr2";
+    int r2;
+
+	r2 = pthread_create( &hilo1, NULL, inicializarPrograma, (idProg,pagRequeridas) arg1);
+
+	pthread_join( hilo2, NULL);
+
+	void finalizarPrograma(int idProg){
+
+		// falta terminar
+		// void informarFinalizacionASwap(int idProg){}
+
+		 sleep(1);
+	}
+
+	*/
 
 
 		fd_set master; 	// Conjunto maestro de descriptores de fichero
