@@ -11,14 +11,14 @@
 #include<arpa/inet.h>
 #include<sys/socket.h>
 #include<sys/types.h>
-#include <fcntl.h>
-#include <netinet/in.h>
+#include<fcntl.h>
+#include<netinet/in.h>
 #include<netinet/ip.h>
 #include<unistd.h>
-#include <commons/log.h>
-#include <commons/config.h>
-#include <commons/txt.h>
-#include <sys/mman.h>
+#include<commons/log.h>
+#include<commons/config.h>
+#include<commons/txt.h>
+#include<sys/mman.h>
 
 
 #define Puerto 1206
@@ -38,6 +38,12 @@
 	int iniciarServidor();
 	int establecerConexion(int sock_lst);
 
+	typedef struct __attribute__((packed)){
+		int pid;
+		int nroPag;
+		int posicion;
+		char texto[1024];
+	} paqueteUMC;
 
 int main(int argc,char **argv) {
 
@@ -57,13 +63,18 @@ int main(int argc,char **argv) {
 		if (mensajeUmc == 0) {
 			// UMC Cerro la conexion
 			printf("SWAP: Select: La UMC %d se ha desconectado\n", new_lst);
-			} else {
-				//Hubo un error en la conexion
-				perror("recv");
-			}
-			//printf("SWAP: El mensaje:  %s\n de la UMC a llegado al Swap.\n",buffer);
+			return EXIT_FAILURE;
+		} else {
+			//Hubo un error en la conexion
+			perror("recv");
+			return EXIT_FAILURE;
 		}
-	printf("SWAP: El mensaje:  %s de la UMC a llegado al Swap.\n",buffer);
+	}
+	printf("SWAP: El mensaje:  %s\n de la UMC a llegado al Swap.\n",buffer);
+
+	//Me llega un nuevo proceso
+	printf("LLego nuevo proceso al SWAP \n");
+
 
 	printf("SWAP: me cierro\n");
 	return EXIT_SUCCESS;
@@ -154,15 +165,14 @@ int mapearArchivo(){
 	  discoSwapMapped = mmap(0, length,PROT_READ, MAP_SHARED,fd,0);
 	if (discoSwapMapped == MAP_FAILED) {
 		close(fd);
-		printf("Error mapeando el archivo %s", Nombre_Swap);
+		printf("Error mapeando el archivo %s \n", Nombre_Swap);
 		exit(EXIT_FAILURE);
 	    }
-	printf("Mapeo perfecto el %s", Nombre_Swap);
+	printf("Mapeo perfecto  %s \n", Nombre_Swap);
 	return 1;
 }
 
 int iniciarServidor(int puerto) {
-	////
 
 	int sock_lst;  // Escuchar sobre sock_lst, nuevas conexiones sobre new_lst
 	struct sockaddr_in my_addr;    // información sobre mi dirección
@@ -194,20 +204,11 @@ int iniciarServidor(int puerto) {
 
 	return sock_lst;
 }
-//
-//int socketDeMemoria;
-//int socketServidor = iniciarServidor(PUERTO_SWAPPER);
-//printf("Escuchando en el puerto %d \n ", PUERTO_SWAPPER);
-//info("Escuchando en el puerto %d", PUERTO_SWAPPER);
-//while(1){
-//socketDeMemoria = establecerConexion(socketServidor);
 
 int establecerConexion(int sock_lst) {
 	int new_lst;
 	struct sockaddr_in umcAddress; // información sobre la dirección del cliente
 	unsigned int sin_size = sizeof(struct sockaddr_in);
-
-
 	if ((new_lst = accept(sock_lst, (struct sockaddr *)&umcAddress, &sin_size)) == -1)
 	{
 		perror("accept");
