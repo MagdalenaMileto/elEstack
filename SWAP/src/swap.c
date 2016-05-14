@@ -35,54 +35,23 @@
 	int	abrirConfiguracion();
 	int	crearArchivo();
 	int mapearArchivo();
+	int iniciarServidor();
+	int establecerConexion(int sock_lst);
 
 
 int main(int argc,char **argv) {
+
+	int sock_lst;
+	int new_lst;
+	int mensajeUmc;
+	char buffer[100];
 
 	abrirConfiguracion();
 	crearArchivo();
 	mapearArchivo();
 
-	int sock_lst, new_lst;  // Escuchar sobre sock_lst, nuevas conexiones sobre new_lst
-	struct sockaddr_in my_addr;    // información sobre mi dirección
-	struct sockaddr_in umcAddress; // información sobre la dirección del cliente
-	my_addr.sin_family = AF_INET;         // Ordenación de bytes de máquina
-		my_addr.sin_port = htons(Puerto);     // short, Ordenación de bytes de la red
-		my_addr.sin_addr.s_addr = INADDR_ANY; // rellenar con mi dirección IP
-		memset(&(my_addr.sin_zero), '\0', 8); // poner a cero el resto de la estructura
-	int yes=1;
-	int mensajeUmc;
-	char buffer[100];
-	unsigned int sin_size = sizeof(struct sockaddr_in);
-
-	if ((sock_lst = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
-		perror("socket");
-		exit(1);
-	}
-
-	if (setsockopt(sock_lst,SOL_SOCKET,SO_REUSEADDR,&yes,sizeof(int)) == -1) {
-	    perror("setsockopt");
-	    exit(1);
-	}
-
-
-	if (bind(sock_lst, (struct sockaddr *)&my_addr, sizeof(struct sockaddr)) == -1) {
-		perror("bind");
-		exit(1);
-	}
-
-	if (listen(sock_lst, 10) == -1) {
-	            perror("listen");
-	            exit(1);
-	}
-
-	if ((new_lst = accept(sock_lst, (struct sockaddr *)&umcAddress, &sin_size)) == -1)
-	{
-		perror("accept");
-	}
-	else {
-        printf("SWAP: Nueva conexion desde %s en" "socket %d\n",inet_ntoa(umcAddress.sin_addr), new_lst);
-	}
+	sock_lst = iniciarServidor();
+	new_lst = establecerConexion(sock_lst);
 
 	if ((mensajeUmc = recv(new_lst, buffer, sizeof(buffer), 0)) <= 0) {
 		if (mensajeUmc == 0) {
@@ -190,4 +159,62 @@ int mapearArchivo(){
 	    }
 	printf("Mapeo perfecto el %s", Nombre_Swap);
 	return 1;
+}
+
+int iniciarServidor(int puerto) {
+	////
+
+	int sock_lst;  // Escuchar sobre sock_lst, nuevas conexiones sobre new_lst
+	struct sockaddr_in my_addr;    // información sobre mi dirección
+	my_addr.sin_family = AF_INET;         // Ordenación de bytes de máquina
+	my_addr.sin_port = htons(Puerto);     // short, Ordenación de bytes de la red
+	my_addr.sin_addr.s_addr = INADDR_ANY; // rellenar con mi dirección IP
+	memset(&(my_addr.sin_zero), '\0', 8); // poner a cero el resto de la estructura
+	int yes=1;
+
+	if ((sock_lst = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
+		perror("socket");
+		return -1;
+	}
+
+	if (setsockopt(sock_lst,SOL_SOCKET,SO_REUSEADDR,&yes,sizeof(int)) == -1) {
+		perror("setsockopt");
+		return -1;
+	}
+
+	if (bind(sock_lst, (struct sockaddr *)&my_addr, sizeof(struct sockaddr)) == -1) {
+		perror("bind");
+		return -1;
+	}
+
+	if (listen(sock_lst, 10) == -1) {
+		perror("listen");
+		return -1;
+	}
+
+	return sock_lst;
+}
+//
+//int socketDeMemoria;
+//int socketServidor = iniciarServidor(PUERTO_SWAPPER);
+//printf("Escuchando en el puerto %d \n ", PUERTO_SWAPPER);
+//info("Escuchando en el puerto %d", PUERTO_SWAPPER);
+//while(1){
+//socketDeMemoria = establecerConexion(socketServidor);
+
+int establecerConexion(int sock_lst) {
+	int new_lst;
+	struct sockaddr_in umcAddress; // información sobre la dirección del cliente
+	unsigned int sin_size = sizeof(struct sockaddr_in);
+
+
+	if ((new_lst = accept(sock_lst, (struct sockaddr *)&umcAddress, &sin_size)) == -1)
+	{
+		perror("accept");
+	}
+	else {
+        printf("SWAP: Nueva conexion desde %s en" "socket %d\n",inet_ntoa(umcAddress.sin_addr), new_lst);
+        return -1;
+	}
+	return new_lst;
 }
