@@ -11,12 +11,15 @@
 #include<arpa/inet.h>
 #include<sys/socket.h>
 #include<sys/types.h>
+#include <fcntl.h>
 #include <netinet/in.h>
 #include<netinet/ip.h>
 #include<unistd.h>
 #include <commons/log.h>
 #include <commons/config.h>
 #include <commons/txt.h>
+#include <sys/mman.h>
+
 
 #define Puerto 1206
 
@@ -27,14 +30,18 @@
 	int Retardo_Compactacion;
 	t_config* configuracion;
 	long int tamanio_archivo;
+	char * discoSwapMapped;
+
 	int	abrirConfiguracion();
 	int	crearArchivo();
+	int mapearArchivo();
 
 
 int main(int argc,char **argv) {
 
 	abrirConfiguracion();
 	crearArchivo();
+	mapearArchivo();
 
 	int sock_lst, new_lst;  // Escuchar sobre sock_lst, nuevas conexiones sobre new_lst
 	struct sockaddr_in my_addr;    // información sobre mi dirección
@@ -166,3 +173,21 @@ int crearArchivo(){
 	return 1;
 }
 
+int mapearArchivo(){
+	int fd;
+	size_t length = tamanio_archivo;
+	discoSwapMapped=malloc(tamanio_archivo);
+	fd = open(Nombre_Swap, O_RDONLY);
+	  if (fd == -1) {
+		printf("Error abriendo %s para su lectura", Nombre_Swap);
+		exit(EXIT_FAILURE);
+	    }
+	  discoSwapMapped = mmap(0, length,PROT_READ, MAP_SHARED,fd,0);
+	if (discoSwapMapped == MAP_FAILED) {
+		close(fd);
+		printf("Error mapeando el archivo %s", Nombre_Swap);
+		exit(EXIT_FAILURE);
+	    }
+	printf("Mapeo perfecto el %s", Nombre_Swap);
+	return 1;
+}
