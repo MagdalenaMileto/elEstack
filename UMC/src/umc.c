@@ -17,6 +17,7 @@
 #include<netinet/in.h>
 #include<commons/config.h>
 #include "../../COMUNES/handshake.h"
+#include<pthread.h>
 #define PORT 1992
 
 int main(int argc,char **argv)
@@ -112,6 +113,7 @@ else
 			direccionesLogicas[c].idPrograma = idProg;
 		}
 		// void informarInicializacionASwap(int paginasRequeridas){}
+		sleep(1);
 	}
 
 /*	void almacenarBytes(int pagina, int offset, int tamanioBuffer, int buffer[tamanioBuffer]){
@@ -125,12 +127,38 @@ else
 	void cambioDeProcesoActivo(int idProg){
 	}
 
+// Conexion con el nucleo dice que finalice programa
+
+	int idProg = lo recibo
+    pthread_t hilo1;
+    char *arg1 = "thr1";
+    int r1;
+
+	r1 = pthread_create( &hilo1, NULL, finalizarPrograma, (idProg) arg1);
+
+	pthread_join( hilo1, NULL);
+
+// Conexion con el nucleo dice que inicialice programa
+
+	int idProg = lo recibo
+	int pagRequeridas = lo recibo
+    pthread_t hilo2;
+    char *arg1 = "thr2";
+    int r2;
+
+	r2 = pthread_create( &hilo1, NULL, inicializarPrograma, (idProg,pagRequeridas) arg1);
+
+	pthread_join( hilo2, NULL);
+
 	void finalizarPrograma(int idProg){
 
 		// falta terminar
 		// void informarFinalizacionASwap(int idProg){}
+
+		 sleep(1);
 	}
-*/
+
+	*/
 
 
 		fd_set master; 	// Conjunto maestro de descriptores de fichero
