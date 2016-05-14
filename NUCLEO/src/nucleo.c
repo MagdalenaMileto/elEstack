@@ -11,9 +11,6 @@
 /* VARIABLES GLOBALES */
 
 
-
-
-
 //Colas PLP
 t_queue* cola_new;
 t_queue* cola_exit;
@@ -23,20 +20,13 @@ t_queue* cola_exec;
 t_queue* cola_ready;
 t_queue* cola_block;
 
-
-
-
-
 pthread_mutex_t mutex_cola_new;
-
 
 
 
 
 // Listas que maneja el PCP
 t_queue* cola_CPU_libres;
-
-
 
 
  struct arg_struct {
@@ -53,7 +43,7 @@ typedef struct{
 
 
 
-
+//Eliminar todo lo que sea de mas de aca
 int listenningSocket,socketCliente,servidorSocket,servidorCPU,clienteSocket,losClientes,clientesCPU,umc,ultimoCPU;
 
 char mensaje[100];
@@ -66,45 +56,38 @@ char mensaje[100];
 
 
 int main(){
+      signal(SIGINT, intHandler);
 
-	printf("NUCLEO: INICIÓ\n");
+      printf("NUCLEO: INICIÓ\n");
 
-  signal(SIGINT, intHandler);
+     
+      //Inicializaciones -> lo podriamos meter en una funcion externa
 
+      cola_new =queue_create();
+      cola_exec =queue_create();
+      cola_ready = queue_create();
+      cola_block = queue_create();
+      cola_exit = queue_create();
+      cola_CPU_libres = queue_create();
+ 
+      pthread_mutex_init(&mutex_cola_new,NULL);
 
+      //conectarUmc();
 
+      pthread_t thPCP, thPLP,thCONEXIONES_CPU,thCONEXIONES_CONSOLA;
 
+      pthread_create(&thCONEXIONES_CONSOLA, NULL, hilo_HANDLER_CONEXIONES_CONSOLA, NULL);
+      pthread_create(&thCONEXIONES_CPU, NULL, hilo_HANDLER_CONEXIONES_CPU, NULL);
+  
 
-    cola_new =queue_create();
+      pthread_create(&thPCP, NULL, hilo_PCP, NULL);
+      pthread_create(&thPLP, NULL, hilo_PLP, NULL);
 
-   cola_exec =queue_create();
-   cola_ready = queue_create();
-   cola_block = queue_create();
-   cola_exit = queue_create();
+      pthread_join(thCONEXIONES_CONSOLA, NULL);
+      pthread_join(thCONEXIONES_CPU, NULL);
 
-
-   cola_CPU_libres = queue_create();
-
-
-  pthread_mutex_init(&mutex_cola_new,NULL);
-
-
-
-  //conectarUmc();
-
-
-
-  pthread_t thPCP, thPLP,thCONEXIONES_CPU,thCONEXIONES_CONSOLA;
-
-  pthread_create(&thCONEXIONES_CONSOLA, NULL, hilo_CONEXIONES_CONSOLA, NULL);
- // pthread_create(&thCONEXIONES_CPU, NULL, hilo_CONEXIONES_CPU, NULL);
-  //pthread_create(&thPCP, NULL, hilo_PCP, NULL);
-  //pthread_create(&thPLP, NULL, hilo_PLP, NULL);
-
-  pthread_join(thCONEXIONES_CONSOLA, NULL);
- // pthread_join(thCONEXIONES_CPU, NULL);
-	//pthread_join(thPCP, NULL);
-	//pthread_join(thPLP, NULL);
+      pthread_join(thPCP, NULL);
+	pthread_join(thPLP, NULL);
 
 	//Terminamos
 }
@@ -122,8 +105,6 @@ void conectarUmc(void){
  }
 
 }
-
-
 
 
 
@@ -149,11 +130,9 @@ void *hilo_PCP(void *arg){
 
 t_proceso* crearPrograma(void){
 
-t_proceso* procesoNuevo;
-
-procesoNuevo=malloc(sizeof(t_proceso));
-
-return procesoNuevo;
+      t_proceso* procesoNuevo;
+      procesoNuevo=malloc(sizeof(t_proceso));
+      return procesoNuevo;
 
 }
 
@@ -176,48 +155,29 @@ void *hilo_CONEXION_CONSOLA(void *arg){
 
     proceso = crearPrograma();
 
+      while(1){
+            t_header estructuraARecibir;
+            estado=recibir_paquete(args->socket,&estructuraARecibir);
 
+            if(estado==-1){
+                  printf("Nucleo: Cerro Socket consola\n");
+                  break;
+                  //Aca deberia eliminar el programa pcb cerrar socket blablabla si ejecuta cpu decile ya fue man UMC
+            }
 
-    while(1){
+      
+            if(estructuraARecibir.id==101){
+            
+                  pthread_mutex_lock(&mutex_cola_new);
+                  queue_push(cola_new, proceso);
+                  pthread_mutex_unlock(&mutex_cola_new);
 
-        t_header estructuraARecibir;
-
-
-
-          estado=recibir_paquete(args->socket,&estructuraARecibir);
-
-
-          printf("estado %d \n",estado);
-          if(estado==-1){
-               printf("Nucleo: Cerro Socket consola\n");
-               break;
-               //Aca deberia eliminar el programa pcb cerrar socket blablabla si ejecuta cpu decile ya fue man UMC
-          }
+                  printf("NUCLEO: Recibi CONSOLA %s\n",(char*)estructuraARecibir.data);
+            }
 
           
-          if(estructuraARecibir.id==101){
-
-
-
-pthread_mutex_lock(&mutex_cola_new);
-
-
-            queue_push(cola_new, proceso);
-
-pthread_mutex_unlock(&mutex_cola_new);
-
-
-
-
-
-
-            printf("NUCLEO: Recibi CONSOLA %s\n",(char*)estructuraARecibir.data);
-
-
-          }
-          //printf("estado %d \n",estado);
-          estructuraARecibir.id=0;
-          free(estructuraARecibir.data);
+            estructuraARecibir.id=0;
+            free(estructuraARecibir.data);
           
      }
 
@@ -227,12 +187,12 @@ pthread_mutex_unlock(&mutex_cola_new);
 
 void *hilo_HANDLER_CONEXIONES_CONSOLA(void *arg){
 
-     int servidorSocket,socketCliente;
-     struct sockaddr_in addr;      // Esta estructura contendra los datos de la conexion del cliente. IP, puerto, etc.
-     socklen_t addrlen = sizeof(addr);
+      int servidorSocket,socketCliente;
+      struct sockaddr_in addr;      // Esta estructura contendra los datos de la conexion del cliente. IP, puerto, etc.
+      socklen_t addrlen = sizeof(addr);
       struct arg_struct *args; //Probar de sacar afuera esto?
 
-     servidorSocket=servidor(1200);
+      servidorSocket=servidor(1200);
 
 
      if(servidorSocket==-1){
@@ -241,11 +201,10 @@ void *hilo_HANDLER_CONEXIONES_CONSOLA(void *arg){
           exit(1);
      }
      
-     listen(servidorSocket,5);   
+     listen(servidorSocket,5);    //Aca maximas conexiones, ver de cambiar?
 
      while(1){
           socketCliente = accept(servidorSocket, (struct sockaddr *) &addr, &addrlen);
-
           
           args = malloc(sizeof(struct arg_struct));//cuando se termine el proceso hacer un free de esto
           args->socket=socketCliente;
@@ -299,10 +258,6 @@ void *hilo_CONEXION_CPU(void *arg){
 
 
 
-
-
-
-
 void *hilo_HANDLER_CONEXIONES_CPU(void *arg){
 
      struct arg_struct *args; //Probar de sacar afuera esto?
@@ -320,7 +275,7 @@ void *hilo_HANDLER_CONEXIONES_CPU(void *arg){
           exit(1);
      }
      
-     listen(servidorSocket,5);  
+     listen(servidorSocket,5);  //Aca maximas conexiones, ver de cambiar?
 
      while(1){
           socketCliente = accept(servidorSocket, (struct sockaddr *) &addr, &addrlen);
@@ -334,14 +289,6 @@ void *hilo_HANDLER_CONEXIONES_CPU(void *arg){
 
           printf("acepte%d\n",socketCliente);
      }
-
-
-
-
-
-
-
-
 
 }
 
