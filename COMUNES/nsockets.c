@@ -25,20 +25,14 @@ signed int cliente(char *ip_server, int puerto)
 	int iSocket; 					// Escuchar sobre sock_fd, nuevas conexiones sobre new_fd
 	struct sockaddr_in their_addr; 	// Información sobre mi dirección
 
+	struct timeval  timeout;
+	timeout.tv_sec = 10;
+	timeout.tv_usec = 0;
 
+	fd_set set;
 
-
-    struct timeval  timeout;
-    timeout.tv_sec = 10;
-    timeout.tv_usec = 0;
-
-    fd_set set;
-   
-    int so_error;
-    socklen_t len;
-
-   
-
+	int so_error;
+	socklen_t len;
 
 	// Seteo IP y Puerto
 	their_addr.sin_family = AF_INET;  					// Ordenación de bytes de la máquina
@@ -46,93 +40,86 @@ signed int cliente(char *ip_server, int puerto)
 	their_addr.sin_addr.s_addr = inet_addr(ip_server);
 	memset(&(their_addr.sin_zero), '\0', 8); 			// Poner a cero el resto de la estructura
 
-
-
 	// Pido socket
 	if ((iSocket = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
 		//log_error(logger, "socket: %s", strerror(errno));
-		perror("NSOCKETS: No se pudo conectar cliente\n");
+		perror("NSOCKETS: No pude abrir el socket\n");
 		return 0;
 	}
 
-  
 	fcntl(iSocket, F_SETFL, O_NONBLOCK);
-
-
 
 	// Intento conectar
 	if (connect(iSocket, (struct sockaddr *) &their_addr, sizeof their_addr) == -1) {
 		//log_error(logger, "connect: %s", strerror(errno));
 		//puts("error");
-
-		//return 0;
+		perror("NSOCKETS: No pude conectarme con el cliente\n");
+		return -1;
 	}
 	//return iSocket;
 	FD_ZERO(&set);
-    FD_SET(iSocket, &set);
+	FD_SET(iSocket, &set);
 	select(iSocket+1, NULL, &set, NULL, &timeout);
 
 	len = sizeof(so_error);
 	getsockopt(iSocket, SOL_SOCKET, SO_ERROR, &so_error, &len);
 
-	if(so_error!=0){return 0;} 
+	if(so_error!=0)
+		return 0;
 	//puts(&status);
-    return (iSocket);
-
-
-
+	return (iSocket);
 }
 
 
 /*
-* Abre un socket servidor de tipo AF_INET. Devuelve el descriptor
-* del socket o -1 si hay probleamas
-*/
+ * Abre un socket servidor de tipo AF_INET. Devuelve el descriptor
+ * del socket o -1 si hay probleamas
+ */
 
 int32_t servidor (int puerto){
 	struct sockaddr_in direccion;
 	int descriptor;
 
 	/*
-	* se abre el socket
-	*/
+	 * se abre el socket
+	 */
 	descriptor = socket (AF_INET, SOCK_STREAM, 0);
 	if (descriptor == SOCKET_ERROR)
-	 	return SOCKET_ERROR;
+		return SOCKET_ERROR;
 
 	/*
-	* Se rellenan los campos de la estructura Direccion, necesaria
-	* para la llamada a la funcion bind()
-	*/
+	 * Se rellenan los campos de la estructura Direccion, necesaria
+	 * para la llamada a la funcion bind()
+	 */
 	direccion.sin_family = AF_INET;
 	direccion.sin_port = htons(puerto);
 	//direccion.sin_addr.s_addr =INADDR_ANY;
 	//Se prueba usando LOCALHOST : 127.0.0.1
 	direccion.sin_addr.s_addr = inet_addr("127.0.0.1");
 
-int enable = 1;
-if (setsockopt(descriptor, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(int)) < 0)
-    perror("setsockopt(SO_REUSEADDR) failed");
+	int enable = 1;
+	if (setsockopt(descriptor, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(int)) < 0)
+		perror("setsockopt(SO_REUSEADDR) failed");
 
 
 	if (bind (descriptor, (struct sockaddr *)&direccion, sizeof(direccion)) == SOCKET_ERROR){
 		perror("NSOCKETS: No se pudo blindear\n");
-		
+
 		close (descriptor);
 		return SOCKET_ERROR;
 	}
 
 	/*
-	* Se avisa al sistema que comience a atender llamadas de clientes
-	*/
+	 * Se avisa al sistema que comience a atender llamadas de clientes
+	 */
 	if (listen (descriptor, 1) == SOCKET_ERROR){
 		close (descriptor);
 		return SOCKET_ERROR;
 	}
 
 	/*
-	* Se devuelve el descriptor del socket servidor
-	*/
+	 * Se devuelve el descriptor del socket servidor
+	 */
 	return descriptor;
 }
 
@@ -151,7 +138,7 @@ lectura y escritura
 
 
 
-*/
+ */
 
 
 
@@ -172,79 +159,79 @@ int32_t leer_socket (int32_t nuevo_socket, char *buffer, size_t size)
 
 		if (aux > 0){
 			/*
-			* En caso de leer datos, se incrementa la variable que contiene los datos leidos hasta el momento
-			*/
+			 * En caso de leer datos, se incrementa la variable que contiene los datos leidos hasta el momento
+			 */
 			leido = leido + aux;
 		}
 		else{
 			/*
-			* Si read devuelve 0, es que se cerro el socket. Se devuelven los caracteres leidos hasta ese momento
-			*/
+			 * Si read devuelve 0, es que se cerro el socket. Se devuelven los caracteres leidos hasta ese momento
+			 */
 			if (aux == 0)
 			{
 				return leido;
 			}
 			if (aux == -1){
 				/*
-				* En caso de error:
-				* EINTR se produce hubo una  interrupcion del sistema antes de leer ningun dato. No
-				* es un error realmente.
-				* EGAIN significa que el socket no esta disponible por el  momento.
-				* Ambos errores se tratan con una espera de 100 microsegundos y se vuelve a intentar.
-				* El resto de los posibles errores provocan que salgamos de la funcion con error.
-				*/
+				 * En caso de error:
+				 * EINTR se produce hubo una  interrupcion del sistema antes de leer ningun dato. No
+				 * es un error realmente.
+				 * EGAIN significa que el socket no esta disponible por el  momento.
+				 * Ambos errores se tratan con una espera de 100 microsegundos y se vuelve a intentar.
+				 * El resto de los posibles errores provocan que salgamos de la funcion con error.
+				 */
 
 				//Mover la logica de señales al Sig_handler
 
 				switch (errno){
-					case EINTR:
-					case EAGAIN:
-						usleep (100);
-						break;
-					default:
-						//Se desconecto el Socket
-						return -1;
+				case EINTR:
+				case EAGAIN:
+					usleep (100);
+					break;
+				default:
+					//Se desconecto el Socket
+					return -1;
 				}
 			}
 		}
 	}
 	/*
-	* Se devuelve el total de los caracteres leidos
-	*/
+	 * Se devuelve el total de los caracteres leidos
+	 */
 	return leido;
 }
 
 /*
-* Escribe dato en el socket cliente. Devuelve numero de bytes escritos, o -1 si hay error.
-*/
+ * Escribe dato en el socket cliente. Devuelve numero de bytes escritos, o -1 si hay error.
+ */
 int32_t escribir_socket (int32_t nuevo_socket, char *datos, size_t longitud)
 {
 	size_t escrito = 0;
 	size_t aux = 0;
 
 	/*
-	* Comprobacion de los parametros de entrada
-	*/
+	 * Comprobacion de los parametros de entrada
+	 */
 	if ((nuevo_socket == -1) || (datos == NULL) || (longitud < 1))
 		return -1;
 
 	/*
-	* Bucle hasta que hayamos escrito todos los caracteres que se indicaron.
-	*/
+	 * Bucle hasta que hayamos escrito todos los caracteres que se indicaron.
+	 */
 	while (escrito < longitud){
 		aux = send(nuevo_socket, datos + escrito, longitud - escrito, 0);
 		if (aux > 0){
 			/*
-			* Si se consiguio escribir caracteres, se actualiza la variable escrito
-			*/
+			 * Si se consiguio escribir caracteres, se actualiza la variable escrito
+			 */
 			escrito = escrito + aux;
 		}
 		else
 		{
 			/*
-			* Si se cerro el socket, devolvemos el numero de caracteres leidos.
-			* Si hubo un error, devuelve -1
-			*/
+			 * Si se cerro el socket, devolvemos el numero de caracteres leidos.
+			 * Si hubo un error, devuelve -1
+			 */
 			if (aux == 0){
 				return escrito;
 			}
@@ -256,8 +243,8 @@ int32_t escribir_socket (int32_t nuevo_socket, char *datos, size_t longitud)
 	}
 
 	/*
-	* Devolvemos el total de caracteres leidos
-	*/
+	 * Devolvemos el total de caracteres leidos
+	 */
 	return escrito;
 }
 
@@ -338,46 +325,31 @@ int32_t enviar_paquete(int32_t enlace,t_header header_a_enviar)
 	return res; 		//Devuelvo el size de lo enviado
 }
 
-
-
-
-
-
-
 /*
-
-
-
-
-*/
-
-
-
-/*
-* Se le pasa un socket de servidor y acepta en el una conexion de cliente.
-* devuelve el descriptor del socket del cliente o -1 si hay problemas.
-*/
+ * Se le pasa un socket de servidor y acepta en el una conexion de cliente.
+ * devuelve el descriptor del socket del cliente o -1 si hay problemas.
+ */
 int32_t aceptar_cliente (int descriptor){
 
 	socklen_t longitud_cliente;
 	struct sockaddr cliente;
 	int32_t hijo;
 
-		/*
-		* La llamada a la funcion accept requiere que el parametro
-		* longitud_cliente contenga inicialmente el tamano de la
-		* estructura Cliente que se le pase. A la vuelta de la
-		* funcion, esta variable contiene la longitud de la informacion
-		* util devuelta en Cliente
-		*/
+	/*
+	 * La llamada a la funcion accept requiere que el parametro
+	 * longitud_cliente contenga inicialmente el tamano de la
+	 * estructura Cliente que se le pase. A la vuelta de la
+	 * funcion, esta variable contiene la longitud de la informacion
+	 * util devuelta en Cliente
+	 */
 	longitud_cliente = sizeof(cliente);
 	hijo = accept (descriptor, &cliente, &longitud_cliente);
 	if (hijo == SOCKET_ERROR)
 		return SOCKET_ERROR;
 
-		/*
-		* Se devuelve el descriptor en el que esta "enchufado" el cliente.
-		*/
+	/*
+	 * Se devuelve el descriptor en el que esta "enchufado" el cliente.
+	 */
 	return hijo;
 }
 
@@ -404,8 +376,3 @@ int32_t set_nonblocking(int descriptor){
 		return SOCKET_ERROR;
 	return EXIT_SUCCESS;
 }
-
-
-
-
-
