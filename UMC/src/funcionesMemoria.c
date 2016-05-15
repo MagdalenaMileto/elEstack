@@ -5,6 +5,8 @@
  *      Author: Micaela Paredes
  */
 
+memoria = malloc(MARCOS*MARCO_SIZE); // Memoria total
+
 	void inicializarDireccionesLogicas(void)
 	{
 		int i = 0;

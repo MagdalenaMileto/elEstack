@@ -18,78 +18,43 @@
 #include<commons/config.h>
 #include "../../COMUNES/handshake.h"
 #include<pthread.h>
+#include "globales.h"
 #define PORT 1992
-int cantidadPaginas, tamanioPagina;
+
 
 int main(int argc,char **argv)
 {
-	if (argc != 5)
+	int tablaDePaginas[MARCOS];
+	regPrograma direccionesLogicas[MARCOS];
+
+	t_pagina *memoria = (t_pagina*)malloc(MARCO_SIZE*MARCOS);
+
+	if (argc != 2)
 	{
-		perror("No se ingreso la cantidad de parametros correspondientes");
+		perror("No se paso la cantidad de parametros necesaria\n");
 		return EXIT_FAILURE;
 	}
 
+	int nucleo,cpu,swap;
 
-	t_config* configuracion;
-	configuracion = config_create("Ruta al archivo de configuracion");
+	leerArchivoDeConfiguracion();
 
-	char IP_SWAP[16];
-	int PUERTO_SWAP, PUERTO_NUCLEO, PUERTO_CPU;
-	int MARCOS;
-	int MARCO_SIZE;
+	swap = cliente(IP_SWAP,PUERTO_SWAP);
 
-	if (config_has_property(configuracion,"IP_SWAP"))
-	/* IPSWAP = config_get_string_value(configuracion,"IPSWAP");
-		else
-		{
-		perror("No esta configurada la ip del swap");
-		return 1;
-		}*/
-
-	if (config_has_property(configuracion,"PUERTO_SWAP"))
-		PUERTO_SWAP = config_get_int_value(configuracion,PUERTO_SWAP);
-		else
-		{
-			perror("No esta configurado el puerto del swap");
-			return 1;
-		}
-
-	if (config_has_property(configuracion,"PUERTO_NUCLEO"))
-		PUERTO_NUCLEO = config_get_int_value(configuracion,PUERTO_NUCLEO);
-	else
+	if (!swap)
 	{
-		perror("No esta configurado el puerto del nucleo");
-		return 1;
+		printf("No se pudo abrir el socket a SWAP\n");
+		return EXIT_FAILURE;
 	}
 
-	if (config_has_property(configuracion,"PUERTO_CPU"))
-		PUERTO_CPU = config_get_int_value(configuracion,PUERTO_CPU);
-	else
+	if (swap == -1)
 	{
-		perror("No esta configurado el puerto del cpu");
-		return 1;
+		printf("No se pudo conectar al SWAP\n");
+		return EXIT_FAILURE;
 	}
 
-
-	const int nucleoport = 1200;
-	const int cpuport = 1205;
-
-	struct sockaddr_in direccionNucleo;
-	direccionNucleo.sin_family = AF_INET;
-	direccionNucleo.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
-	direccionNucleo.sin_port = htons(nucleoport);
-
-	struct sockaddr_in direccionCPU;
-	direccionCPU.sin_family = AF_INET;
-	direccionCPU.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
-	direccionCPU.sin_port = htons(cpuport);
-
-
-	struct sockaddr_in direccionSwap;
-	direccionSwap.sin_family = AF_INET;
-	direccionSwap.sin_addr.s_addr = inet_addr(argv[1]);
-	direccionSwap.sin_port = htons(atoi(argv[2]));
-
+	nucleo = servidor(PUERTO_NUCLEO);
+	cpu = servidor(PUERTO_CPU);
 
 	int listenernucleo, listenercpu;	// Descriptor de socket a la escucha
 	int nucleofd,cpufd,swapfd;	// Descriptor de socket de nueva conexión aceptada
@@ -97,79 +62,6 @@ int main(int argc,char **argv)
 	int mensajeNucleo, mensajeCPU;
 	int yes=1;	// Para setsockopt() SO_REUSEADDR, más abajo
 	unsigned int addrlen = sizeof(struct sockaddr_in);
-
-
-	if ((listenernucleo = socket(AF_INET, SOCK_STREAM, 0)) == -1)
-	{
-		perror("socket");
-		exit(1);
-	}
-
-	if ((listenercpu = socket(AF_INET, SOCK_STREAM, 0)) == -1)
-	{
-			perror("socket");
-			exit(1);
-	}
-
-	if ((swapfd = socket(AF_INET, SOCK_STREAM, 0)) == -1)
-	{
-			perror("socket");
-			exit(1);
-	}
-
-	// Obviar el mensaje "address already in use"
-	if (setsockopt(listenernucleo, SOL_SOCKET, SO_REUSEADDR, &yes,sizeof(int)) == -1)
-	{
-		perror("setsockopt");
-		exit(1);
-	}
-
-	if (setsockopt(listenercpu, SOL_SOCKET, SO_REUSEADDR, &yes,sizeof(int)) == -1)
-	{
-		perror("setsockopt");
-		exit(1);
-	}
-
-	if (setsockopt(swapfd, SOL_SOCKET, SO_REUSEADDR, &yes,sizeof(int)) == -1)
-	{
-		perror("setsockopt");
-		exit(1);
-	}
-
-
-	if (bind(listenernucleo, (struct sockaddr*)&direccionNucleo, sizeof(direccionNucleo)) == -1)
-	{
-		perror("bind");
-
-		exit(1);
-	}
-
-	if (bind(listenercpu, (struct sockaddr*)&direccionCPU, sizeof(direccionCPU)) == -1)
-	{
-		perror("bind");
-
-		exit(1);
-	}
-
-	// Escuchar
-	if (listen(listenernucleo, 10) == -1)
-	{
-		perror("listen");
-		exit(1);
-	}
-
-	if (listen(listenercpu, 10) == -1)
-	{
-		perror("listen");
-		exit(1);
-	}
-
-
-	if(connect(swapfd,(void*)&direccionSwap,sizeof(direccionSwap)) != 0)
-	{
-		perror("No se pudo conectar al swap.");
-	}
-
 
 	// Gestionar las conexiones
 
@@ -179,7 +71,7 @@ int main(int argc,char **argv)
 	{
 		perror("accept");
 	}
-		else
+	else
 		{
 
 			printf("UMC: Nueva conexion desde %s en " "socket %d\n", inet_ntoa(direccionNucleo.sin_addr),nucleofd);
@@ -205,7 +97,7 @@ int main(int argc,char **argv)
 	{
 		perror("accept");
 	}
-		else
+	else
 		{
 
 		printf("UMC: Nueva conexion desde %s en " "socket %d\n", inet_ntoa(direccionCPU.sin_addr),cpufd);
