@@ -1,5 +1,5 @@
 /*
- * estructurasControl.h
+ *  estructurasControl.h
  *
  *	Interfaces para los distintos tipos de estructuras de control
  *	requeridos por los distintos modulos
@@ -7,28 +7,21 @@
  *  Created on: 26/4/2016
  *      Author: Franco Albornoz
  */
-#ifndef PARSER_H_
+
 #include <parser/parser.h>
-#endif
+#include <stdint.h>
 
 #ifndef ESTRUCTURASCONTROL_H_
 #define ESTRUCTURASCONTROL_H_
 
 // Estructura para el PCB
-// Faltan el indice de codigo y el indice de etiquetas
-
-
-typedef struct __attribute__((packed)){
+typedef struct __attribute__((packed))t_pcb{
 	int pid;
 	unsigned int pc;
 	unsigned int codePages;
+	u_int16_t *codeIndex;
+	void *labelIndex;	// Hace falta definir bien esto
 	t_puntero sc;
 }t_pcb;
-
-
-
-
-
-
 
 #endif /* ESTRUCTURASCONTROL_H_ */
