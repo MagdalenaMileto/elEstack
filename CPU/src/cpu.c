@@ -6,21 +6,21 @@
  */
 
 
-#include<stdlib.h>
-#include<stdio.h>
-#include<string.h>
-#include<arpa/inet.h>
-#include<sys/socket.h>
-#include<sys/types.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+#include <arpa/inet.h>
+#include <sys/socket.h>
+#include <sys/types.h>
 #include <netinet/in.h>
-#include<netinet/ip.h>
-#include<unistd.h>
-#include<parser/parser.h>
+#include <netinet/ip.h>
+#include <unistd.h>
+#include <parser/parser.h>
 #include <parser/sintax.h>
 #include <parser/metadata_program.h>
+#include "primitivas.h"
 #include "../../COMUNES/nsockets.h"
 #include "../../COMUNES/estructurasControl.h"
-#include "primitivas.h"
 #include "../../COMUNES/handshake.h"
 
 /* El programa recibe la IP y puerto del nucleo como primer y segundo parametros
@@ -37,53 +37,34 @@ int main(int argc,char **argv) {
 	int maxfd = 3;				// Indice de maximo FD
 	char buffer[100];			// Bufer para send/recv
 
-struct timeval tv;			// Estructura para select()
-tv.tv_sec = 2;
+	struct timeval tv;			// Estructura para select()
+	tv.tv_sec = 2;
 	tv.tv_usec = 500000;
 
 	fd_set readfds,masterfds;	// Estructuras para select()
 	FD_ZERO(&readfds);
 	FD_ZERO(&masterfds);
 
-	struct sockaddr_in nucleoAddress;
-	nucleoAddress.sin_family = AF_INET;
-	nucleoAddress.sin_addr.s_addr = inet_addr(argv[1]);
-	nucleoAddress.sin_port = htons(atoi(argv[2]));
+	int nucleo = cliente(argv[1],argv[2]);
 
-	struct sockaddr_in umcAddress;
-	umcAddress.sin_family = AF_INET;
-	umcAddress.sin_addr.s_addr = inet_addr(argv[3]);
-	umcAddress.sin_port = htons(atoi(argv[4]));
+	//	if(handshakeOut('c','n',nucleo))
+	//	{
+	//		perror("No me conecte con un nucleo\n");
+	//		close(nucleo);
+	//		return 1;
+	//	}
 
-	int nucleo = socket(AF_INET,SOCK_STREAM,0);
-	if (nucleo>maxfd)
-		maxfd = nucleo;			// Se actualiza el indice de maximo fd
-	if(connect(nucleo,(void*)&nucleoAddress,sizeof(nucleoAddress)) != 0) {
-		perror("CPU: No se pudo conectar al nucleo.");
-		return EXIT_FAILURE;
-
-	}
-//	if(handshakeOut('c','n',nucleo))
-//	{
-//		perror("No me conecte con un nucleo\n");
-//		close(nucleo);
-//		return 1;
-//	}
 	FD_SET(nucleo,&masterfds);	// Se agrega socket a la lista de fds
 
-	int umc = socket(AF_INET,SOCK_STREAM,0);
-	if (umc>maxfd)
-		maxfd = umc;			// Se actualiza el indice de maximo fd
-	if(connect(umc,(void*)&umcAddress,sizeof(umcAddress)) != 0) {
-		perror("CPU: No se pudo conectar a la umc.");
-		//return EXIT_FAILURE;
-	}
-//	if(handshakeOut('c','u',umc))
-//	{
-//		perror("No me conecte con la UMC\n");
-//		close(umc);
-//		return 1;
-//	}
+	int umc = cliente(argv[3],argv[4]);
+
+	//	if(handshakeOut('c','u',umc))
+	//	{
+	//		perror("No me conecte con la UMC\n");
+	//		close(umc);
+	//		return 1;
+	//	}
+
 	FD_SET(umc,&masterfds);		// Se agrega socket a la lista de fds
 
 	t_pcb pcb;					//Declaracion e inicializacion del PCB
@@ -106,39 +87,23 @@ tv.tv_sec = 2;
 	primitivas.AnSISOP_obtenerValorCompartida = (void*)&obtenerValorCompartida;
 	primitivas.AnSISOP_retornar = (void*)&retornar;
 
-	while(1) {
-	readfds = masterfds;	// Copio el struct con fds al auxiliar para read
+	while(1)
+	{
+		readfds = masterfds;	// Copio el struct con fds al auxiliar para read
 		select(maxfd+1,&readfds,NULL,NULL,&tv);
 		if (FD_ISSET(nucleo, &readfds))		// Si el nucleo envio algo
 		{
-		recv(nucleo,buffer,sizeof(buffer),MSG_DONTWAIT);
-		printf("CPU: El nucleo informa lo siguiente: %s\nMensaje enviado a la UMC.\n",buffer);
-		
-
-		/*********************
-
-
-		creo que yo no deberia hacer hacer el FD_CLR y lo deberia hacer el recv pero si no lo hago se queda como que siempre esta recibiendo mensaje
-		y aparece el mismo mensaje miles de veces en la pantalla en el caso de un loop (si sacas el return exit y dejas que loopee sin el fdclear)
-
-		***********************/
-		send(umc,buffer,sizeof(buffer),0);
-
-
-		FD_CLR(nucleo,&masterfds);
+			recv(nucleo,buffer,sizeof(buffer),MSG_DONTWAIT);
+			printf("CPU: El nucleo informa lo siguiente: %s\nMensaje enviado a la UMC.\n",buffer);
+			send(umc,buffer,sizeof(buffer),0);
+			FD_CLR(nucleo,&masterfds);
+			analizadorLinea("a = b + c",&primitivas,&primitivas_kernel);
+			printf("CPU: Cierra\n");
+			return EXIT_SUCCESS;
+		}
+		//recv(nucleo,&pcb,sizeof(pcb),0);		// El CPU nos envia una copia del PCB o nos envia su direccion en la UMC?
 		close(nucleo);
 		close(umc);
-
-
-		analizadorLinea("a = b + c",&primitivas,&primitivas_kernel);
-
-		printf("CPU: Cierra\n");
-		return EXIT_SUCCESS;
-	   
-
-	}
-		//recv(nucleo,&pcb,sizeof(pcb),0);		// El CPU nos envia una copia del PCB o nos envia su direccion en la UMC?
-	
 	}
 
 	close(nucleo);
