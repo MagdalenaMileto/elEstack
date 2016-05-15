@@ -14,6 +14,23 @@
 #ifndef ESTRUCTURASCONTROL_H_
 #define ESTRUCTURASCONTROL_H_
 
+// Estructura para identificar variables con una etiqueta y una posicion en el stack
+typedef struct variables
+{
+	char etiqueta;
+	t_puntero pos;
+} variables;
+
+// Estructura de contexto para el stack
+typedef struct context
+{
+	int pos;
+	t_puntero *args;
+	variables *vars;
+	int retPos;
+	t_puntero retVar;
+};
+
 // Estructura para el PCB
 typedef struct __attribute__((packed))t_pcb{
 	int pid;
