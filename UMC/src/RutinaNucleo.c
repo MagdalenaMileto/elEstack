@@ -8,13 +8,19 @@
 #include<stdio.h>
 #include<stdio.h>
 #include<strings.h>
+
 // Gestionar rutina del nucleo
 
-void rutinaNucleo(int nucleofd)
+typedef struct arg_sockets{
+	int socket;
+}arg_sockets;
+void *rutinaNucleo(void *argumentoSocket)
 {
 	int buf;
 	int bytesRecibidos;
-	if ((bytesRecibidos = recv(nucleofd, &buf, sizeof(buf), 0)) <= 0)
+	arg_sockets *argumentos = (arg_sockets *)argumentoSocket;;
+
+	if ((bytesRecibidos = recv(argumentos->socket, &buf, sizeof(buf), 0)) <= 0)
 	{
 
 		// Error o conexión cerrada por el cliente
@@ -22,9 +28,9 @@ void rutinaNucleo(int nucleofd)
 		{
 
 			// Conexión cerrada
-			printf("UMC: Select: El nucleo %d se ha desconectado\n", nucleofd);
+			printf("UMC: Select: El nucleo %d se ha desconectado\n", argumentos->socket);
 		} else
 			perror("recv");
 	}
 		bzero(&buf,sizeof(buf));            // Vaciar buffer
-	}
+}
