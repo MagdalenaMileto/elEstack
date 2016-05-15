@@ -29,7 +29,7 @@ typedef struct context
 	variables *vars;
 	int retPos;
 	t_puntero retVar;
-};
+}context;
 
 // Estructura para el PCB
 typedef struct __attribute__((packed))t_pcb{

@@ -45,7 +45,7 @@ int main(int argc,char **argv) {
 	FD_ZERO(&readfds);
 	FD_ZERO(&masterfds);
 
-	int nucleo = cliente(argv[1],argv[2]);
+	int nucleo = cliente(argv[1],atoi(argv[2]));
 
 	//	if(handshakeOut('c','n',nucleo))
 	//	{
@@ -56,7 +56,7 @@ int main(int argc,char **argv) {
 
 	FD_SET(nucleo,&masterfds);	// Se agrega socket a la lista de fds
 
-	int umc = cliente(argv[3],argv[4]);
+	int umc = cliente(argv[3],atoi(argv[4]));
 
 	//	if(handshakeOut('c','u',umc))
 	//	{
