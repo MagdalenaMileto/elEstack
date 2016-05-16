@@ -18,7 +18,6 @@ void finalizarPrograma(int idProg);
 void almacenarBytes(int pagina, int offset, int tamanioBuffer, int buffer[tamanioBuffer]);
 void solicitarBytes(int pagina, int offset, int cantidadBytes);
 void cambioDeProcesoActivo(int idProg);
-void rutinaNucleo(int cpufd);
 void leerArchivoDeConfiguracion(void);
 char IP_SWAP[16];
 int PUERTO_SWAP, PUERTO_NUCLEO, PUERTO_CPU;

@@ -16,7 +16,7 @@ typedef struct arg_sockets{
 
 // Gestionar rutina del nucleo
 
-void *rutinaCPU(void *argumentoSocket)
+*rutinaCPU(void *argumentoSocket)
 {
 	int buf;
 	int bytesRecibidos;

@@ -9,12 +9,13 @@
 #include<stdio.h>
 #include<strings.h>
 
-// Gestionar rutina del nucleo
-
 typedef struct arg_sockets{
 	int socket;
 }arg_sockets;
-void *rutinaNucleo(void *argumentoSocket)
+
+// Gestionar rutina del nucleo
+
+*rutinaNucleo(void *argumentoSocket)
 {
 	int buf;
 	int bytesRecibidos;

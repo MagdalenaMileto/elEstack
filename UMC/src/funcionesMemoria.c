@@ -5,26 +5,21 @@
  *      Author: Micaela Paredes
  */
 
-memoria = malloc(MARCOS*MARCO_SIZE); // Memoria total
+#include "umc.c"
 
 	void inicializarDireccionesLogicas(void)
 	{
 		int i = 0;
-		for(;i <= (cantidadPaginas - 1); i++)
+		for(;i <= (MARCOS - 1); i++)
 		{
-			direccionesLogicas[i].idPrograma = 0;
-			int c = 0;
-			for(;c <= (tamanioPagina - 1); c++)
-			{
-				direccionesLogicas[i].pagina.offset[c] = c;
-			}
+			direccionesLogicas[i] = 0;
 		}
 	}
 
 	void inicializarTablaDePaginas(void)
 	{
 		int i = 0;
-		for(;i<=cantidadPaginas; i++)
+		for(;i<=MARCO_SIZE; i++)
 		{
 			tablaDePaginas[i] = 0;
 		}
@@ -33,17 +28,17 @@ memoria = malloc(MARCOS*MARCO_SIZE); // Memoria total
 	void inicializarPrograma(int idProg, int paginasRequeridas)
 	{
 		int c = 0;
-		while(direccionesLogicas[c].idPrograma == 0)
+		while(direccionesLogicas[c] == 0)
 		{
 			c++;
 		}
 		int limite = c + paginasRequeridas;
 		for(; c<= limite; c++)
 		{
-			direccionesLogicas[c].idPrograma = idProg;
+			direccionesLogicas[c] = idProg;
 		}
 			// void informarInicializacionASwap(int paginasRequeridas, processid){}
-		sleep(1);
+
 	}
 
 

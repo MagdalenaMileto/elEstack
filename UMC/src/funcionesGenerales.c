@@ -5,8 +5,8 @@
  *      Author: utnso
  */
 #include <commons/config.h>
-#include "globales.h"
 #include <stdlib.h>
+#include "funciones.h"
 
 // leer archivo de configuracion
 

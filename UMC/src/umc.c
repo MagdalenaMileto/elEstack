@@ -18,16 +18,23 @@
 #include<commons/config.h>
 #include "../../COMUNES/handshake.h"
 #include<pthread.h>
-#include "globales.h"
 #define PORT 1992
 
+char IP_SWAP[16];
+int PUERTO_SWAP, PUERTO_NUCLEO, PUERTO_CPU;
+int MARCOS,MARCO_SIZE;
+
+typedef struct{
+	char offset[MARCO_SIZE];
+}t_pagina;
+
+int tablaDePaginas[MARCOS];
+int direccionesLogicas[MARCOS];
+
+t_pagina *memoria = (t_pagina*)malloc(MARCO_SIZE*MARCOS);
 
 int main(int argc,char **argv)
 {
-	int tablaDePaginas[MARCOS];
-	regPrograma direccionesLogicas[MARCOS];
-
-	t_pagina *memoria = (t_pagina*)malloc(MARCO_SIZE*MARCOS);
 
 	if (argc != 2)
 	{
