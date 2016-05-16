@@ -47,3 +47,46 @@ int main(void) {
 	printf("CONSOLA: Cierro\n");
 	return 0;
 }
+
+
+
+int lecturaDeScript(int argc, char **argv)
+{
+	FILE* script;
+	char buffer[100];
+
+  if(argc==1)
+  {
+    printf("Debe ingresar el nombre del archivo fuente (en lenguaje AnSISOP) en linea de comando.\n");
+    exit(1);
+  }
+
+  if(argc!=3)
+  {
+	  printf("Numero incorrecto de argumentos.\n");
+  }
+
+  if((script= fopen(argv[1],"r"))==NULL)
+  {
+    printf("Error al abrir %s\n",argv[1]);
+    exit(2);
+  }
+
+  printf("Cantidad de bytes en el archivo %s: %ld\n",argv[1],sizeof(argv[1]));
+
+  if(sizeof(argv[1]) > 0)
+  {
+	  script = fopen (argv[1], "r");
+
+	   	while (feof(script) == 0)
+	   	{
+	   		fscanf(script, "%s" ,buffer);
+	   		printf("%s",buffer);
+	   	}
+
+	   	fclose (script);
+  }
+  return 0;
+}
+
+
