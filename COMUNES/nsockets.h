@@ -24,6 +24,7 @@ int32_t cerrar_socket (int descriptor);
 int32_t liberar_puerto (int descriptor);
 int32_t set_nonblocking(int descriptor);
 signed int cliente(char *ip_server, int puerto);
+int enviar_id(int conexion,int id);
 int32_t servidor (int puerto);
 
 #endif /* NSOCKETS_H_ */

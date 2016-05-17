@@ -47,16 +47,16 @@ signed int cliente(char *ip_server, int puerto)
 		return 0;
 	}
 
-	fcntl(iSocket, F_SETFL, O_NONBLOCK);
+	//fcntl(iSocket, F_SETFL, O_NONBLOCK);
 
 	// Intento conectar
 	if (connect(iSocket, (struct sockaddr *) &their_addr, sizeof their_addr) == -1) {
 		//log_error(logger, "connect: %s", strerror(errno));
 		//puts("error");
-		perror("NSOCKETS: No pude conectarme con el cliente\n");
-		return -1;
+		perror("NSOCKETS: No pude conectarme con el cliente\n"); //Esto no esta andando
+		return -0;
 	}
-	//return iSocket;
+	return iSocket;
 	FD_ZERO(&set);
 	FD_SET(iSocket, &set);
 	select(iSocket+1, NULL, &set, NULL, &timeout);
@@ -150,8 +150,10 @@ int32_t leer_socket (int32_t nuevo_socket, char *buffer, size_t size)
 
 	/*Comprobacion de que los parametros de entrada son correctos*/
 
-	if ((nuevo_socket == -1) || (buffer == NULL) || (size < 1))
-		return -1;
+	if ((nuevo_socket == -1) || (buffer == NULL) || (size < 1)){
+return -1;
+}
+		
 
 	/* Mientras no hayamos leido todos los datos solicitados*/
 	while (leido < size){
@@ -198,13 +200,26 @@ int32_t leer_socket (int32_t nuevo_socket, char *buffer, size_t size)
 	/*
 	 * Se devuelve el total de los caracteres leidos
 	 */
+	
 	return leido;
 }
 
 /*
  * Escribe dato en el socket cliente. Devuelve numero de bytes escritos, o -1 si hay error.
  */
-int32_t escribir_socket (int32_t nuevo_socket, char *datos, size_t longitud)
+
+
+int enviar_id(int conexion,int id){
+	t_header var;
+	var.id=id;
+	var.size = sizeof(int);
+	return	enviar_paquete(conexion,var);
+
+}
+
+
+
+int escribir_socket (int32_t nuevo_socket, char *datos, size_t longitud)
 {
 	size_t escrito = 0;
 	size_t aux = 0;
@@ -212,12 +227,19 @@ int32_t escribir_socket (int32_t nuevo_socket, char *datos, size_t longitud)
 	/*
 	 * Comprobacion de los parametros de entrada
 	 */
-	if ((nuevo_socket == -1) || (datos == NULL) || (longitud < 1))
+
+	if ((nuevo_socket == -1) || (datos == NULL) || (longitud < 1)){
+	
 		return -1;
+	}
+		
+		
 
 	/*
 	 * Bucle hasta que hayamos escrito todos los caracteres que se indicaron.
 	 */
+
+	 
 	while (escrito < longitud){
 		aux = send(nuevo_socket, datos + escrito, longitud - escrito, 0);
 		if (aux > 0){
@@ -233,18 +255,16 @@ int32_t escribir_socket (int32_t nuevo_socket, char *datos, size_t longitud)
 			 * Si hubo un error, devuelve -1
 			 */
 			if (aux == 0){
+					
 				return escrito;
 			}
 			else
-			{
+			{		
 				return -1;
 			}
 		}
 	}
-
-	/*
-	 * Devolvemos el total de caracteres leidos
-	 */
+	
 	return escrito;
 }
 
@@ -277,7 +297,7 @@ int32_t recibir_paquete(int32_t enlace,t_header* header_a_recibir)
 			memcpy(header_a_recibir->data,buffer,header_a_recibir->size);
 		}
 		else
-		{
+		{	
 			res = -1;	//En caso de que no reciba nada
 		}
 	}else{
@@ -294,7 +314,7 @@ int32_t recibir_paquete(int32_t enlace,t_header* header_a_recibir)
 int32_t enviar_paquete(int32_t enlace,t_header header_a_enviar)
 {
 
-	int32_t res;
+	int res;
 	size_t size_t_header;
 
 	size_t_header = sizeof(t_header);
@@ -302,6 +322,7 @@ int32_t enviar_paquete(int32_t enlace,t_header header_a_enviar)
 	if (enlace != 0)
 	{
 		res = escribir_socket(enlace,(char*)&header_a_enviar, size_t_header);
+		
 		if(res != size_t_header)
 		{
 			return -1;
@@ -309,15 +330,18 @@ int32_t enviar_paquete(int32_t enlace,t_header header_a_enviar)
 		if(header_a_enviar.size != 0)
 		{
 			res = escribir_socket(enlace,header_a_enviar.data,header_a_enviar.size);
+		
 
+			
 			if(res != header_a_enviar.size)
 			{
+				
 				return -1;
 			}
 		}
 	}
 	else
-	{
+	{ 
 		res = -1;
 	}
 

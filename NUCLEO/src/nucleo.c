@@ -5,11 +5,14 @@
  *      Author: nico
  */
 
+
+
 #include "nucleo.h"
 
 
-/* VARIABLES GLOBALES */
 
+/* VARIABLES GLOBALES */
+int * CONSTANTE;
 
 typedef struct {
   int puerto_programas;
@@ -70,6 +73,7 @@ char mensaje[100];
 
 
 int main(){
+    
       signal(SIGINT, intHandler);
 
       printf("NUCLEO: INICIÓ\n");
@@ -89,7 +93,7 @@ int main(){
       pthread_t mock;
       pthread_create(&mock, NULL, hilo_mock, NULL);
 
-
+      sleep(3);
 
 
      
@@ -104,7 +108,7 @@ int main(){
  
       pthread_mutex_init(&mutex_cola_new,NULL);
 
-      //conectarUmc();
+     
 
       pthread_t thPCP, thPLP,thCONEXIONES_CPU,thCONEXIONES_CONSOLA;
 
@@ -115,11 +119,17 @@ int main(){
       pthread_create(&thPCP, NULL, hilo_PCP, NULL);
       pthread_create(&thPLP, NULL, hilo_PLP, NULL);
 
+
+       conectarUmc();
+
       pthread_join(thCONEXIONES_CONSOLA, NULL);
       pthread_join(thCONEXIONES_CPU, NULL);
 
       pthread_join(thPCP, NULL);
 	pthread_join(thPLP, NULL);
+
+
+
 
 	//Terminamos
 }
@@ -130,11 +140,38 @@ void conectarUmc(void){
 
   //Handlear errores; El programa debe salir si no conecta umc? remite conexion? que hacemo?
 
-  umc = cliente("127.0.0.1",1200);
+  umc = cliente("127.0.0.1",1207);
   if(umc==0){
     printf("NUCLEO: No encontre UMC me cierro :'( \n");
       exit (EXIT_FAILURE);
  }
+ printf("Nucleo: Conecté bien umc %d\n",umc);
+
+
+
+        t_header header;
+        t_header paqueteRecibido;
+
+        header.id=202;
+        header.size=sizeof(int);
+        header.data=mensaje;
+
+
+        //Handlear errores  ****** ****** ****** ****** ****** ****** ****** ****** ****** ****** ******
+        int estado;
+        estado=enviar_id(umc, 202);
+        estado=recibir_paquete(umc,&paqueteRecibido);
+
+
+        if(paqueteRecibido.id!=201){
+            printf("NUCLEO:Handshake invalido con umc\n");  
+        }else{
+            printf("NUCLEO:Handshake exitoso con umc\n");
+        }
+
+
+
+
 
 }
 
@@ -249,7 +286,8 @@ void *hilo_CONEXION_CONSOLA(void *arg){
     proceso = crearPrograma();
 
       while(1){
-            t_header estructuraARecibir;
+            t_header estructuraARecibir; // Esto tiene que ser un puntero cambiar.....
+
             estado=recibir_paquete(args->socket,&estructuraARecibir);
 
             if(estado==-1){
@@ -258,14 +296,14 @@ void *hilo_CONEXION_CONSOLA(void *arg){
                   //Aca deberia eliminar el programa pcb cerrar socket blablabla si ejecuta cpu decile ya fue man UMC
             }
 
-      
-            if(estructuraARecibir.id==101){
-            
-                  //pthread_mutex_lock(&mutex_cola_new);
-                  //queue_push(cola_new, proceso);
-                  //pthread_mutex_unlock(&mutex_cola_new);
-                  mandarCodigoAUmc(estructuraARecibir.data,estructuraARecibir.size);
-                  //printf("NUCLEO: Recibi CONSOLA %s\n",(char*)estructuraARecibir.data);
+            switch(estructuraARecibir.id){
+              case 101:
+                mandarCodigoAUmc(estructuraARecibir.data,estructuraARecibir.size);
+                //pthread_mutex_lock(&mutex_cola_new);
+                //queue_push(cola_new, proceso);
+                //pthread_mutex_unlock(&mutex_cola_new);
+              break;
+
             }
 
           
@@ -285,7 +323,7 @@ void *hilo_HANDLER_CONEXIONES_CONSOLA(void *arg){
       socklen_t addrlen = sizeof(addr);
       struct arg_struct *args; //Probar de sacar afuera esto?
 
-      servidorSocket=servidor(1200);
+      servidorSocket=servidor(1209);
 
 
      if(servidorSocket==-1){
@@ -293,7 +331,7 @@ void *hilo_HANDLER_CONEXIONES_CONSOLA(void *arg){
           close(servidorSocket);
           exit(1);
      }
-     
+
      listen(servidorSocket,5);    //Aca maximas conexiones, ver de cambiar?
 
      while(1){
@@ -305,7 +343,7 @@ void *hilo_HANDLER_CONEXIONES_CONSOLA(void *arg){
           pthread_t thCONEXION_CONSOLA;
           pthread_create(&thCONEXION_CONSOLA, NULL, hilo_CONEXION_CONSOLA, (void *)args);
 
-          printf("acepte%d\n",socketCliente);
+          printf("NUCLEO: Acepte consola %d\n",socketCliente);
      }
 
 }
@@ -337,10 +375,13 @@ void *hilo_CONEXION_CPU(void *arg){
                //Aca deberia eliminar el programa pcb cerrar socket blablabla si ejecuta cpu decile ya fue man UMC
           }
 
-          
-          if(estructuraARecibir.id==101){
+            switch(estructuraARecibir.id){
+              case 101:
+              break;
 
-          }
+            }
+
+
           estructuraARecibir.id=0;
           free(estructuraARecibir.data);
           
@@ -359,7 +400,7 @@ void *hilo_HANDLER_CONEXIONES_CPU(void *arg){
      socklen_t addrlen = sizeof(addr);
 
 
-     servidorSocket=servidor(1201);
+     servidorSocket=servidor(1202);
 
 
      if(servidorSocket==-1){
@@ -381,7 +422,7 @@ void *hilo_HANDLER_CONEXIONES_CPU(void *arg){
           pthread_t thCONEXION_CPU;
           pthread_create(&thCONEXION_CPU, NULL, hilo_CONEXION_CPU, (void *)args);
 
-          printf("acepte%d\n",socketCliente);
+          printf("NUCLEO: Acepte nueva CPU %d\n",socketCliente);
      }
 
 }
@@ -422,59 +463,84 @@ int umcMock,clienteUmc;
 void *hilo_mock(void *arg){
 
 
-
+      struct sockaddr_in addr;  socklen_t addrlen = sizeof(addr);
 
       pthread_t thmock_consola, thmock_cpu;
 
-      pthread_create(&thmock_consola, NULL, hilo_mock_consola, NULL);
+     pthread_create(&thmock_consola, NULL, hilo_mock_consola, NULL);
       pthread_create(&thmock_cpu, NULL, hilo_mock_cpu, NULL);
   
 
 
-      umcMock=servidor(5001);
+      umcMock=servidor(1207);
       listen(umcMock,5);   
       clienteUmc = accept(umcMock, (struct sockaddr *) &addr, &addrlen);
 
 
-      t_header estructuraARecibir;
-      sleep(1);
+
+      printf("UMCMOCK: Acepte conexion%d\n",clienteUmc);
+
+       
+
+        t_header header;
+        t_header paqueteRecibido;
+
+
+
+        int estado;
+       estado=enviar_id(clienteUmc, 201);
+
+
+        recibir_paquete(clienteUmc,&paqueteRecibido);
+
+        if(paqueteRecibido.id==202){
+            printf("UMCMOCK:Handshake exitoso\n");
+        }else{
+            printf("UMCMOCK:Handshake invalido\n");  
+        }
 
 
 
 
-      recibir_paquete(clienteUmc,&estructuraARecibir);
 
 
+      while(1){}
 
 
-
+     
 
 }
 
 
 
 void *hilo_mock_consola(void *arg){
+      int consola;
 
-cliente2 = cliente("127.0.0.1",5001);
+      sleep(4);
 
-
-      
+      consola = cliente("127.0.0.1",1209);
+      printf("CONSOLAMOCK: Conecté%d\n",consola);
       t_header header;
 
       header.id = 101;
       header.size = strlen(mensaje);
       header.data = mensaje;
-            
+          
+          sleep(10);
 
-
-
+close(consola);
+   
 
 }
 
 
 void *hilo_mock_cpu(void *arg){
+      int cpu;
 
-      cliente2 = cliente("127.0.0.1",5001);
+
+      sleep(5);
+      cpu = cliente("127.0.0.1",1202);
+      printf("CPUMOCK: Conecté%d\n",cpu);
 
 
       
@@ -483,8 +549,8 @@ void *hilo_mock_cpu(void *arg){
       header.id = 101;
       header.size = strlen(mensaje);
       header.data = mensaje;
-            
-
+           // close(cpu);
+      while(1){}
 
 }
 
