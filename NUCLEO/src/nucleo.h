@@ -48,8 +48,18 @@ void *hilo_PCP(void *arg);
 
 
 
+void *hilo_mock(void *arg);
+
+
+void *hilo_mock_consola(void *arg);
+void *hilo_mock_cpu(void *arg);
+
+
+
+
+
 void *hilo_CONEXION_CONSOLA(void *arg);
-void *hilo_CONEXION_CONSOLA(void *arg);
+void *hilo_CONEXION_CPU(void *arg);
 
 
 void *hilo_HANDLER_CONEXIONES_CPU(void *arg);

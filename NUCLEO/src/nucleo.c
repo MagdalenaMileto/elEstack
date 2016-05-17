@@ -82,6 +82,16 @@ int main(){
       config_kernel->sizePagina=10;
 
 
+
+//MOCKS
+
+
+      pthread_t mock;
+      pthread_create(&mock, NULL, hilo_mock, NULL);
+
+
+
+
      
       //Inicializaciones -> lo podriamos meter en una funcion externa
 
@@ -389,5 +399,92 @@ void intHandler(int dummy) {
     printf("NUCLEO: CERRÓ\n");
     printf("cierro Todo...\n\n");
     exit(0);
+}
+
+
+
+/********************************************************************************
+*********************************************************************************
+*********************************************************************************
+************************MOCKS    ************************************************
+*********************************************************************************
+*********************************************************************************
+*********************************************************************************
+*/
+
+
+
+
+
+
+int umcMock,clienteUmc;
+
+void *hilo_mock(void *arg){
+
+
+
+
+      pthread_t thmock_consola, thmock_cpu;
+
+      pthread_create(&thmock_consola, NULL, hilo_mock_consola, NULL);
+      pthread_create(&thmock_cpu, NULL, hilo_mock_cpu, NULL);
+  
+
+
+      umcMock=servidor(5001);
+      listen(umcMock,5);   
+      clienteUmc = accept(umcMock, (struct sockaddr *) &addr, &addrlen);
+
+
+      t_header estructuraARecibir;
+      sleep(1);
+
+
+
+
+      recibir_paquete(clienteUmc,&estructuraARecibir);
+
+
+
+
+
+
+}
+
+
+
+void *hilo_mock_consola(void *arg){
+
+cliente2 = cliente("127.0.0.1",5001);
+
+
+      
+      t_header header;
+
+      header.id = 101;
+      header.size = strlen(mensaje);
+      header.data = mensaje;
+            
+
+
+
+
+}
+
+
+void *hilo_mock_cpu(void *arg){
+
+      cliente2 = cliente("127.0.0.1",5001);
+
+
+      
+      t_header header;
+
+      header.id = 101;
+      header.size = strlen(mensaje);
+      header.data = mensaje;
+            
+
+
 }
 
