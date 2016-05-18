@@ -411,10 +411,6 @@ int recibir_id(int socket){
 
 }
 
-
-
-
-
 int handshake(int socket, int enviar, int recibir){
 			if(enviar_id(socket,enviar)==-1) return -1;
 
@@ -424,7 +420,6 @@ int handshake(int socket, int enviar, int recibir){
 			if(temp==recibir) return 1;
 
 			return -1;
-
 
 
 }

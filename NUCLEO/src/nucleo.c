@@ -281,6 +281,7 @@ void *hilo_CONEXION_CONSOLA(void *arg){
         return;
     }
     printf("NUCLEO:Handshake valido consola, creando proceso %d\n",args->socket);
+
     proceso = crearPrograma();
 
       while(1){
