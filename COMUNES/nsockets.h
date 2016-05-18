@@ -26,5 +26,7 @@ int32_t set_nonblocking(int descriptor);
 signed int cliente(char *ip_server, int puerto);
 int enviar_id(int conexion,int id);
 int32_t servidor (int puerto);
+int handshake(int socket, int enviar, int recibir);
+int recibir_id(int socket);
 
 #endif /* NSOCKETS_H_ */

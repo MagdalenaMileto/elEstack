@@ -211,6 +211,9 @@ return -1;
 
 int enviar_id(int conexion,int id){
 	t_header var;
+	int *temp,algo=1;
+	temp=&algo;
+	var.data=&temp;
 	var.id=id;
 	var.size = sizeof(int);
 	return	enviar_paquete(conexion,var);
@@ -306,7 +309,7 @@ int32_t recibir_paquete(int32_t enlace,t_header* header_a_recibir)
 	free(buffer);
 	buffer = NULL;
 
-	return res;
+	return header_a_recibir->id;
 }
 
 /*Para enviar un paquete, se pasa como parametro a quien va dirigido, junto con el tipo header y data que se van a enviar
@@ -324,7 +327,7 @@ int32_t enviar_paquete(int32_t enlace,t_header header_a_enviar)
 		res = escribir_socket(enlace,(char*)&header_a_enviar, size_t_header);
 		
 		if(res != size_t_header)
-		{
+		{ 
 			return -1;
 		}
 		if(header_a_enviar.size != 0)
@@ -335,7 +338,7 @@ int32_t enviar_paquete(int32_t enlace,t_header header_a_enviar)
 			
 			if(res != header_a_enviar.size)
 			{
-				
+			
 				return -1;
 			}
 		}
@@ -344,8 +347,6 @@ int32_t enviar_paquete(int32_t enlace,t_header header_a_enviar)
 	{ 
 		res = -1;
 	}
-
-
 	return res; 		//Devuelvo el size de lo enviado
 }
 
@@ -399,4 +400,31 @@ int32_t set_nonblocking(int descriptor){
 	if (fcntl(descriptor, F_SETFL, O_NONBLOCK) == -1)
 		return SOCKET_ERROR;
 	return EXIT_SUCCESS;
+}
+
+int recibir_id(int socket){
+	int temp;
+	t_header estructuraARecibir;
+	temp =recibir_paquete(socket,&estructuraARecibir);
+	free(estructuraARecibir.data);
+	return temp;
+
+}
+
+
+
+
+
+int handshake(int socket, int enviar, int recibir){
+			if(enviar_id(socket,enviar)==-1) return -1;
+
+			int temp;
+
+			temp=recibir_id(socket);
+			if(temp==recibir) return 1;
+
+			return -1;
+
+
+
 }

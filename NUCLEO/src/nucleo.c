@@ -149,24 +149,17 @@ void conectarUmc(void){
 
 
 
-        t_header header;
-        t_header paqueteRecibido;
-
-        header.id=202;
-        header.size=sizeof(int);
-        header.data=mensaje;
-
-
+  
         //Handlear errores  ****** ****** ****** ****** ****** ****** ****** ****** ****** ****** ******
+    
+
         int estado;
-        estado=enviar_id(umc, 202);
-        estado=recibir_paquete(umc,&paqueteRecibido);
-
-
-        if(paqueteRecibido.id!=201){
-            printf("NUCLEO:Handshake invalido con umc\n");  
+        estado=handshake(umc, 202,201);
+       
+        if(estado==1){
+            printf("NUCLEO:Handshake exitoso con umc\n");  
         }else{
-            printf("NUCLEO:Handshake exitoso con umc\n");
+            printf("NUCLEO:Handshake invalido con umc\n");
         }
 
 
@@ -283,6 +276,11 @@ void *hilo_CONEXION_CONSOLA(void *arg){
     int estado;
     t_proceso* proceso;
 
+    if(handshake(args->socket,101,102)!=1){
+        printf("NUCLEO:Handshake invalido consola %d\n",args->socket);
+        return;
+    }
+    printf("NUCLEO:Handshake valido consola, creando proceso %d\n",args->socket);
     proceso = crearPrograma();
 
       while(1){
@@ -482,22 +480,16 @@ void *hilo_mock(void *arg){
 
        
 
-        t_header header;
-        t_header paqueteRecibido;
-
-
-
         int estado;
-       estado=enviar_id(clienteUmc, 201);
-
-
-        recibir_paquete(clienteUmc,&paqueteRecibido);
-
-        if(paqueteRecibido.id==202){
-            printf("UMCMOCK:Handshake exitoso\n");
+        estado=handshake(clienteUmc, 201,202);
+       
+        if(estado==1){
+            printf("UMCMOCK:Handshake exitoso con nucleo\n");  
         }else{
-            printf("UMCMOCK:Handshake invalido\n");  
+            printf("UMCMOCK:Handshake invalido con nucleo\n");
         }
+
+
 
 
 
@@ -520,12 +512,13 @@ void *hilo_mock_consola(void *arg){
 
       consola = cliente("127.0.0.1",1209);
       printf("CONSOLAMOCK: Conecté%d\n",consola);
-      t_header header;
 
-      header.id = 101;
-      header.size = strlen(mensaje);
-      header.data = mensaje;
-          
+
+    if(handshake(consola,102,101)!=1){
+        printf("CONSOLAMOCK:Handshake invalido nucleo %d\n",consola);
+        return;
+    }
+     printf("CONSOLAMOCK:Handshake valido nucleo %d\n",consola);
           sleep(10);
 
 close(consola);
