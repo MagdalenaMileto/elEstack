@@ -54,6 +54,7 @@ int lecturaDeScript(int argc, char **argv)
 {
 	FILE* script;
 	char buffer[100];
+	int tamano = sizeof(argv[1]);
 
   if(argc==1)
   {
@@ -72,7 +73,7 @@ int lecturaDeScript(int argc, char **argv)
     exit(2);
   }
 
-  printf("Cantidad de bytes en el archivo %s: %ld\n",argv[1],sizeof(argv[1]));
+  printf("Cantidad de bytes en el archivo %s: %d\n",argv[1],tamano);
 
   if(sizeof(argv[1]) > 0)
   {
