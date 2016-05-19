@@ -11,6 +11,7 @@
 
 
 
+
 /* VARIABLES GLOBALES */
 int * CONSTANTE;
 
@@ -63,7 +64,7 @@ typedef struct{
 //Eliminar todo lo que sea de mas de aca
 int listenningSocket,socketCliente,servidorSocket,servidorCPU,clienteSocket,losClientes,clientesCPU,umc,ultimoCPU;
 
-char mensaje[100];
+char mensaje[92]="¡Me gusta esa teoría! Tal vez son quintillizos.... todos se llaman Petyr, todos están ob";
 
 
 /* FIN DE VARIABLES GLOBALES */
@@ -83,7 +84,7 @@ int main(){
 
 
 
-      config_kernel->sizePagina=10;
+      config_kernel->sizePagina=50;
 
 
 
@@ -204,30 +205,41 @@ void mandarCodigoAUmc(char* codigo,int size){
   int cuantasPaginas, estado,i;
   t_header header;
 
-  cuantasPaginas = (size + (config_kernel->sizePagina / 2)) / config_kernel->sizePagina;
+  cuantasPaginas = ceil((double)size / (double)config_kernel->sizePagina);
 
+
+  //printf("cuantas paginas%d size%d\n",cuantasPaginas,size);
   
   //Codigo de AMEO TENE X CANTIDAD DE PAGINAS?
 
-    header.id = 301;
-    header.size = sizeof(cuantasPaginas);
-    header.data = &cuantasPaginas;
+    header.id = 204;
+    header.size = sizeof(int);
 
-    estado=enviar_paquete(umc, header);
 
+	header.data = malloc(sizeof(int));
+	memcpy(header.data,&cuantasPaginas,sizeof(int));
+
+
+	printf("***%d*\n",*((int*)header.data));
+
+   estado=enviar_paquete(umc, header);
     //Verificar error envio (desconexion)
+
 
     estado=recibir_paquete(umc,&header);
 
+
+
         //Verificar error recepcion(desconexion)
 
-    if(header.id==302){
-      if((int)header.data==1){
+    if(header.id==205){
+      if(*((int*)header.data)==1){
         //Hay espacio, mando paginas
+      	printf("ASDASDASDASDASD\n");
         for(i=0;i<cuantasPaginas;i++){
 
 
-           header.id = 304;
+           header.id = 206;
            header.size = config_kernel->sizePagina;
            header.data = codigo+i*(config_kernel->sizePagina);
 
@@ -296,7 +308,8 @@ void *hilo_CONEXION_CONSOLA(void *arg){
             }
 
             switch(estructuraARecibir.id){
-              case 101:
+              case 103:
+             
                 mandarCodigoAUmc(estructuraARecibir.data,estructuraARecibir.size);
                 //pthread_mutex_lock(&mutex_cola_new);
                 //queue_push(cola_new, proceso);
@@ -495,9 +508,32 @@ void *hilo_mock(void *arg){
 
 
 
+        t_header header,headerEnviar;
+
+      while(1){
+
+      	estado=recibir_paquete(clienteUmc,&header);
+
+      	if(header.id==204){
+      		printf("UMCMOCK: me pidió %d paginas. Le digo q si\n",*((int*)header.data));
+      	
+      		headerEnviar.id=205;int a=1;
+      		headerEnviar.data=&a;
+      		headerEnviar.size=sizeof(int);
+      		enviar_paquete(clienteUmc,headerEnviar);
+
+      	}
+
+      	 if(header.id==206){
+      		printf("UMCMOCK: recibo pagina: %s\n",(char*)header.data);
+      	
+
+      	}
+      	printf("Pase\n");
+      	free(header.data);
 
 
-      while(1){}
+      }
 
 
      
@@ -520,8 +556,16 @@ void *hilo_mock_consola(void *arg){
         return;
     }
      printf("CONSOLAMOCK:Handshake valido nucleo %d\n",consola);
-          sleep(10);
 
+     t_header header;
+     header.size=sizeof(mensaje);
+     header.id=103;
+     header.data=mensaje;
+    
+     enviar_paquete(consola,header);
+
+          sleep(5);
+         
 close(consola);
    
 
@@ -543,7 +587,7 @@ void *hilo_mock_cpu(void *arg){
       header.id = 101;
       header.size = strlen(mensaje);
       header.data = mensaje;
-           // close(cpu);
+           close(cpu);
       while(1){}
 
 }

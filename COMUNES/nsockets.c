@@ -302,9 +302,11 @@ int32_t recibir_paquete(int32_t enlace,t_header* header_a_recibir)
 		else
 		{	
 			res = -1;	//En caso de que no reciba nada
+			return -1;
 		}
 	}else{
 		res=-1; //ver esto
+		return -1;
 	}
 	free(buffer);
 	buffer = NULL;

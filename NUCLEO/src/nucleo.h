@@ -7,6 +7,7 @@
 
 #ifndef NUCLEO_H_
 #define NUCLEO_H_
+#include <math.h>
 
 #include <stdio.h>
 #include <string.h>
