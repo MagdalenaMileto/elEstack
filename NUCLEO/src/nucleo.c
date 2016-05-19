@@ -216,8 +216,7 @@ void mandarCodigoAUmc(char* codigo,int size){
     header.size = sizeof(int);
 
 
-	header.data = malloc(sizeof(int));
-	memcpy(header.data,&cuantasPaginas,sizeof(int));
+	header.data = &cuantasPaginas;
 
 
 	printf("***%d*\n",*((int*)header.data));
