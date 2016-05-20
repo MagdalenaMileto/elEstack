@@ -113,6 +113,8 @@ int main(int argc, char **argv){
 
 			recibir_paquete(consola,&header);
 
+			printf ("resuesta: %s\n", header);
+
 
 		}
 	}
