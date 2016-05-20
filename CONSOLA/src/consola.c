@@ -50,9 +50,12 @@ int main(int argc, char **argv){
 
 	char* script;
 	FILE *archivo;
-	char nomArchivo[];
+	char nomArchivo[50];
 	int exito = 0;
-	char comando [100];
+
+	int conexionConElNucleo(void);
+	char* leerArchivo(FILE *archivo);
+	void leerArchivoDeConfiguracion();
 
 
 	int consola = socket(AF_INET, SOCK_STREAM, 0);
@@ -65,7 +68,6 @@ int main(int argc, char **argv){
 	if (connect(consola, (void*) &direccionServidor, sizeof(direccionServidor)) != 0) {
 			perror("CONSOLA: No se pudo conectar/ cerrando...");
 		close(consola);
-		break;
 		return 1;
 	}
 
@@ -85,7 +87,7 @@ int main(int argc, char **argv){
 			printf("No se pudo acceder al script.\n");
 		}
 		else{
-		script = leerarchivo(archivo);					//lee el archivo y reserva memoria
+				script = leerArchivo(archivo);					//lee el archivo y reserva memoria
 				fclose(archivo);
 				printf("Exito en lectura de scrit.\n");
 				exito=1;
@@ -95,7 +97,6 @@ int main(int argc, char **argv){
 
 	if(exito){
 
-		if(conexionConElNucleo != 0){
 
 			if(handshake(consola,102,101) != 1){
 				printf("CONSOLA; handshake invalido nucleo %d\n", consola);
@@ -109,16 +110,16 @@ int main(int argc, char **argv){
 			header.id = 103;
 			header.data = script;
 
-			enviar_paquete(consola,header);
 
-			recibir_paquete(consola,&header);
+			enviar_paquete(consola, header);
 
-			printf ("resuesta: %s\n", header);
+			if ( recibir_paquete(consola,&header) < 0)return EXIT_FAILURE;
+
+			printf("%s\n", header.data);
 
 
-		}
-	}
 
+}
 	free(script);
 	close(consola);
 	printf("CONSOLA: Cierro\n");
@@ -129,39 +130,38 @@ int main(int argc, char **argv){
 //************************************FUNCONES*********************************************
 
 
-struct sockaddr_in
-	{
-	   short int sin_family;        // Familia de la Dirección
-	   unsigned short int sin_port; // Puerto
-	   struct in_addr sin_addr;     // Dirección de Internet
-	}direccionServidor;
-
-
-
-
 
 
 int conexionConElNucleo(void){
 
-int nucleo, n,conexion;
-if(leerArchivoDeConfiguracion()!=0){
+int nucleo;
+t_config* configuracion;
 
-		n= leerArchivoDeConfiguracion();
-		nucleo = cliente(n,9997);
+configuracion = config_create("Ruta al archivo de configuracion");
+int PUERTO_NUCLEO;
 
-		if(nucleo==0){
+		if (config_has_property(configuracion,"PUERTO_NUCLEO")){
+			PUERTO_NUCLEO = config_get_int_value(configuracion,PUERTO_NUCLEO);
+
+				nucleo = cliente(PUERTO_NUCLEO,9997);
+
+				if(nucleo==0){
 			printf("CONSOLA: No hubo conexion con el nucleo.. :'( \n");
-			conexion = 0;
-			return conexion;
+			return 0;
+
+
 		}
 		else {
 			printf("CONSOLA: Conexion con nucleo %d\n",nucleo);
-			conexion = 1;
-			return conexion;
+			return 1;
 		}
+	}
+return 1;
 }
-else return 0;
-}
+
+
+
+
 
 
 
@@ -172,7 +172,6 @@ char* leerArchivo(FILE *archivo) {
 	long tamanio = ftell(archivo);
 	fseek(archivo, 0, SEEK_SET);   // reserva memoria
 	char *script = malloc(tamanio + 1);
-	size_t leer = fread(script, tamanio, 1, archivo);
 	script[tamanio] = '\0';
 	printf("Lectura: %s\n", script);
 	return script;

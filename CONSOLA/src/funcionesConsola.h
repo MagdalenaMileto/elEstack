@@ -22,6 +22,7 @@
 
 int conexionConElNucleo(void);
 char* leerArchivo(FILE *archivo);
+void leerArchivoDeConfiguracion();
 
 
 
