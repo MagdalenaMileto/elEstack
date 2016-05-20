@@ -31,8 +31,10 @@
 							<tool id="cdt.managedbuild.tool.gnu.cross.c.linker.1504961986" name="Cross GCC Linker" superClass="cdt.managedbuild.tool.gnu.cross.c.linker">
 								<option id="gnu.c.link.option.libs.1338931975" name="Libraries (-l)" superClass="gnu.c.link.option.libs" valueType="libs">
 									<listOptionValue builtIn="false" value="pthread"/>
+									<listOptionValue builtIn="false" srcPrefixMapping="" srcRootPath="" value="commons"/>
+									<listOptionValue builtIn="false" srcPrefixMapping="" srcRootPath="" value="m"/>
 								</option>
-								<option id="gnu.c.link.option.userobjs.6539611" superClass="gnu.c.link.option.userobjs" valueType="userObjs">
+								<option id="gnu.c.link.option.userobjs.6539611" name="Other objects" superClass="gnu.c.link.option.userobjs" valueType="userObjs">
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/COMUNES/nsockets.c}&quot;"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.c.linker.input.1102273899" superClass="cdt.managedbuild.tool.gnu.c.linker.input">
@@ -125,4 +127,5 @@
 			<resource resourceType="PROJECT" workspacePath="/NUCLEO"/>
 		</configuration>
 	</storageModule>
+	<storageModule moduleId="org.eclipse.cdt.internal.ui.text.commentOwnerProjectMappings"/>
 </cproject>

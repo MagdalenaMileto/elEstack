@@ -546,7 +546,7 @@ void *hilo_mock(void *arg){
       	
 
       	}
-      	printf("Pase\n");
+      //	printf("Pase\n");
       	free(header.data);
 
 
