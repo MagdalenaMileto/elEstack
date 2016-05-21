@@ -39,6 +39,14 @@
 #define PACKAGESIZE 1024	// Define cual va a ser el size maximo del paquete a enviar
 
 
+typedef struct{
+  int socket_CPU;
+  int socket_PROGRAMA;
+  t_pcb pcb;
+}t_proceso;
+
+
+
 void intHandler(int dummy);
 
 void conectarUmc(void);
@@ -47,7 +55,8 @@ void *hilo_PLP(void *arg);
 void *hilo_PCP(void *arg);
 
 
-
+t_proceso* dameProceso(t_queue *cola, int sock );
+void mandarAEjecutar(t_proceso *proceso,int sock);
 
 void *hilo_mock(void *arg);
 

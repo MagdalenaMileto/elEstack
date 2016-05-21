@@ -40,7 +40,7 @@ t_queue* cola_block;
 
 pthread_mutex_t mutex_cola_new;
 
-
+int pidcounter=0;
 
 
 // Listas que maneja el PCP
@@ -52,11 +52,6 @@ t_queue* cola_CPU_libres;
 
 };
 
-typedef struct{
-  int socket_CPU;
-  int socket_PROGRAMA;
-  t_pcb pcb;
-}t_proceso;
 
 
 
@@ -169,6 +164,18 @@ void conectarUmc(void){
 
 }
 
+t_proceso* dameProceso(t_queue *cola, int sock ){
+  int a=0,t;
+  t_proceso *w;
+  while(w=(t_proceso*)list_get(cola->elements,a)){
+   
+    if(w->socket_CPU==sock) return (t_proceso*)list_remove(cola->elements,a);
+    a++;
+  }
+  return NULL;
+}
+
+
 
 
 
@@ -178,8 +185,9 @@ t_proceso *proceso;
     while(1){
    		if(queue_size(cola_new)!=0){
    			//Hay un proceso en new mando a ready
-   			printf("Nucleo: Saco proceso new, mando a ready\n");
-   			proceso=queue_pop(cola_new);
+          proceso=queue_pop(cola_new);
+   			printf("Nucleo: Saco proceso  %d new, mando a ready\n",proceso->pcb.pid);
+   		
    			queue_push(cola_ready,proceso);
    		}	
     }
@@ -187,17 +195,36 @@ t_proceso *proceso;
 }
 
 
+void mandarAEjecutar(t_proceso *proceso,int sock){
+  t_header header; int estado;
+  header.id=303;
+  header.data=&proceso->pcb;
+  header.size=sizeof(proceso->pcb);
+  sleep(1);
+  proceso->socket_CPU=sock;
+  estado = enviar_paquete((int)sock,header);
+
+
+
+}
+
+
+
 
 void *hilo_PCP(void *arg){
 
-t_proceso *proceso;
+t_proceso *proceso;int sock;
     while(1){
 
     	if(queue_size(cola_ready)!=0&&queue_size(cola_CPU_libres)!=0){
-   			printf("Nucleo: Saco proceso ready, mando a exec\n");
-   			proceso=queue_pop(cola_ready);
-   			queue_push(cola_exec,proceso);
+   		
 
+        sock=(int)queue_pop(cola_CPU_libres);
+   			proceso=queue_pop(cola_ready);
+        printf("Nucleo: Saco proceso %d ready, mando a exec\n",proceso->pcb.pid);
+
+   			queue_push(cola_exec,proceso);
+        mandarAEjecutar(proceso,sock);
    		}	
 
 
@@ -212,6 +239,8 @@ t_proceso* crearPrograma(void){
 
       t_proceso* procesoNuevo;
       procesoNuevo=malloc(sizeof(t_proceso));
+      procesoNuevo->pcb.pid=pidcounter;
+      pidcounter++;
       return procesoNuevo;
 
 }
@@ -392,11 +421,12 @@ void *hilo_CONEXION_CPU(void *arg){
     int estado;
     t_proceso* proceso;
     queue_push(cola_CPU_libres,(void*)args->socket);
-
+         t_header estructuraARecibir;
   while(1){
 
-          t_header estructuraARecibir;
+        
           estado=recibir_paquete(args->socket,&estructuraARecibir);
+
 
           if(estado==-1){
                printf("Nucleo: Cerro Socket cpu\n");
@@ -404,8 +434,13 @@ void *hilo_CONEXION_CPU(void *arg){
                //Aca deberia eliminar el programa pcb cerrar socket blablabla si ejecuta cpu decile ya fue man UMC
           }
 
-            switch(estructuraARecibir.id){
-              case 101:
+            switch(estado){
+              case 304:
+                
+               proceso=dameProceso(cola_exec,args->socket);
+               printf("NUCLEO: Recibi proceso %d por fin de quantum, encolando en cola ready\n",proceso->pcb.pid);
+               queue_push(cola_ready,proceso);
+               queue_push(cola_CPU_libres,(void *)args->socket);
               break;
 
             }
@@ -494,9 +529,12 @@ void *hilo_mock(void *arg){
 
       struct sockaddr_in addr;  socklen_t addrlen = sizeof(addr);
 
-      pthread_t thmock_consola, thmock_cpu;
+      pthread_t thmock_consola,thmock_consola2, thmock_cpu;
 
-     pthread_create(&thmock_consola, NULL, hilo_mock_consola, NULL);
+
+
+   pthread_create(&thmock_consola, NULL, hilo_mock_consola, NULL);
+     pthread_create(&thmock_consola2, NULL, hilo_mock_consola, NULL);
       pthread_create(&thmock_cpu, NULL, hilo_mock_cpu, NULL);
   
 
@@ -532,7 +570,7 @@ void *hilo_mock(void *arg){
       	estado=recibir_paquete(clienteUmc,&header);
 
       	if(header.id==204){
-      		printf("UMCMOCK: me pidió %d paginas. Le digo q si\n",*((int*)header.data));
+      		//printf("UMCMOCK: me pidió %d paginas. Le digo q si\n",*((int*)header.data));
       	
       		headerEnviar.id=205;int a=1;
       		headerEnviar.data=&a;
@@ -542,7 +580,7 @@ void *hilo_mock(void *arg){
       	}
 
       	 if(header.id==206){
-      		printf("UMCMOCK: recibo pagina: %s\n",(char*)header.data);
+      	//	printf("UMCMOCK: recibo pagina: %s\n",(char*)header.data);
       	
 
       	}
@@ -581,7 +619,8 @@ void *hilo_mock_consola(void *arg){
     
      enviar_paquete(consola,header);
 
-          sleep(5);
+while(1){}
+         // sleep(5);
          
 close(consola);
    
@@ -590,7 +629,7 @@ close(consola);
 
 
 void *hilo_mock_cpu(void *arg){
-      int cpu;
+      int cpu,estado;
 
 
       sleep(5);
@@ -599,13 +638,24 @@ void *hilo_mock_cpu(void *arg){
 
 
       
-      t_header header;
+      t_header header,headerEnviar;
 
-      header.id = 101;
-      header.size = strlen(mensaje);
-      header.data = mensaje;
-           close(cpu);
-      while(1){}
+
+          
+      while(1){
+          estado=recibir_paquete(cpu,&header);  
+          if(estado==303){
+            printf("CPUMOCK: Recibi pcb... ejecutando\n");
+            sleep(2);
+            headerEnviar.id=304;
+            headerEnviar.data=header.data;
+            headerEnviar.size=header.size;
+            enviar_paquete(cpu,headerEnviar);
+
+          }
+
+
+      }
 
 }
 

@@ -244,7 +244,9 @@ int escribir_socket (int32_t nuevo_socket, char *datos, size_t longitud)
 
 	 
 	while (escrito < longitud){
+	
 		aux = send(nuevo_socket, datos + escrito, longitud - escrito, 0);
+		//perror("ee");
 		if (aux > 0){
 			/*
 			 * Si se consiguio escribir caracteres, se actualiza la variable escrito
@@ -262,7 +264,7 @@ int escribir_socket (int32_t nuevo_socket, char *datos, size_t longitud)
 				return escrito;
 			}
 			else
-			{		
+			{	
 				return -1;
 			}
 		}
