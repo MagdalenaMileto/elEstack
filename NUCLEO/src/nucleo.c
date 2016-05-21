@@ -173,9 +173,15 @@ void conectarUmc(void){
 
 
 void *hilo_PLP(void *arg){
+t_proceso *proceso;
 
     while(1){
-    //Do something yoooo
+   		if(queue_size(cola_new)!=0){
+   			//Hay un proceso en new mando a ready
+   			printf("Nucleo: Saco proceso new, mando a ready\n");
+   			proceso=queue_pop(cola_new);
+   			queue_push(cola_ready,proceso);
+   		}	
     }
 
 }
@@ -184,7 +190,18 @@ void *hilo_PLP(void *arg){
 
 void *hilo_PCP(void *arg){
 
+t_proceso *proceso;
     while(1){
+
+    	if(queue_size(cola_ready)!=0&&queue_size(cola_CPU_libres)!=0){
+   			printf("Nucleo: Saco proceso ready, mando a exec\n");
+   			proceso=queue_pop(cola_ready);
+   			queue_push(cola_exec,proceso);
+
+   		}	
+
+
+
     //Do something yoooo
     }
 
@@ -234,7 +251,7 @@ void mandarCodigoAUmc(char* codigo,int size){
     if(header.id==205){
       if(*((int*)header.data)==1){
         //Hay espacio, mando paginas
-      	printf("ASDASDASDASDASD\n");
+      	
         for(i=0;i<cuantasPaginas;i++){
 
 
@@ -310,9 +327,9 @@ void *hilo_CONEXION_CONSOLA(void *arg){
               case 103:
              
                 mandarCodigoAUmc(estructuraARecibir.data,estructuraARecibir.size);
-                //pthread_mutex_lock(&mutex_cola_new);
-                //queue_push(cola_new, proceso);
-                //pthread_mutex_unlock(&mutex_cola_new);
+                pthread_mutex_lock(&mutex_cola_new);
+                queue_push(cola_new, proceso);
+                pthread_mutex_unlock(&mutex_cola_new);
               break;
 
             }
@@ -374,6 +391,7 @@ void *hilo_CONEXION_CPU(void *arg){
     struct arg_struct *args = (struct arg_struct *)arg;
     int estado;
     t_proceso* proceso;
+    queue_push(cola_CPU_libres,(void*)args->socket);
 
   while(1){
 
@@ -528,7 +546,7 @@ void *hilo_mock(void *arg){
       	
 
       	}
-      	printf("Pase\n");
+      //	printf("Pase\n");
       	free(header.data);
 
 

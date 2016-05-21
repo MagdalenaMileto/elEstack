@@ -1,39 +1,49 @@
 ## tp-2016-1c-El-algoritmo-del-ritmo
 
 
-##Protocolos
+#Protocolos  
 
 
 
-#Consola - Nucleo
+##Consola - Nucleo  
 
-**Handshake**
+**Handshake**  
 
-Nucleo -> 101 -> Consola
-Consola -> 102 -> Nucleo
-Handshake exitoso
+Nucleo -> 101 -> Consola  
+Consola -> 102 -> Nucleo  
+Handshake exitoso  
 
-
-
-
-
-#UMC - Nucleo
-
-**Handshake**
-
-UMC -> 201 -> Nucleo
-Nucleo -> 202 -> UMC
-Handshake exitoso
+CONSOLA -> 103 -> Nucleo  
+mando en data el codigo  
 
 
+##UMC - Nucleo  
 
-#CPU - Nucleo
+**Handshake**  
 
-**Handshake**
+UMC -> 201 -> Nucleo  
+Nucleo -> 202 -> UMC  
+Handshake exitoso  
 
-Nucleo -> 301 -> CPU
-CPU -> 302 -> Nucleo
-Handshake exitoso
+Nucleo -> 204 -> UMC    
+Nuevo proceso. Pregunto si tiene espacio para almacenar X cantidad de paginas  
+UMC -> 205 -> Nucleo  
+Le digo que si o no tengo espacio  
+Nucleo ->206 -> Umc  
+escribo paginas  
+
+
+  
+  
+
+##CPU - Nucleo  
+
+**Handshake**  
+
+Nucleo -> 301 -> CPU  
+CPU -> 302 -> Nucleo  
+Handshake exitoso  
+
 
 
 
