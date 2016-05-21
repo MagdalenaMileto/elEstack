@@ -5,45 +5,17 @@
  *      Author: Ivan Bober
  */
 
-#include<stdlib.h>
-#include<stdio.h>
-#include<string.h>
-#include<arpa/inet.h>
-#include<sys/socket.h>
-#include<sys/types.h>
-#include<fcntl.h>
-#include<netinet/in.h>
-#include<netinet/ip.h>
-#include<unistd.h>
-#include<commons/log.h>
-#include<commons/config.h>
-#include<commons/txt.h>
-#include<sys/mman.h>
+#include "swap.h"
 
+int cantPagsOcupadas;
+pagina paginasSWAP[2000];
+proceso procesos[100];
+int contadorProcesos;
 
-#define Puerto 1206
+char * discoSwapMapped;
+char* discoMapped;
+char * discoParaleloNoVirtual;
 
-	char* Nombre_Swap;
-	int Puerto_Swap;
-	int Cantidad_Paginas;
-	int Tamanio_Pagina;
-	int Retardo_Compactacion;
-	t_config* configuracion;
-	long int tamanio_archivo;
-	char * discoSwapMapped;
-
-	int	abrirConfiguracion();
-	int	crearArchivo();
-	int mapearArchivo();
-	int iniciarServidor();
-	int establecerConexion(int sock_lst);
-
-	typedef struct __attribute__((packed)){
-		int pid;
-		int nroPag;
-		int posicion;
-		char texto[1024];
-	} paqueteUMC;
 
 int main(int argc,char **argv) {
 
@@ -51,6 +23,8 @@ int main(int argc,char **argv) {
 	int new_lst;
 	int mensajeUmc;
 	char buffer[100];
+	int pedidoUMC;
+	paqueteUMC* paquete = malloc(sizeof(paqueteUMC));
 
 	abrirConfiguracion();
 	crearArchivo();
@@ -70,10 +44,48 @@ int main(int argc,char **argv) {
 			return EXIT_FAILURE;
 		}
 	}
+
+	paqueteUMC *paqueteRta= malloc(sizeof(paqueteUMC));
+
+	//asociar a paquete con el proceso que me llega y el mensaje que entra que diga que se tiene que hacer (pedidoUMC)
+	switch (pedidoUMC){
+	case 0: {//Nuevo proceso
+		// Tiene que haber retardo?
+		printf("Se creara un nuevo proceso de %d paginas y con PID: %d \n", paquete->nroPag, paquete->pid);
+
+		paqueteRta->pid = paquete->pid;
+		int espacio = hayLugarParaNuevoProceso(paquete->nroPag);
+
+		if(espacio == -2){
+			compactacion();
+			int espacio2 = hayLugarParaNuevoProceso(paquete->nroPag);
+			paqueteRta->flagProc = reservarProceso(paquete->pid,paquete->nroPag, espacio2);
+		}
+		if(espacio == -1)
+		{
+			paqueteRta->flagProc = 0;
+		}
+		else{
+			paqueteRta->flagProc = reservarProceso(paquete->pid,paquete->nroPag, espacio);
+		}
+		break;
+	}
+	case 1: { //caso de Sacar proceso
+		break;
+	}
+	case 2: { //caso de Escritura endisco
+
+		break;
+	}
+}
+
 	printf("SWAP: El mensaje:  %s\n de la UMC a llegado al Swap.\n",buffer);
 
-	//Me llega un nuevo proceso
-	printf("LLego nuevo proceso al SWAP \n");
+
+
+//
+//	//Me llega un nuevo proceso
+//	printf("LLego nuevo proceso al SWAP \n");
 
 
 	printf("SWAP: me cierro\n");
@@ -150,6 +162,8 @@ int crearArchivo(){
 
 	fclose(arch);
 
+	contadorProcesos = 0;
+
 	return 1;
 }
 
@@ -157,6 +171,7 @@ int mapearArchivo(){
 	int fd;
 	size_t length = tamanio_archivo;
 	discoSwapMapped=malloc(tamanio_archivo);
+	discoParaleloNoVirtual = malloc(tamanio_archivo);
 	fd = open(Nombre_Swap, O_RDONLY);
 	  if (fd == -1) {
 		printf("Error abriendo %s para su lectura", Nombre_Swap);
@@ -168,6 +183,11 @@ int mapearArchivo(){
 		printf("Error mapeando el archivo %s \n", Nombre_Swap);
 		exit(EXIT_FAILURE);
 	    }
+	discoMapped = discoSwapMapped;
+	int i;
+		for(i=0;i<tamanio_archivo;i++){
+			discoParaleloNoVirtual[i] = discoMapped[i];
+		}
 	printf("Mapeo perfecto  %s \n", Nombre_Swap);
 	return 1;
 }
@@ -219,3 +239,200 @@ int establecerConexion(int sock_lst) {
 	}
 	return new_lst;
 }
+
+int hayLugarParaNuevoProceso(int cantPagsNecesita){
+	//en caso de no encontrar lugar, me devuelve -1 y paso a hacer la compactacion
+	//en otro caso, me devuelve el numero de pag a partir de la cual escribo
+	int flagPuede = -1;
+	int j=ultimaPagLibre();
+	int i = j;
+	int totalLibres = 0;
+	while(1){
+		if(j == -1){
+			break;
+		}
+		int primerOcupada = primerPaginaOcupadaLuegoDeUnaLibreDada(j);
+		if((primerOcupada - j) >= cantPagsNecesita || primerOcupada == -1)
+		{
+			return j;
+		}
+		else {
+			totalLibres = totalLibres + primerOcupada-j;
+			i = j;
+			if(i == Cantidad_Paginas -1){
+				return -1;
+			}
+			if(totalLibres >=cantPagsNecesita)
+			{
+				return -2;
+			}
+			int k = j;
+			j = primerPagLibreAPartirDeUnaDada(k);
+		}
+	}
+	return flagPuede;
+}
+
+
+int primerPaginaOcupadaLuegoDeUnaLibreDada(int nroPag){
+	int nroPaginaOcupada = -1;
+	int estadoPaginaSiguiente = -1;
+	int i;
+	for(i=nroPag+1;i<Cantidad_Paginas;i++){
+		estadoPaginaSiguiente = paginasSWAP[i].ocupada;
+		if(estadoPaginaSiguiente == 1)
+		{
+			return (nroPaginaOcupada = i);
+		}
+	}
+return nroPaginaOcupada;
+}
+
+int primerPagLibreAPartirDeUnaDada(int numeroPag){
+	int primerPagLibre;
+	int i;
+	for(i=numeroPag;i<Cantidad_Paginas;i++){
+		if(paginasSWAP[i].ocupada ==0)
+		{
+			return primerPagLibre= i;
+		}
+	}
+	return -1;
+}
+
+
+int ultimaPagLibre(){
+	int primerPagLibre;
+	int i;
+	for(i=0;i<Cantidad_Paginas;i++){
+		if(paginasSWAP[i].ocupada ==0){
+			return primerPagLibre= i;
+		}
+	}
+	return -1;
+}
+
+int reservarProceso(int pidProceso, int cantPags , int pagAPartir){
+	int error;
+	error = asignarEspacio(cantPags, contadorProcesos, pidProceso, pagAPartir);
+	if(error == -1){
+		printf("Hubo error al asignar el proceso %d /n", pidProceso);
+		return 0;
+	}
+	printf("Se reservo el espacio para el proceso con PID: %d de %d paginas /n", pidProceso, cantPags);
+	return 1;
+}
+
+int asignarEspacio(int cantPagsAAsignar, int contadorP, int proceso, int inicio){
+	int primerPaginaLibre = inicio;
+	int i;
+	if(inicio +cantPagsAAsignar > Cantidad_Paginas)
+	{
+		return -1;
+	}
+	for(i=0;i<cantPagsAAsignar;i++){
+		printf("Se asignara la pagina %d al proceso %d /n", primerPaginaLibre+i,proceso);
+		paginasSWAP[primerPaginaLibre +i].ocupada = 1;
+		paginasSWAP[primerPaginaLibre +i].idProcesoQueLoOcupa = proceso;
+		cantPagsOcupadas++;
+	}
+	procesos[contadorProcesos].idProceso = proceso;
+	procesos[contadorProcesos].cantPagsUsando = cantPagsAAsignar;
+	contadorProcesos++;
+
+	return 1;
+}
+
+int compactacion(){ //Flag: 1 salio bien, 2 hubo error
+	printf("SE INVOCO AL MODULO DE COMPACTACION... /n");
+	printf("INICIANDO COMPACTACION /n");
+	int resultado = -1;
+	int i;
+	long int inicioOcupada, finOcupada;
+	long int inicioLibre, finLibre;
+	int primerPaginaOcupada;
+	int primerPaginaLibre;
+	do {
+		primerPaginaLibre = ultimaPagLibre();
+		primerPaginaOcupada = primerPaginaOcupadaLuegoDeUnaLibre();
+		if(primerPaginaOcupada == -1)
+		{
+			printf("No hay mas paginas que compactar, finalizando correctamente. /n");
+			break;
+		}
+		leerPagina(primerPaginaOcupada, &inicioOcupada, &finOcupada);
+		leerPagina(primerPaginaLibre,&inicioLibre,&finLibre);
+		printf("La pagina ocupada %d pasara a la pagina %d libre /n", primerPaginaOcupada, primerPaginaLibre);
+		for(i=0;i<Tamanio_Pagina;i++)
+		{
+			char car = discoParaleloNoVirtual[(inicioOcupada+i)];;
+			discoParaleloNoVirtual[(inicioLibre+i)] = car;}
+			paginasSWAP[primerPaginaOcupada].ocupada = 0;
+			paginasSWAP[primerPaginaLibre].idProcesoQueLoOcupa = paginasSWAP[primerPaginaOcupada].idProcesoQueLoOcupa;
+			paginasSWAP[primerPaginaOcupada].idProcesoQueLoOcupa = -1;
+			paginasSWAP[primerPaginaLibre].ocupada = 1;
+	}
+	while (hayPaginasOcupadasLuegoDeLaUltimaLibre());
+	updatearArchivoDisco();
+	resultado = 1;
+	printf("Terminando compactacion.../n");
+	sleep(Retardo_Compactacion);
+	return resultado;
+}
+
+int primerPaginaOcupadaLuegoDeUnaLibre(){
+	int estadoPaginaSiguiente = -1;
+	int estadoPaginaAnterior =-1;
+	int i;
+	for(i=0;i<Cantidad_Paginas;i++){
+		estadoPaginaAnterior = paginasSWAP[i].ocupada;
+		estadoPaginaSiguiente = paginasSWAP[i+1].ocupada;
+		if(estadoPaginaAnterior == 0)
+		{
+			if(estadoPaginaSiguiente == 1)
+			{
+				return (i+1);
+			}
+		}
+	}
+	return -1;
+}
+
+
+int leerPagina( int nroPag, long int*inicio, long int*fin){
+	*inicio = nroPag*Tamanio_Pagina;
+	if(*inicio >tamanio_archivo)
+	{
+		printf("No se puede leer la pagina /n");
+		return -1;
+	}
+	*fin = *inicio +Tamanio_Pagina-1;
+	return 1;
+}
+
+int hayPaginasOcupadasLuegoDeLaUltimaLibre(){
+	int i;
+	int flagExistencia;
+	for(i=ultimaPagLibre();i<Cantidad_Paginas;i++){
+		if(paginasSWAP[i].ocupada == 1)
+		{
+			flagExistencia=1;
+		}
+	}
+	return flagExistencia;
+}
+
+int updatearArchivoDisco(){
+	FILE* archendisco =fopen(Nombre_Swap, "w");;
+	int i =0;
+	printf("Escribiendo en %s, archivo en disco /n", Nombre_Swap);
+	for(i=0;i<tamanio_archivo; i++)
+	{
+		fputc(discoParaleloNoVirtual[i],archendisco);
+	}
+	fclose(archendisco);
+	mapearArchivo();
+	return 1;
+}
+
+
