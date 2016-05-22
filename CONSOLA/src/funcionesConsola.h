@@ -18,11 +18,14 @@
 #include <netinet/ip.h>
 #include <unistd.h>
 #include <commons/config.h>
+#include "../../COMUNES/handshake.h"
+#include "../../COMUNES/nsockets.h"
 
 
-int conexionConElNucleo(void);
-char* leerArchivo(FILE *archivo);
-void leerArchivoDeConfiguracion();
+int iniciarConsola();
+char* leerElArchivo(FILE *archivo);
+int conectarConElNucleo();
+int enviarInformacionAlNucleo(char * script, int nucleo, int consola);
 
 
 
