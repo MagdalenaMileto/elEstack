@@ -13,6 +13,12 @@ int socketConexionNucleo;
 
 
 int main(int argc, char **argv) {
+	
+	if (argc != 2)
+		{
+			perror("No se paso la cantidad de parametros necesaria\n");
+			return EXIT_FAILURE;
+		}
 
 	char* script;
 	FILE *archivo;
