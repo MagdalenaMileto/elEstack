@@ -53,6 +53,9 @@ int primerPaginaOcupadaLuegoDeUnaLibre();
 int leerPagina( int nroPag, long int*inicio, long int*fin);
 int hayPaginasOcupadasLuegoDeLaUltimaLibre();
 int updatearArchivoDisco();
+int liberarProceso(int idProc);
+int getPrimerPagProc(int idProceso);
+int getPosicionDelProceso(int idProc);
 
 typedef struct __attribute__((packed)){
 	int pid;

@@ -71,6 +71,9 @@ int main(int argc,char **argv) {
 		break;
 	}
 	case 1: { //caso de Sacar proceso
+///retardo?
+		printf("Se liberara el proceso %d /n", paquete->pid);
+		paqueteRta->flagProc = liberarProceso(paquete->pid);
 		break;
 	}
 	case 2: { //caso de Escritura endisco
@@ -433,6 +436,52 @@ int updatearArchivoDisco(){
 	fclose(archendisco);
 	mapearArchivo();
 	return 1;
+}
+
+int liberarProceso(int idProc){
+	int posProcEnElArray;
+	int cantPagsQueUsa;
+	int primerPaginaDelProceso;
+	posProcEnElArray = getPosicionDelProceso(idProc);
+	cantPagsQueUsa = procesos[posProcEnElArray].cantPagsUsando;
+	primerPaginaDelProceso = getPrimerPagProc(idProc);
+	int i;
+	printf("Liberando el proceso %d \n", idProc);
+	for(i=0;i<cantPagsQueUsa;i++)
+	{
+		printf("Borrando pagina %d ocupada por %d /n", primerPaginaDelProceso, idProc);
+		paginasSWAP[primerPaginaDelProceso].ocupada = 0;
+		paginasSWAP[primerPaginaDelProceso].idProcesoQueLoOcupa = -1;
+		primerPaginaDelProceso++; //aumento en 1
+		cantPagsOcupadas--;
+	}
+
+	printf("Se libero el proceso %d /n", idProc);
+	return 0;
+}
+
+int getPrimerPagProc(int idProceso){
+	int pag;
+	int i;
+	for(i=0;i<Cantidad_Paginas;i++){
+		if(paginasSWAP[i].idProcesoQueLoOcupa == idProceso)
+		{
+			return pag = i;
+		}
+	}
+	return -1;
+}
+
+int getPosicionDelProceso(int idProc){
+	int idProceso = -1;
+	int i;
+	for(i=0;i<contadorProcesos; i++){
+		if(procesos[i].idProceso == idProc){
+			idProceso = i;
+		}
+	}
+	return idProceso;
+
 }
 
 
