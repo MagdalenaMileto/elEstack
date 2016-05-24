@@ -135,23 +135,22 @@ int enviarInfo(int new_lst, buffer_t Buffer, int cantidadAEnviar) {
 int enviarMensaje(int new_lst, MPS_MSG *mensaje) {
 	int retorno;
 	t_header cabecera;
-	unsigned char *BufferEnviar;
+	unsigned char *bufferEnviar;
 	int largoHeader = sizeof(cabecera.id_payload)+ sizeof(cabecera.tam_payload);
 	int largoTotal = largoHeader + mensaje->tam_payload;
 
-	BufferEnviar = malloc(sizeof(unsigned char) * largoTotal);
+	bufferEnviar = malloc(sizeof(unsigned char) * largoTotal);
 	cabecera.id_payload = mensaje->id_payload;
 	cabecera.tam_payload = mensaje->tam_payload;
 	//Copia la cabecera al buffer.
-	memcpy(BufferEnviar, &cabecera, largoHeader);
+	memcpy(bufferEnviar, &cabecera, largoHeader);
 	//copia el mensaje seguido de la cabezera dentro del buffer.
-	memcpy(BufferEnviar + largoHeader, mensaje->Payload,
-			mensaje->tam_payload);
+	memcpy(bufferEnviar + largoHeader, mensaje->Payload, mensaje->tam_payload);
 
 	setsockopt(new_lst, SOL_SOCKET, SO_SNDBUF, &largoTotal, sizeof(int));
-	retorno = enviarInfo(new_lst, BufferEnviar, largoTotal);
+	retorno = enviarInfo(new_lst, bufferEnviar, largoTotal);
 
-	free(BufferEnviar);
+	free(bufferEnviar);
 	if (retorno < largoTotal) {
 		return -1;
 	}
