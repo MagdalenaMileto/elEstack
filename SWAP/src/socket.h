@@ -21,7 +21,6 @@
 
 typedef unsigned char* buffer_t;
 
-
 typedef struct _MPS_MSG
 {
  int8_t id_payload;
@@ -40,7 +39,6 @@ typedef struct _t_header
 int iniciarServidor();
 int establecerConexion(int sock_lst);
 int recibirMensaje(int Socket, MPS_MSG *mensaje);
-
-
+int recibirInfo(int new_lst, buffer_t Buffer, int CantidadARecibir);
 
 #endif /* SOCKET_H_ */

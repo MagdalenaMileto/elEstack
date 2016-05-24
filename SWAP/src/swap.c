@@ -21,7 +21,6 @@ int main(int argc,char **argv) {
 
 	int sock_lst;
 	int new_lst;
-	int mensajeUmc;
 	char buffer[100];
 	int pedidoUMC;
 	paqueteUMC* paquete = malloc(sizeof(paqueteUMC));
@@ -38,17 +37,6 @@ int main(int argc,char **argv) {
 		while(1){
 			int respuesta = -1;
 			respuesta = recibirMensaje(new_lst, mensaje);
-			if ((mensajeUmc = recv(new_lst, buffer, sizeof(buffer), 0)) <= 0) {
-				if (mensajeUmc == 0) {
-					// UMC Cerro la conexion
-					printf("SWAP: Select: La UMC %d se ha desconectado\n", new_lst);
-					return EXIT_FAILURE;
-				} else {
-					//Hubo un error en la conexion
-					perror("recv");
-					return EXIT_FAILURE;
-				}
-			}
 
 			paqueteUMC *paqueteRta= malloc(sizeof(paqueteUMC));
 
@@ -85,12 +73,12 @@ int main(int argc,char **argv) {
 				//retardo??
 				printf("Se escribira para el proceso %d /n", paquete->pid);
 				int flagRespuesta;
-				flagRespuesta = escribirPaginaProceso(paquete->pid, paquete->pagina, paquete->texto);
+				//flagRespuesta = escribirPaginaProceso(paquete->pid, paquete->pagina, paquete->texto);
 				//flagRespuesta = escribirPagina(o->pagina, paginaAEscribir);
 				paqueteRta->flagProc = flagRespuesta;
 
-				armarMensaje(msjRespuesta,0,sizeof(orden), oRespuesta);
-				enviarMensaje(socketDeMemoria,msjRespuesta);
+			//	armarMensaje(msjRespuesta,0,sizeof(paqueteUMC), paqueteRta);
+			//	enviarMensaje(new_lst,msjRespuesta);
 				break;
 			}
 		}
