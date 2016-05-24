@@ -41,7 +41,7 @@
 
 typedef struct{
   int socket_CPU;
-  int socket_PROGRAMA;
+  int socket_CONSOLA;
   t_pcb pcb;
 }t_proceso;
 

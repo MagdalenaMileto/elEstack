@@ -15,6 +15,9 @@ Handshake exitoso
 
 CONSOLA -> 103 -> Nucleo  
 mando en data el codigo  
+  
+NUCLEO -> 108 -> Consola
+fin de proceso por desconexion abrupta con cpu
 
 
 ##UMC - Nucleo  
@@ -43,6 +46,12 @@ escribo paginas
 Nucleo -> 301 -> CPU  
 CPU -> 302 -> Nucleo  
 Handshake exitoso  
+  
+
+Nucleo -> 303 -> CPU  
+envio PCB  
+CPU -> 304 -> NUCLEO  
+fin de quantum
 
 
 
