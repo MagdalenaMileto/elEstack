@@ -30,69 +30,84 @@ int main(int argc,char **argv) {
 	crearArchivo();
 	mapearArchivo();
 
-	sock_lst = iniciarServidor();
-	new_lst = establecerConexion(sock_lst);
+	sock_lst = iniciarServidor(Puerto);
+	while(1){
+		new_lst = establecerConexion(sock_lst);
+		MPS_MSG *mensaje = calloc(1,sizeof(MPS_MSG));
 
-	if ((mensajeUmc = recv(new_lst, buffer, sizeof(buffer), 0)) <= 0) {
-		if (mensajeUmc == 0) {
-			// UMC Cerro la conexion
-			printf("SWAP: Select: La UMC %d se ha desconectado\n", new_lst);
-			return EXIT_FAILURE;
-		} else {
-			//Hubo un error en la conexion
-			perror("recv");
-			return EXIT_FAILURE;
+		while(1){
+			int respuesta = -1;
+			respuesta = recibirMensaje(new_lst, mensaje);
+			if ((mensajeUmc = recv(new_lst, buffer, sizeof(buffer), 0)) <= 0) {
+				if (mensajeUmc == 0) {
+					// UMC Cerro la conexion
+					printf("SWAP: Select: La UMC %d se ha desconectado\n", new_lst);
+					return EXIT_FAILURE;
+				} else {
+					//Hubo un error en la conexion
+					perror("recv");
+					return EXIT_FAILURE;
+				}
+			}
+
+			paqueteUMC *paqueteRta= malloc(sizeof(paqueteUMC));
+
+			//asociar a paquete con el proceso que me llega y el mensaje que entra que diga que se tiene que hacer (pedidoUMC)
+			switch (pedidoUMC){
+			case 0: {//Nuevo proceso
+				// Tiene que haber retardo?
+				printf("Se creara un nuevo proceso de %d paginas y con PID: %d \n", paquete->nroPag, paquete->pid);
+
+				paqueteRta->pid = paquete->pid;
+				int espacio = hayLugarParaNuevoProceso(paquete->nroPag);
+
+				if(espacio == -2){
+					compactacion();
+					int espacio2 = hayLugarParaNuevoProceso(paquete->nroPag);
+					paqueteRta->flagProc = reservarProceso(paquete->pid,paquete->nroPag, espacio2);
+				}
+				if(espacio == -1)
+				{
+					paqueteRta->flagProc = 0;
+				}
+				else{
+					paqueteRta->flagProc = reservarProceso(paquete->pid,paquete->nroPag, espacio);
+				}
+				break;
+			}
+			case 1: { //caso de Sacar proceso
+		///retardo?
+				printf("Se liberara el proceso %d /n", paquete->pid);
+				paqueteRta->flagProc = liberarProceso(paquete->pid);
+				break;
+			}
+			case 2: { //caso de Escritura en disco
+				//retardo??
+				printf("Se escribira para el proceso %d /n", paquete->pid);
+				int flagRespuesta;
+				flagRespuesta = escribirPaginaProceso(paquete->pid, paquete->pagina, paquete->texto);
+				//flagRespuesta = escribirPagina(o->pagina, paginaAEscribir);
+				paqueteRta->flagProc = flagRespuesta;
+
+				armarMensaje(msjRespuesta,0,sizeof(orden), oRespuesta);
+				enviarMensaje(socketDeMemoria,msjRespuesta);
+				break;
+			}
+		}
+
+			printf("SWAP: El mensaje:  %s\n de la UMC a llegado al Swap.\n",buffer);
+
+
+
+		//
+		//	//Me llega un nuevo proceso
+		//	printf("LLego nuevo proceso al SWAP \n");
+
+
+			printf("SWAP: me cierro\n");
+			return EXIT_SUCCESS;
 		}
 	}
-
-	paqueteUMC *paqueteRta= malloc(sizeof(paqueteUMC));
-
-	//asociar a paquete con el proceso que me llega y el mensaje que entra que diga que se tiene que hacer (pedidoUMC)
-	switch (pedidoUMC){
-	case 0: {//Nuevo proceso
-		// Tiene que haber retardo?
-		printf("Se creara un nuevo proceso de %d paginas y con PID: %d \n", paquete->nroPag, paquete->pid);
-
-		paqueteRta->pid = paquete->pid;
-		int espacio = hayLugarParaNuevoProceso(paquete->nroPag);
-
-		if(espacio == -2){
-			compactacion();
-			int espacio2 = hayLugarParaNuevoProceso(paquete->nroPag);
-			paqueteRta->flagProc = reservarProceso(paquete->pid,paquete->nroPag, espacio2);
-		}
-		if(espacio == -1)
-		{
-			paqueteRta->flagProc = 0;
-		}
-		else{
-			paqueteRta->flagProc = reservarProceso(paquete->pid,paquete->nroPag, espacio);
-		}
-		break;
-	}
-	case 1: { //caso de Sacar proceso
-///retardo?
-		printf("Se liberara el proceso %d /n", paquete->pid);
-		paqueteRta->flagProc = liberarProceso(paquete->pid);
-		break;
-	}
-	case 2: { //caso de Escritura endisco
-
-		break;
-	}
-}
-
-	printf("SWAP: El mensaje:  %s\n de la UMC a llegado al Swap.\n",buffer);
-
-
-
-//
-//	//Me llega un nuevo proceso
-//	printf("LLego nuevo proceso al SWAP \n");
-
-
-	printf("SWAP: me cierro\n");
-	return EXIT_SUCCESS;
 }
 
 int abrirConfiguracion() {
@@ -195,53 +210,7 @@ int mapearArchivo(){
 	return 1;
 }
 
-int iniciarServidor(int puerto) {
 
-	int sock_lst;  // Escuchar sobre sock_lst, nuevas conexiones sobre new_lst
-	struct sockaddr_in my_addr;    // información sobre mi dirección
-	my_addr.sin_family = AF_INET;         // Ordenación de bytes de máquina
-	my_addr.sin_port = htons(Puerto);     // short, Ordenación de bytes de la red
-	my_addr.sin_addr.s_addr = INADDR_ANY; // rellenar con mi dirección IP
-	memset(&(my_addr.sin_zero), '\0', 8); // poner a cero el resto de la estructura
-	int yes=1;
-
-	if ((sock_lst = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
-		perror("socket");
-		return -1;
-	}
-
-	if (setsockopt(sock_lst,SOL_SOCKET,SO_REUSEADDR,&yes,sizeof(int)) == -1) {
-		perror("setsockopt");
-		return -1;
-	}
-
-	if (bind(sock_lst, (struct sockaddr *)&my_addr, sizeof(struct sockaddr)) == -1) {
-		perror("bind");
-		return -1;
-	}
-
-	if (listen(sock_lst, 10) == -1) {
-		perror("listen");
-		return -1;
-	}
-
-	return sock_lst;
-}
-
-int establecerConexion(int sock_lst) {
-	int new_lst;
-	struct sockaddr_in umcAddress; // información sobre la dirección del cliente
-	unsigned int sin_size = sizeof(struct sockaddr_in);
-	if ((new_lst = accept(sock_lst, (struct sockaddr *)&umcAddress, &sin_size)) == -1)
-	{
-		perror("accept");
-	}
-	else {
-        printf("SWAP: Nueva conexion desde %s en" "socket %d\n",inet_ntoa(umcAddress.sin_addr), new_lst);
-        return -1;
-	}
-	return new_lst;
-}
 
 int hayLugarParaNuevoProceso(int cantPagsNecesita){
 	//en caso de no encontrar lugar, me devuelve -1 y paso a hacer la compactacion
@@ -481,7 +450,5 @@ int getPosicionDelProceso(int idProc){
 		}
 	}
 	return idProceso;
-
 }
-
 
