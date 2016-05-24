@@ -10,7 +10,7 @@
 #include "nucleo.h"
 
 
-
+#define ERROR -1
 
 /* VARIABLES GLOBALES */
 int * CONSTANTE;
@@ -122,7 +122,7 @@ int main(){
       pthread_join(thCONEXIONES_CPU, NULL);
 
       pthread_join(thPCP, NULL);
-	pthread_join(thPLP, NULL);
+        pthread_join(thPLP, NULL);
 
 
 
@@ -182,12 +182,13 @@ t_proceso* dameProceso(t_queue *cola, int sock ){
 void *hilo_PLP(void *arg){
 t_proceso *proceso;
 
+//Hay un proceso en new mando a ready 
+//hacerlo con semafoto para que bloquee
+
     while(1){
-   		if(queue_size(cola_new)!=0){
-   			//Hay un proceso en new mando a ready
-          proceso=queue_pop(cola_new);
-   			printf("Nucleo: Saco proceso  %d new, mando a ready\n",proceso->pcb.pid);
-   		
+   		if(queue_size(cola_new)!=0){			
+            proceso=queue_pop(cola_new);
+   			printf("Nucleo: Saco proceso  %d new, mando a ready\n",proceso->pcb.pid);   		
    			queue_push(cola_ready,proceso);
    		}	
     }
@@ -195,20 +196,28 @@ t_proceso *proceso;
 }
 
 
+
+
 void mandarAEjecutar(t_proceso *proceso,int sock){
   t_header header; int estado;
   header.id=303;
   header.data=&proceso->pcb;
   header.size=sizeof(proceso->pcb);
-  sleep(1);
   proceso->socket_CPU=sock;
-  estado = enviar_paquete((int)sock,header);
-
-
-
+  enviar_paquete((int)sock,header);
 }
 
 
+int handlerErrorCPU(int error,int sock){
+    t_proceso *proceso;
+    if(error == -1){
+        if((proceso=dameProceso(cola_exec,sock))||(proceso=dameProceso(cola_ready,sock))||(proceso=dameProceso(cola_block,sock))||(proceso=dameProceso(cola_new,sock))||(proceso=dameProceso(cola_exit,sock))){
+           enviar_id(proceso->socket_CONSOLA,108);
+           return -1;
+        }
+    }
+    return 0;
+}
 
 
 void *hilo_PCP(void *arg){
@@ -235,11 +244,13 @@ t_proceso *proceso;int sock;
 }
 
 
-t_proceso* crearPrograma(void){
+t_proceso* crearPrograma(int sock){
+
 
       t_proceso* procesoNuevo;
       procesoNuevo=malloc(sizeof(t_proceso));
       procesoNuevo->pcb.pid=pidcounter;
+      procesoNuevo->socket_CONSOLA=sock;
       pidcounter++;
       return procesoNuevo;
 
@@ -339,7 +350,7 @@ void *hilo_CONEXION_CONSOLA(void *arg){
     }
     printf("NUCLEO:Handshake valido consola, creando proceso %d\n",args->socket);
 
-    proceso = crearPrograma();
+    proceso = crearPrograma(args->socket);
 
       while(1){
             t_header estructuraARecibir; // Esto tiene que ser un puntero cambiar.....
@@ -435,13 +446,19 @@ void *hilo_CONEXION_CPU(void *arg){
           }
 
             switch(estado){
-              case 304:
-                
-               proceso=dameProceso(cola_exec,args->socket);
-               printf("NUCLEO: Recibi proceso %d por fin de quantum, encolando en cola ready\n",proceso->pcb.pid);
-               queue_push(cola_ready,proceso);
-               queue_push(cola_CPU_libres,(void *)args->socket);
+              case 304:            
+                    proceso=dameProceso(cola_exec,args->socket);
+                    printf("NUCLEO: Recibi proceso %d por fin de quantum, encolando en cola ready\n",proceso->pcb.pid);
+                    queue_push(cola_ready,proceso);
+                    queue_push(cola_CPU_libres,(void *)args->socket);
               break;
+
+                case 320:
+                    proceso=dameProceso(cola_exec,args->socket);
+                    printf("NUCLEO: Recibi proceso %d por fin de ejecucion, encolando en cola exit\n",proceso->pcb.pid);
+                    queue_push(cola_exit,proceso);
+                    queue_push(cola_CPU_libres,(void *)args->socket);
+                break;
 
             }
 
