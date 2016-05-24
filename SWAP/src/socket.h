@@ -38,7 +38,11 @@ typedef struct _t_header
 
 int iniciarServidor();
 int establecerConexion(int sock_lst);
-int recibirMensaje(int Socket, MPS_MSG *mensaje);
-int recibirInfo(int new_lst, buffer_t Buffer, int CantidadARecibir);
+int recibirMensaje(int new_lst, MPS_MSG *mensaje);
+int recibirInfo(int new_lst, buffer_t Buffer, int cantidadARecibir);
+int enviarInfo(int new_lst, buffer_t Buffer, int cantidadAEnviar);
+int enviarMensaje(int new_lst, MPS_MSG *mensaje);
+void armarMensaje(MPS_MSG* mensaje,int descriptor,int tam_payload,void* payload);
+
 
 #endif /* SOCKET_H_ */

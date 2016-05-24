@@ -21,9 +21,6 @@ int main(int argc,char **argv) {
 
 	int sock_lst;
 	int new_lst;
-	char buffer[100];
-	int pedidoUMC;
-	paqueteUMC* paquete = malloc(sizeof(paqueteUMC));
 
 	abrirConfiguracion();
 	crearArchivo();
@@ -38,64 +35,76 @@ int main(int argc,char **argv) {
 			int respuesta = -1;
 			respuesta = recibirMensaje(new_lst, mensaje);
 
-			paqueteUMC *paqueteRta= malloc(sizeof(paqueteUMC));
-
-			//asociar a paquete con el proceso que me llega y el mensaje que entra que diga que se tiene que hacer (pedidoUMC)
-			switch (pedidoUMC){
-			case 0: {//Nuevo proceso
-				// Tiene que haber retardo?
-				printf("Se creara un nuevo proceso de %d paginas y con PID: %d \n", paquete->nroPag, paquete->pid);
-
-				paqueteRta->pid = paquete->pid;
-				int espacio = hayLugarParaNuevoProceso(paquete->nroPag);
-
-				if(espacio == -2){
-					compactacion();
-					int espacio2 = hayLugarParaNuevoProceso(paquete->nroPag);
-					paqueteRta->flagProc = reservarProceso(paquete->pid,paquete->nroPag, espacio2);
-				}
-				if(espacio == -1)
-				{
-					paqueteRta->flagProc = 0;
-				}
-				else{
-					paqueteRta->flagProc = reservarProceso(paquete->pid,paquete->nroPag, espacio);
-				}
-				break;
-			}
-			case 1: { //caso de Sacar proceso
-		///retardo?
-				printf("Se liberara el proceso %d /n", paquete->pid);
-				paqueteRta->flagProc = liberarProceso(paquete->pid);
-				break;
-			}
-			case 2: { //caso de Escritura en disco
-				//retardo??
-				printf("Se escribira para el proceso %d /n", paquete->pid);
+			if(respuesta != -1){
+				paqueteUMC* paquete = malloc(sizeof(paqueteUMC));
+				paquete = (paqueteUMC*)mensaje->Payload;
 				int flagRespuesta;
-				//flagRespuesta = escribirPaginaProceso(paquete->pid, paquete->pagina, paquete->texto);
-				//flagRespuesta = escribirPagina(o->pagina, paginaAEscribir);
-				paqueteRta->flagProc = flagRespuesta;
+				MPS_MSG* msjRespuesta = malloc(sizeof(MPS_MSG));
+				paqueteUMC* paqueteRta= malloc(sizeof(paqueteUMC));
 
-			//	armarMensaje(msjRespuesta,0,sizeof(paqueteUMC), paqueteRta);
-			//	enviarMensaje(new_lst,msjRespuesta);
-				break;
-			}
-		}
+				///////////////////////
+//				long int inicio;
+//				long int final;
+//				int i;
+//				int flag;
+//				flagParaPag pagflag;
+//				pagflag.paginaAEscribir = calloc(1,Tamanio_Pagina);
+				///////////////////////
 
-			printf("SWAP: El mensaje:  %s\n de la UMC a llegado al Swap.\n",buffer);
+				switch (paquete->pedido){
+				case 0: {//Nuevo proceso
+					// Tiene que haber retardo?
+					printf("Se creara un nuevo proceso de %d paginas y con PID: %d \n", paquete->pagina, paquete->pid);
 
+					paqueteRta->pid = paquete->pid;
+					int espacio = hayLugarParaNuevoProceso(paquete->pagina);
 
-
-		//
-		//	//Me llega un nuevo proceso
-		//	printf("LLego nuevo proceso al SWAP \n");
-
-
-			printf("SWAP: me cierro\n");
-			return EXIT_SUCCESS;
+					if(espacio == -2){
+						compactacion();
+						int espacio2 = hayLugarParaNuevoProceso(paquete->pagina);
+						paqueteRta->flagProc = reservarProceso(paquete->pid,paquete->pagina, espacio2);
+					}
+					if(espacio == -1)
+					{
+						paqueteRta->flagProc = 0;
+					}
+					else{
+						paqueteRta->flagProc = reservarProceso(paquete->pid,paquete->pagina, espacio);
+					}
+					armarMensaje(msjRespuesta,0, sizeof(paqueteUMC), paqueteRta);
+					enviarMensaje(new_lst, msjRespuesta);
+					respuesta = -1;
+					break;
+				}
+				case 1: { //caso de Sacar proceso
+					///retardo?
+					printf("Se liberara el proceso %d /n", paquete->pid);
+					paqueteRta->flagProc = liberarProceso(paquete->pid);
+					armarMensaje(msjRespuesta,0,sizeof(paqueteUMC), paqueteRta);
+					enviarMensaje(new_lst, msjRespuesta);
+					respuesta = -1;
+					break;
+				}
+				case 2: { //caso de Escritura en disco
+					//retardo??
+					printf("Se escribira para el proceso %d /n", paquete->pid);
+					flagRespuesta = escribirPaginaProceso(paquete->pid, paquete->pagina, paquete->texto);
+					paqueteRta->flagProc = flagRespuesta;
+					armarMensaje(msjRespuesta,0,sizeof(paqueteUMC), paqueteRta);
+					enviarMensaje(new_lst,msjRespuesta);
+					respuesta = -1;
+					break;
+				}
+					//default
+				case 3: { //caso de Lectura de pagina
+				}
+				}else
+					{
+					break;
+				}
 		}
 	}
+			return 0;
 }
 
 int abrirConfiguracion() {
@@ -440,3 +449,40 @@ int getPosicionDelProceso(int idProc){
 	return idProceso;
 }
 
+int escribirPaginaProceso(int idProceso, int nroPag, char*data){
+	int resultado;
+	int posProc = getPosicionDelProceso(idProceso);
+	int primeraPagProceso = getPrimerPagProc(idProceso);
+	int cantidadPagsQueUsa = procesos[posProc].cantPagsUsando;
+	int paginaAEscribir = nroPag + primeraPagProceso; //lo mismo que la linea de leer pagina, para volver a antes poner -1
+	if(nroPag > cantidadPagsQueUsa)
+	{
+		printf("No puede escribir en %d, no esta en su rango /n", nroPag);
+		return 0;
+	}
+	printf("Se escribira la pagina %d del proceso: %d, cuya asociada es %d /n", nroPag,idProceso,paginaAEscribir);
+	resultado = escribirPagina(paginaAEscribir, data);
+	return resultado;
+}
+
+int escribirPagina(int nroPag, char*dataPagina){
+	long int inicioPag;
+	long int finPag;
+	int cantCaracteres;
+	cantCaracteres = strlen(dataPagina);
+
+	printf("Se escribira la pagina %d de %d bytes, aun asi ocupara %d /n",nroPag ,cantCaracteres,Tamanio_Pagina);
+	int numero = nroPag;
+	leerPagina(numero, &inicioPag, &finPag); //con esto determino los valores de inicio de escritura y de fin
+	int i=0;
+	memset(discoParaleloNoVirtual, '\0', Tamanio_Pagina);
+	for(i =0; i<cantCaracteres;i++){
+		char car = dataPagina[i];
+		discoParaleloNoVirtual[(inicioPag+i)] = car;
+	}
+	if(updatearArchivoDisco(numero)==1)
+	{
+		printf("Pagina %d, copiada con exito! Contenido de la misma: %s /n", nroPag, dataPagina);
+	}
+	return 1;
+}

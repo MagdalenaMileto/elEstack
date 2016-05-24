@@ -85,15 +85,15 @@ int recibirMensaje(int new_lst, MPS_MSG *mensaje) {
 	return retorno;
 }
 
-int recibirInfo(int new_lst, buffer_t Buffer, int CantidadARecibir) {
-	long Recibido = 0;
-	long TotalRecibido = 0;
-	while (TotalRecibido < CantidadARecibir) {
-		Recibido = recv(new_lst, Buffer + TotalRecibido,CantidadARecibir - TotalRecibido, 0);
+int recibirInfo(int new_lst, buffer_t Buffer, int cantidadARecibir) {
+	long recibido = 0;
+	long totalRecibido = 0;
+	while (totalRecibido < cantidadARecibir) {
+		recibido = recv(new_lst, Buffer + totalRecibido,cantidadARecibir - totalRecibido, 0);
 
-		switch (Recibido) {
+		switch (recibido) {
 		case 0:
-			return TotalRecibido;
+			return totalRecibido;
 			break;
 
 		case -1:
@@ -101,11 +101,68 @@ int recibirInfo(int new_lst, buffer_t Buffer, int CantidadARecibir) {
 			break;
 
 		default:
-			TotalRecibido += Recibido;
+			totalRecibido += recibido;
 			break;
 		}
 	}
-	return TotalRecibido;
+	return totalRecibido;
+}
+
+int enviarInfo(int new_lst, buffer_t Buffer, int cantidadAEnviar) {
+	int enviados = 0;
+	int totalEnviados = 0;
+
+	while (totalEnviados < cantidadAEnviar) {
+		enviados = send(new_lst, Buffer + totalEnviados,cantidadAEnviar - totalEnviados, 0);
+		switch (enviados) {
+		case 0:
+			return totalEnviados;
+			break;
+
+		case -1:
+			return -1;
+			break;
+
+		default:
+			totalEnviados += enviados;
+			break;
+		}
+	};
+
+	return totalEnviados;
+}
+
+int enviarMensaje(int new_lst, MPS_MSG *mensaje) {
+	int retorno;
+	t_header cabecera;
+	unsigned char *BufferEnviar;
+	int largoHeader = sizeof(cabecera.id_payload)+ sizeof(cabecera.tam_payload);
+	int largoTotal = largoHeader + mensaje->tam_payload;
+
+	BufferEnviar = malloc(sizeof(unsigned char) * largoTotal);
+	cabecera.id_payload = mensaje->id_payload;
+	cabecera.tam_payload = mensaje->tam_payload;
+	//Copia la cabecera al buffer.
+	memcpy(BufferEnviar, &cabecera, largoHeader);
+	//copia el mensaje seguido de la cabezera dentro del buffer.
+	memcpy(BufferEnviar + largoHeader, mensaje->Payload,
+			mensaje->tam_payload);
+
+	setsockopt(new_lst, SOL_SOCKET, SO_SNDBUF, &largoTotal, sizeof(int));
+	retorno = enviarInfo(new_lst, BufferEnviar, largoTotal);
+
+	free(BufferEnviar);
+	if (retorno < largoTotal) {
+		return -1;
+	}
+	return 1;
+}
+
+
+void armarMensaje(MPS_MSG* mensaje,int descriptor,int tam_payload,void* payload){
+	mensaje->id_payload=descriptor;
+	mensaje->tam_payload = tam_payload;
+	mensaje->Payload = payload;
 }
 
 

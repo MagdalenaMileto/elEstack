@@ -44,11 +44,13 @@ int updatearArchivoDisco();
 int liberarProceso(int idProc);
 int getPrimerPagProc(int idProceso);
 int getPosicionDelProceso(int idProc);
+int escribirPaginaProceso(int idProceso, int nroPag, char*data);
+int escribirPagina(int nroPag, char*dataPagina);
 
 typedef struct __attribute__((packed)){
 	int pid;
-	int nroPag;
-	int posicionSwap;
+	int pedido;
+	int pagina;
 	char texto[1024];
 	int flagProc; //
 } paqueteUMC;
@@ -62,6 +64,11 @@ typedef struct __attribute__((packed)){
 	int cantPagsUsando;
 	int idProceso;
 }proceso;
+
+typedef struct __attribute__((packed)){
+	int flagResultad;
+	char *paginaAEscribir;
+}flagParaPag;
 
 
 #endif /* SWAP_H_ */
