@@ -26,26 +26,6 @@ int Retardo_Compactacion;
 t_config* configuracion;
 long int tamanio_archivo;
 
-int	abrirConfiguracion();
-int	crearArchivo();
-int mapearArchivo();
-int asignarEspacio(int cantPagsAAsignar, int contadorP, int proceso, int inicio);
-int ultimaPagLibre();
-int compactacion();
-int hayLugarParaNuevoProceso(int cantPagsNecesita);
-int primerPaginaOcupadaLuegoDeUnaLibreDada(int nroPag);
-int primerPagLibreAPartirDeUnaDada(int numeroPag);
-int reservarProceso(int pidProceso, int cantPags , int pagAPartir);
-void nuevoProc(int pid);
-int primerPaginaOcupadaLuegoDeUnaLibre();
-int leerPagina( int nroPag, long int*inicio, long int*fin);
-int hayPaginasOcupadasLuegoDeLaUltimaLibre();
-int updatearArchivoDisco();
-int liberarProceso(int idProc);
-int getPrimerPagProc(int idProceso);
-int getPosicionDelProceso(int idProc);
-int escribirPaginaProceso(int idProceso, int nroPag, char*data);
-int escribirPagina(int nroPag, char*dataPagina);
 
 typedef struct __attribute__((packed)){
 	int pid;
@@ -66,9 +46,33 @@ typedef struct __attribute__((packed)){
 }proceso;
 
 typedef struct __attribute__((packed)){
-	int flagResultad;
+	int flagResultado;
 	char *paginaAEscribir;
 }flagParaPag;
+
+int	abrirConfiguracion();
+int	crearArchivo();
+int mapearArchivo();
+int asignarEspacio(int cantPagsAAsignar, int contadorP, int proceso, int inicio);
+int ultimaPagLibre();
+int compactacion();
+int hayLugarParaNuevoProceso(int cantPagsNecesita);
+int primerPaginaOcupadaLuegoDeUnaLibreDada(int nroPag);
+int primerPagLibreAPartirDeUnaDada(int numeroPag);
+int reservarProceso(int pidProceso, int cantPags , int pagAPartir);
+void nuevoProc(int pid);
+int primerPaginaOcupadaLuegoDeUnaLibre();
+int leerPagina( int nroPag, long int*inicio, long int*fin);
+int hayPaginasOcupadasLuegoDeLaUltimaLibre();
+int updatearArchivoDisco();
+int liberarProceso(int idProc);
+int getPrimerPagProc(int idProceso);
+int getPosicionDelProceso(int idProc);
+int escribirPaginaProceso(int idProceso, int nroPag, char*data);
+int escribirPagina(int nroPag, char*dataPagina);
+int leerPaginaProceso(int idProceso, int nroPag, flagParaPag* flagParaPag);
+
+
 
 
 #endif /* SWAP_H_ */

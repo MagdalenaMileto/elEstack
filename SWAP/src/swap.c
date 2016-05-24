@@ -47,8 +47,8 @@ int main(int argc,char **argv) {
 //				long int final;
 //				int i;
 //				int flag;
-//				flagParaPag pagflag;
-//				pagflag.paginaAEscribir = calloc(1,Tamanio_Pagina);
+				flagParaPag pagflag;
+				pagflag.paginaAEscribir = calloc(1,Tamanio_Pagina);
 				///////////////////////
 
 				switch (paquete->pedido){
@@ -97,14 +97,26 @@ int main(int argc,char **argv) {
 				}
 					//default
 				case 3: { //caso de Lectura de pagina
-				}
-				}else
-					{
+					printf("Se leera la pagina: %d, del proceso %d /n", paquete->pagina, paquete->pid);
+					leerPaginaProceso(paquete->pid,paquete->pagina, &pagflag);
+
+					paqueteRta->flagProc = pagflag.flagResultado;
+					strcpy(paqueteRta->texto,pagflag.paginaAEscribir);
+					armarMensaje(msjRespuesta,0,sizeof(paqueteUMC), paqueteRta);
+					enviarMensaje(new_lst,msjRespuesta);
+					respuesta=-1;
+
 					break;
 				}
+				default: printf("idOrden incorrecto");
+				}
+			} else
+			{
+				break;
+			}
 		}
 	}
-			return 0;
+	return 0;
 }
 
 int abrirConfiguracion() {
@@ -484,5 +496,27 @@ int escribirPagina(int nroPag, char*dataPagina){
 	{
 		printf("Pagina %d, copiada con exito! Contenido de la misma: %s /n", nroPag, dataPagina);
 	}
+	return 1;
+}
+
+int leerPaginaProceso(int idProceso, int nroPag, flagParaPag* flagParaPag){
+	int posProc = getPosicionDelProceso(idProceso);
+	int primerPag=getPrimerPagProc(idProceso);
+	int cantPagsEnUso = procesos[posProc].cantPagsUsando;
+	int posPag = primerPag +nroPag;
+	if(nroPag>cantPagsEnUso)
+	{
+		printf("No puede leer la pagina %d, no tiene permisos /n",nroPag);
+		return 0;
+	}
+	long int inicio,fin;
+	flagParaPag->flagResultado = leerPagina(posPag,&inicio,&fin);
+	int i;
+	char*dataLeida = malloc(Tamanio_Pagina);
+	for(i=0;i<Tamanio_Pagina; i++)
+	{
+		dataLeida[i]= discoMapped[inicio +i];
+	}
+	strcpy(flagParaPag->paginaAEscribir,dataLeida);
 	return 1;
 }
