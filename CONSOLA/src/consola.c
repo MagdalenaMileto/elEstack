@@ -55,7 +55,6 @@ int main(int argc, char **argv) {
 
 				}
 
-	leerArchivoDeConfiguracion();
 	nucleo= conectarConElNucleo();
 	estado= enviarInformacionAlNucleo(script, nucleo, consola);
 
@@ -132,50 +131,39 @@ printf("CONSOLA: Conecta bien nucleo %d\n", nucleo);
 return nucleo;
 }
 
-
-
-
 int enviarInformacionAlNucleo(char * script, signed int nucleo, signed int consola){
 
+	t_header header,headerEnviar;
+	int estado;
 
-	char *buffer = sizeof(script);
-	char * mensaje;
+	 while(1){
 
-	printf("***%d*\n",*((int*)script));
+	     	if(header.id==103){
 
-	send(nucleo,buffer,sizeof(buffer),0);
+	     		headerEnviar.id=205;int a=1;
+	     		headerEnviar.data=&a;
+	     		headerEnviar.size=sizeof(int);
+	     		enviar_paquete(nucleo,headerEnviar);
 
-	while(1){
+	     	}
 
+	     	 if(header.id==108){
 
-		   // se quedara esperando resuesta?? eso esta bien?
+	     	estado=recibir_paquete(nucleo,&header);
 
-		if (recv(nucleo,buffer,sizeof(buffer),mensaje))return EXIT_FAILURE;
-				else printf("%s\n", mensaje);
+	     	}
 
-		}
+	     //	printf("Pase\n");
+	     	free(header.data);
+
+	 	 }
 
 return 0;
 }
 
 
-void leerArchivoDeConfiguracion(void){
-
-	t_config* configuracion;
-
-	configuracion = config_create("Ruta al archivo de configuracion");
 
 
-	if (config_has_property(configuracion,"PUERTO_NUCLEO"))
-		PUERTO_NUCLEO = config_get_int_value(configuracion,PUERTO_NUCLEO);
-	else
-	{
-		perror("No esta configurado el puerto del nucleo");
-		return;
-	}
-
-
-}
 
 
 
