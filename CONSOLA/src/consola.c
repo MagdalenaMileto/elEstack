@@ -111,16 +111,28 @@ char* leerElArchivo(FILE *archivo) {
 int conectarConElNucleo(){
 
 
-int nucleo = cliente(direccion, PUERTO_NUCLEO);
+int nucleo = cliente("127.0.0.1", PUERTO_NUCLEO);
 
-		//	if(handshakeOut('c','n',nucleo))
-		//	{
-		//		perror("No me conecte con un nucleo\n");
-		//		close(nucleo);
-		//		return 1;
-		//	}
+if(nucleo==0){
+	printf("CONSOLA: No encontre NUCLEO\n");
+	exit (EXIT_FAILURE);
+	}
+
+printf("CONSOLA: Conecta bien nucleo %d\n", nucleo);
+
+
+        int estado;
+        estado=handshake(nucleo, 102,101);
+
+        if(estado==1){
+            printf("CONSOLA:Handshake exitoso con nucleo\n");
+        }else{
+            printf("CONSOLA:Handshake invalido con nucleo\n");
+        }
+
 return nucleo;
 }
+
 
 
 
