@@ -6,8 +6,7 @@
  */
 #include "funcionesConsola.h"
 
-char *direccion = "127.0.0.1";  // no es el de nucleo
-int PUERTO_NUCLEO;
+int PUERTO_NUCLEO = 9997;
 int socketConexionNucleo;
 
 
@@ -139,7 +138,7 @@ return nucleo;
 int enviarInformacionAlNucleo(char * script, signed int nucleo, signed int consola){
 
 
-	char *buffer = 1000;
+	char *buffer = sizeof(script);
 	char * mensaje;
 
 	printf("***%d*\n",*((int*)script));
