@@ -5,21 +5,29 @@
  *      Author: utnso
  */
 #include "funcionesConsola.h"
-char *direccion;
-int puerto;
+
+char *direccion = "127.0.0.1";  // no es el de nucleo
+int PUERTO_NUCLEO;
 int socketConexionNucleo;
+
 
 // estaria muy bueno hacer el log..
 
 
 int main(int argc, char **argv) {
 
+	if (argc != 2)
+		{
+			perror("No se paso la cantidad de parametros necesaria\n");
+			return EXIT_FAILURE;
+		}
+
 	char* script;
 	FILE *archivo;
 	char nomArchivo[50];
-	int32_t nucleo;
-	int32_t estado;
-	int32_t consola;
+	signed int nucleo;
+	signed int estado;
+	signed int consola;
 
 
 	consola=iniciarConsola();
@@ -42,6 +50,7 @@ int main(int argc, char **argv) {
 
 				}
 
+	leerArchivoDeConfiguracion();
 	nucleo= conectarConElNucleo();
 	estado= enviarInformacionAlNucleo(script, nucleo, consola);
 
@@ -96,7 +105,7 @@ char* leerElArchivo(FILE *archivo) {
 int conectarConElNucleo(){
 
 
-int nucleo = cliente(direccion, puerto);
+int nucleo = cliente(direccion, PUERTO_NUCLEO);
 
 		//	if(handshakeOut('c','n',nucleo))
 		//	{
@@ -109,40 +118,47 @@ return nucleo;
 
 
 
-int enviarInformacionAlNucleo(char * script, int32_t nucleo, int32_t consola){
-
-	typedef struct{
-			int32_t id;
-			int32_t size;
-			void* data;
-		}t_header;
+int enviarInformacionAlNucleo(char * script, signed int nucleo, signed int consola){
 
 
-	 t_header header;
-	header.id = 102;
-	header.size = sizeof(script);
-	header.data = &script;
+	char *buffer = 1000;
+	char * mensaje;
 
-	int32_t respuesta=0;
+	printf("***%d*\n",*((int*)script));
 
-	int32_t estado=0;
-
-	printf("***%d*\n",*((int*)header.data));
-
-	estado = enviar_paquete(nucleo, header);
+	send(nucleo,buffer,sizeof(buffer),0);
 
 	while(1){
 
 
-	respuesta=recibir_paquete(consola,&header);   // se quedara esperando resuesta?? eso esta bien?
+		   // se quedara esperando resuesta?? eso esta bien?
 
-		if (respuesta < 0)return EXIT_FAILURE;
-				else printf("%s\n", header.data);
+		if (recv(nucleo,buffer,sizeof(buffer),mensaje))return EXIT_FAILURE;
+				else printf("%s\n", mensaje);
 
-			free(header.size);
 		}
 
-return estado;
+return 0;
 }
+
+
+void leerArchivoDeConfiguracion(void){
+
+	t_config* configuracion;
+
+	configuracion = config_create("Ruta al archivo de configuracion");
+
+
+	if (config_has_property(configuracion,"PUERTO_NUCLEO"))
+		PUERTO_NUCLEO = config_get_int_value(configuracion,PUERTO_NUCLEO);
+	else
+	{
+		perror("No esta configurado el puerto del nucleo");
+		return;
+	}
+
+
+}
+
 
 
