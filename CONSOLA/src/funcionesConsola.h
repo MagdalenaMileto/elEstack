@@ -20,13 +20,14 @@
 #include <commons/config.h>
 #include "../../COMUNES/handshake.h"
 #include "../../COMUNES/nsockets.h"
-
+#include "../../COMUNES/nsockets.c"
+#include <commons/log.h>
+#include <commons/collections/list.h>
 
 int iniciarConsola();
 char* leerElArchivo(FILE *archivo);
 int conectarConElNucleo();
 int enviarInformacionAlNucleo(char * script, int nucleo, int consola);
-
 
 
 #endif /* FUNCIONESCONSOLA_H_ */
