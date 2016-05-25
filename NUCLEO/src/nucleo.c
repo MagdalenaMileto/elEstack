@@ -346,7 +346,7 @@ void *hilo_CONEXION_CONSOLA(void *arg){
 
     if(handshake(args->socket,101,102)!=1){
         printf("NUCLEO:Handshake invalido consola %d\n",args->socket);
-        return;
+       // return;
     }
     printf("NUCLEO:Handshake valido consola, creando proceso %d\n",args->socket);
 
@@ -625,7 +625,7 @@ void *hilo_mock_consola(void *arg){
 
     if(handshake(consola,102,101)!=1){
         printf("CONSOLAMOCK:Handshake invalido nucleo %d\n",consola);
-        return;
+        //return;
     }
      printf("CONSOLAMOCK:Handshake valido nucleo %d\n",consola);
 

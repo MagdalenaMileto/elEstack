@@ -29,6 +29,7 @@
 
 
  #include "../../COMUNES/nsockets.h"
+ //#include "../../COMUNES/nsockets.c"
 
  #include "../../COMUNES/estructurasControl.h"
 
