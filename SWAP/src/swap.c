@@ -22,6 +22,10 @@ int main(int argc,char **argv) {
 	int sock_lst;
 	int new_lst;
 
+	if(abrirConfiguracion() == -1){
+		return -1;
+	}
+
 	abrirConfiguracion();
 	crearArchivo();
 	mapearArchivo();
@@ -78,7 +82,7 @@ int main(int argc,char **argv) {
 				}
 				case 1: { //caso de Sacar proceso
 					///retardo?
-					printf("Se liberara el proceso %d /n", paquete->pid);
+					printf("Se liberara el proceso %d \n", paquete->pid);
 					paqueteRta->flagProc = liberarProceso(paquete->pid);
 					armarMensaje(msjRespuesta,0,sizeof(paqueteUMC), paqueteRta);
 					enviarMensaje(new_lst, msjRespuesta);
@@ -87,7 +91,7 @@ int main(int argc,char **argv) {
 				}
 				case 2: { //caso de Escritura en disco
 					//retardo??
-					printf("Se escribira para el proceso %d /n", paquete->pid);
+					printf("Se escribira para el proceso %d \n", paquete->pid);
 					flagRespuesta = escribirPaginaProceso(paquete->pid, paquete->pagina, paquete->texto);
 					paqueteRta->flagProc = flagRespuesta;
 					armarMensaje(msjRespuesta,0,sizeof(paqueteUMC), paqueteRta);
@@ -97,7 +101,7 @@ int main(int argc,char **argv) {
 				}
 					//default
 				case 3: { //caso de Lectura de pagina
-					printf("Se leera la pagina: %d, del proceso %d /n", paquete->pagina, paquete->pid);
+					printf("Se leera la pagina: %d, del proceso %d \n", paquete->pagina, paquete->pid);
 					leerPaginaProceso(paquete->pid,paquete->pagina, &pagflag);
 
 					paqueteRta->flagProc = pagflag.flagResultado;
@@ -155,16 +159,16 @@ int abrirConfiguracion() {
 		Tamanio_Pagina = config_get_int_value(configuracion, "Tamanio_Pagina");
 		printf("El tamanio de cada pagina es de %d \n", Tamanio_Pagina);
 	}else{
-			perror("No se encontro el tamanio de paginas en el archivo de configuracion");
-			error=1;
+		perror("No se encontro el tamanio de paginas en el archivo de configuracion");
+		error=1;
 	}
-		if(config_has_property(configuracion, "Retardo_Compactacion")){
-			Retardo_Compactacion = config_get_int_value(configuracion, "Retardo_Compactacion");
-			printf("El tiempo de retardo en compactacion, es de: %d \n", Retardo_Compactacion);
-		}else{
-			perror("No se encontro el retardo de compactacion en el archivo de configuracion");
-			error=1;
-		}
+	if(config_has_property(configuracion, "Retardo_Compactacion")){
+		Retardo_Compactacion = config_get_int_value(configuracion, "Retardo_Compactacion");
+		printf("El tiempo de retardo en compactacion, es de: %d \n", Retardo_Compactacion);
+	}else{
+		perror("No se encontro el retardo de compactacion en el archivo de configuracion");
+		error=1;
+	}
 	if(error){
 		return -1;
 	}else{
@@ -180,15 +184,17 @@ int crearArchivo(){
 	char *vectorArchivo[tamanio_archivo];
 	int i;
 	char* caracter = "\0";
-	for(i=0;i<tamanio_archivo;i++){
+	for(i=0;i<tamanio_archivo;i++)
+	{
 		vectorArchivo[i] = caracter;
 	}
-	for(i=0;i<tamanio_archivo;i++){
+	for(i=0;i<tamanio_archivo;i++)
+	{
 		fwrite(vectorArchivo[i],1,1,arch);
 	}
 
 	fclose(arch);
-
+	inicializarEstructuraPaginas();
 	contadorProcesos = 0;
 
 	return 1;
@@ -200,16 +206,18 @@ int mapearArchivo(){
 	discoSwapMapped=malloc(tamanio_archivo);
 	discoParaleloNoVirtual = malloc(tamanio_archivo);
 	fd = open(Nombre_Swap, O_RDONLY);
-	  if (fd == -1) {
+	  if (fd == -1)
+	  {
 		printf("Error abriendo %s para su lectura", Nombre_Swap);
 		exit(EXIT_FAILURE);
 	    }
-	  discoSwapMapped = mmap(0, length,PROT_READ, MAP_SHARED,fd,0);
-	if (discoSwapMapped == MAP_FAILED) {
+	discoSwapMapped = mmap(0, length,PROT_READ, MAP_SHARED,fd,0);
+	if (discoSwapMapped == MAP_FAILED)
+	{
 		close(fd);
 		printf("Error mapeando el archivo %s \n", Nombre_Swap);
 		exit(EXIT_FAILURE);
-	    }
+	}
 	discoMapped = discoSwapMapped;
 	int i;
 		for(i=0;i<tamanio_archivo;i++){
@@ -228,8 +236,10 @@ int hayLugarParaNuevoProceso(int cantPagsNecesita){
 	int j=ultimaPagLibre();
 	int i = j;
 	int totalLibres = 0;
+	//no me convence al 100%
 	while(1){
 		if(j == -1){
+			//no hay paginas libres
 			break;
 		}
 		int primerOcupada = primerPaginaOcupadaLuegoDeUnaLibreDada(j);
@@ -240,9 +250,13 @@ int hayLugarParaNuevoProceso(int cantPagsNecesita){
 		else {
 			totalLibres = totalLibres + primerOcupada-j;
 			i = j;
+
+
 			if(i == Cantidad_Paginas -1){
 				return -1;
 			}
+
+			//Hay que compactar para que pueda entrar el proceso
 			if(totalLibres >=cantPagsNecesita)
 			{
 				return -2;
@@ -297,10 +311,10 @@ int reservarProceso(int pidProceso, int cantPags , int pagAPartir){
 	int error;
 	error = asignarEspacio(cantPags, contadorProcesos, pidProceso, pagAPartir);
 	if(error == -1){
-		printf("Hubo error al asignar el proceso %d /n", pidProceso);
+		printf("Hubo error al asignar el proceso %d \n", pidProceso);
 		return 0;
 	}
-	printf("Se reservo el espacio para el proceso con PID: %d de %d paginas /n", pidProceso, cantPags);
+	printf("Se reservo el espacio para el proceso con PID: %d de %d paginas \n", pidProceso, cantPags);
 	return 1;
 }
 
@@ -312,7 +326,7 @@ int asignarEspacio(int cantPagsAAsignar, int contadorP, int proceso, int inicio)
 		return -1;
 	}
 	for(i=0;i<cantPagsAAsignar;i++){
-		printf("Se asignara la pagina %d al proceso %d /n", primerPaginaLibre+i,proceso);
+		printf("Se asignara la pagina %d al proceso %d \n", primerPaginaLibre+i,proceso);
 		paginasSWAP[primerPaginaLibre +i].ocupada = 1;
 		paginasSWAP[primerPaginaLibre +i].idProcesoQueLoOcupa = proceso;
 		cantPagsOcupadas++;
@@ -325,8 +339,8 @@ int asignarEspacio(int cantPagsAAsignar, int contadorP, int proceso, int inicio)
 }
 
 int compactacion(){ //Flag: 1 salio bien, 2 hubo error
-	printf("SE INVOCO AL MODULO DE COMPACTACION... /n");
-	printf("INICIANDO COMPACTACION /n");
+	printf("SE INVOCO AL MODULO DE COMPACTACION... \n");
+	printf("INICIANDO COMPACTACION \n");
 	int resultado = -1;
 	int i;
 	long int inicioOcupada, finOcupada;
@@ -338,12 +352,12 @@ int compactacion(){ //Flag: 1 salio bien, 2 hubo error
 		primerPaginaOcupada = primerPaginaOcupadaLuegoDeUnaLibre();
 		if(primerPaginaOcupada == -1)
 		{
-			printf("No hay mas paginas que compactar, finalizando correctamente. /n");
+			printf("No hay mas paginas que compactar, finalizando correctamente. \n");
 			break;
 		}
 		leerPagina(primerPaginaOcupada, &inicioOcupada, &finOcupada);
 		leerPagina(primerPaginaLibre,&inicioLibre,&finLibre);
-		printf("La pagina ocupada %d pasara a la pagina %d libre /n", primerPaginaOcupada, primerPaginaLibre);
+		printf("La pagina ocupada %d pasara a la pagina %d libre \n", primerPaginaOcupada, primerPaginaLibre);
 		for(i=0;i<Tamanio_Pagina;i++)
 		{
 			char car = discoParaleloNoVirtual[(inicioOcupada+i)];;
@@ -356,7 +370,7 @@ int compactacion(){ //Flag: 1 salio bien, 2 hubo error
 	while (hayPaginasOcupadasLuegoDeLaUltimaLibre());
 	updatearArchivoDisco();
 	resultado = 1;
-	printf("Terminando compactacion.../n");
+	printf("Terminando compactacion...\n");
 	sleep(Retardo_Compactacion);
 	return resultado;
 }
@@ -384,7 +398,7 @@ int leerPagina( int nroPag, long int*inicio, long int*fin){
 	*inicio = nroPag*Tamanio_Pagina;
 	if(*inicio >tamanio_archivo)
 	{
-		printf("No se puede leer la pagina /n");
+		printf("No se puede leer la pagina \n");
 		return -1;
 	}
 	*fin = *inicio +Tamanio_Pagina-1;
@@ -406,7 +420,7 @@ int hayPaginasOcupadasLuegoDeLaUltimaLibre(){
 int updatearArchivoDisco(){
 	FILE* archendisco =fopen(Nombre_Swap, "w");;
 	int i =0;
-	printf("Escribiendo en %s, archivo en disco /n", Nombre_Swap);
+	printf("Escribiendo en %s, archivo en disco \n", Nombre_Swap);
 	for(i=0;i<tamanio_archivo; i++)
 	{
 		fputc(discoParaleloNoVirtual[i],archendisco);
@@ -427,14 +441,14 @@ int liberarProceso(int idProc){
 	printf("Liberando el proceso %d \n", idProc);
 	for(i=0;i<cantPagsQueUsa;i++)
 	{
-		printf("Borrando pagina %d ocupada por %d /n", primerPaginaDelProceso, idProc);
+		printf("Borrando pagina %d ocupada por %d \n", primerPaginaDelProceso, idProc);
 		paginasSWAP[primerPaginaDelProceso].ocupada = 0;
 		paginasSWAP[primerPaginaDelProceso].idProcesoQueLoOcupa = -1;
 		primerPaginaDelProceso++; //aumento en 1
 		cantPagsOcupadas--;
 	}
 
-	printf("Se libero el proceso %d /n", idProc);
+	printf("Se libero el proceso %d \n", idProc);
 	return 0;
 }
 
@@ -469,10 +483,10 @@ int escribirPaginaProceso(int idProceso, int nroPag, char*data){
 	int paginaAEscribir = nroPag + primeraPagProceso; //lo mismo que la linea de leer pagina, para volver a antes poner -1
 	if(nroPag > cantidadPagsQueUsa)
 	{
-		printf("No puede escribir en %d, no esta en su rango /n", nroPag);
+		printf("No puede escribir en %d, no esta en su rango \n", nroPag);
 		return 0;
 	}
-	printf("Se escribira la pagina %d del proceso: %d, cuya asociada es %d /n", nroPag,idProceso,paginaAEscribir);
+	printf("Se escribira la pagina %d del proceso: %d, cuya asociada es %d \n", nroPag,idProceso,paginaAEscribir);
 	resultado = escribirPagina(paginaAEscribir, data);
 	return resultado;
 }
@@ -483,7 +497,7 @@ int escribirPagina(int nroPag, char*dataPagina){
 	int cantCaracteres;
 	cantCaracteres = strlen(dataPagina);
 
-	printf("Se escribira la pagina %d de %d bytes, aun asi ocupara %d /n",nroPag ,cantCaracteres,Tamanio_Pagina);
+	printf("Se escribira la pagina %d de %d bytes, aun asi ocupara %d \n",nroPag ,cantCaracteres,Tamanio_Pagina);
 	int numero = nroPag;
 	leerPagina(numero, &inicioPag, &finPag); //con esto determino los valores de inicio de escritura y de fin
 	int i=0;
@@ -494,7 +508,7 @@ int escribirPagina(int nroPag, char*dataPagina){
 	}
 	if(updatearArchivoDisco(numero)==1)
 	{
-		printf("Pagina %d, copiada con exito! Contenido de la misma: %s /n", nroPag, dataPagina);
+		printf("Pagina %d, copiada con exito! Contenido de la misma: %s \n", nroPag, dataPagina);
 	}
 	return 1;
 }
@@ -506,7 +520,7 @@ int leerPaginaProceso(int idProceso, int nroPag, flagParaPag* flagParaPag){
 	int posPag = primerPag +nroPag;
 	if(nroPag>cantPagsEnUso)
 	{
-		printf("No puede leer la pagina %d, no tiene permisos /n",nroPag);
+		printf("No puede leer la pagina %d, no tiene permisos \n",nroPag);
 		return 0;
 	}
 	long int inicio,fin;
@@ -520,3 +534,14 @@ int leerPaginaProceso(int idProceso, int nroPag, flagParaPag* flagParaPag){
 	strcpy(flagParaPag->paginaAEscribir,dataLeida);
 	return 1;
 }
+
+int inicializarEstructuraPaginas(){
+	int i;
+	for(i=0;i<Cantidad_Paginas;i++)
+	{
+		paginasSWAP[i].idProcesoQueLoOcupa = -1;
+		paginasSWAP[i].ocupada = 0;
+	}
+	return 1;
+}
+

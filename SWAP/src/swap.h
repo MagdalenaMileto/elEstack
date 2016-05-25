@@ -71,8 +71,8 @@ int getPosicionDelProceso(int idProc);
 int escribirPaginaProceso(int idProceso, int nroPag, char*data);
 int escribirPagina(int nroPag, char*dataPagina);
 int leerPaginaProceso(int idProceso, int nroPag, flagParaPag* flagParaPag);
-
-
+int inicializarEstructuraPaginas();
+void llenarprocPags();
 
 
 #endif /* SWAP_H_ */
