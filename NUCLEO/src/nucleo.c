@@ -14,7 +14,7 @@
 
 
 
- #define CONFIG_NUCLEO "config"
+ #define CONFIG_NUCLEO "src/config"
 
 /* VARIABLES GLOBALES */
 int * CONSTANTE;
