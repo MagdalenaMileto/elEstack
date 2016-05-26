@@ -12,22 +12,13 @@
 
 #define ERROR -1
 
+
+
+ #define CONFIG_NUCLEO "config"
+
 /* VARIABLES GLOBALES */
 int * CONSTANTE;
-
-typedef struct {
-  int puerto_programas;
-  int puerto_cpus;
-  char* ip_umv;
-  int puerto_umv;
-  int quantum;
-  int sizePagina;
-
-}CONF_KERNEL;
-
-CONF_KERNEL *config_kernel;
-
-
+CONF_NUCLEO *config_nucleo;
 
 //Colas PLP
 t_queue* cola_new;
@@ -75,11 +66,14 @@ int main(){
       printf("NUCLEO: INICIÓ\n");
 
 
-      config_kernel = malloc(sizeof(CONF_KERNEL));
+  //Levantar archivo de configuracion
+  config_nucleo = malloc(sizeof(CONF_NUCLEO));
+
+  get_config_nucleo(config_nucleo);//Crea y setea el config del kernel
 
 
-
-      config_kernel->sizePagina=50;
+printf("valor %d\n",config_nucleo->VALOR_SEM[2]);
+     
 
 
 
@@ -136,7 +130,7 @@ void conectarUmc(void){
 
   //Handlear errores; El programa debe salir si no conecta umc? remite conexion? que hacemo?
 
-  umc = cliente("127.0.0.1",1207);
+  umc = cliente(config_nucleo->IP_UMC,config_nucleo->PUERTO_UMC);
   if(umc==0){
     printf("NUCLEO: No encontre UMC me cierro :'( \n");
       exit (EXIT_FAILURE);
@@ -239,6 +233,8 @@ t_proceso *proceso;int sock;
 
 
     //Do something yoooo
+
+      usleep(1000);
     }
 
 }
@@ -262,7 +258,7 @@ void mandarCodigoAUmc(char* codigo,int size){
   int cuantasPaginas, estado,i;
   t_header header;
 
-  cuantasPaginas = ceil((double)size / (double)config_kernel->sizePagina);
+  cuantasPaginas = ceil((double)size / (double)config_nucleo->SIZE_PAGINA);
 
 
   //printf("cuantas paginas%d size%d\n",cuantasPaginas,size);
@@ -296,8 +292,8 @@ void mandarCodigoAUmc(char* codigo,int size){
 
 
            header.id = 206;
-           header.size = config_kernel->sizePagina;
-           header.data = codigo+i*(config_kernel->sizePagina);
+           header.size = config_nucleo->SIZE_PAGINA;
+           header.data = codigo+i*(config_nucleo->SIZE_PAGINA);
 
            estado=enviar_paquete(umc, header);
 
@@ -391,7 +387,7 @@ void *hilo_HANDLER_CONEXIONES_CONSOLA(void *arg){
       socklen_t addrlen = sizeof(addr);
       struct arg_struct *args; //Probar de sacar afuera esto?
 
-      servidorSocket=servidor(1209);
+      servidorSocket=servidor(config_nucleo->PUERTO_PROG);
 
 
      if(servidorSocket==-1){
@@ -481,7 +477,7 @@ void *hilo_HANDLER_CONEXIONES_CPU(void *arg){
      socklen_t addrlen = sizeof(addr);
 
 
-     servidorSocket=servidor(1202);
+     servidorSocket=servidor(config_nucleo->PUERTO_CPU);
 
 
      if(servidorSocket==-1){
@@ -675,4 +671,111 @@ void *hilo_mock_cpu(void *arg){
       }
 
 }
+
+
+
+
+
+
+
+
+
+/********************************************************************************
+*********************************************************************************
+*********************************************************************************
+************************Funciones apoyo  ****************************************
+*********************************************************************************
+*********************************************************************************
+*********************************************************************************
+*/
+
+
+
+
+void get_config_nucleo (CONF_NUCLEO *config_nucleo)
+{
+
+
+
+  t_config *fnucleo = config_create(CONFIG_NUCLEO);
+  config_nucleo->PUERTO_PROG = config_get_int_value(fnucleo,"PUERTO_PROG");
+  config_nucleo->PUERTO_CPU = config_get_int_value(fnucleo,"PUERTO_CPU");
+
+  config_nucleo->QUANTUM = config_get_int_value(fnucleo,"QUANTUM");
+  config_nucleo->QUANTUM_SLEEP = config_get_int_value(fnucleo,"QUANTUM_SLEEP");
+
+  config_nucleo->IO_IDS = config_get_array_value(fnucleo, "IO_IDS");
+
+  config_nucleo->IO_SLEEP = config_get_array_value(fnucleo, "IO_SLEEP");
+
+  config_nucleo->SEM_IDS = config_get_array_value(fnucleo, "SEM_IDS");
+
+  config_nucleo->SEM_INIT = config_get_array_value(fnucleo, "SEM_INIT");
+
+
+
+  config_nucleo->SHARED_VARS = config_get_array_value(fnucleo, "SHARED_VARS");
+
+  config_nucleo->STACK_SIZE = config_get_int_value(fnucleo,"STACK_SIZE");
+
+
+
+//HASTA ACA LO QUE PIDE EL ENUNCIADO
+
+
+
+  config_nucleo->SIZE_PAGINA = config_get_int_value(fnucleo, "SIZE_PAGINA");  
+  config_nucleo->IP_UMC = config_get_string_value(fnucleo, "IP_UMC");
+  config_nucleo->PUERTO_UMC = config_get_int_value(fnucleo,"PUERTO_UMC");
+  //config_destroy(fnucleo);//Ya no lo necesito
+
+
+
+
+
+  //config_nucleo->VALOR_SHARED_VARS= convertirConfigInt(?????????,config_nucleo->variables_compartidas);
+  //Iniciar en 0
+  //Hacer
+
+  config_nucleo->VALOR_IO= convertirConfigInt(config_nucleo->IO_SLEEP,config_nucleo->IO_IDS);
+  config_nucleo->VALOR_SEM= convertirConfigInt(config_nucleo->SEM_INIT,config_nucleo->SEM_IDS);
+
+
+
+
+
+  return;
+}
+
+
+
+int *convertirConfigInt(char **ana1,char **ana2){
+
+  int i;
+  int *resul;
+
+  /*
+  if((strlen(ana1))/sizeof(char*)!=(strlen(ana1))/sizeof(char*))
+  {exit(EXIT_FAILURE);//Error en arhcivo conf
+  }
+*/
+  resul=malloc(((strlen((char*)ana1))/sizeof(char*))*sizeof(int));
+  for(i=0;i<(strlen((char*)ana1))/sizeof(char*);i++){
+    resul[i]=atoi(ana1[i]);
+
+  }
+  return resul;
+
+}
+
+
+
+
+long long current_timestamp(void) {
+    struct timeval te;
+    gettimeofday(&te, NULL);
+    long long milliseconds = te.tv_sec*1000LL + te.tv_usec/1000; 
+    return milliseconds;
+}
+
 

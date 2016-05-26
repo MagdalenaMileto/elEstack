@@ -40,13 +40,52 @@
 #define PACKAGESIZE 1024	// Define cual va a ser el size maximo del paquete a enviar
 
 
+
+typedef struct {
+  int PUERTO_PROG;
+  int PUERTO_CPU;
+  int QUANTUM;
+  int QUANTUM_SLEEP;
+  char** SEM_IDS;
+  char** SEM_INIT;
+  char** IO_IDS;
+  char** IO_SLEEP;
+  char** SHARED_VARS;
+  int STACK_SIZE;
+
+//Mias
+  char* IP_UMC;
+  int PUERTO_UMC;
+  int SIZE_PAGINA;
+
+
+  int* VALOR_SHARED_VARS;
+  int* VALOR_SEM;
+  int* VALOR_IO;
+
+
+}CONF_NUCLEO;
+
+
+
+
+
+
+
 typedef struct{
   int socket_CPU;
   int socket_CONSOLA;
   t_pcb pcb;
+  long long tiempoBloqueado;
+  char semaforoBloqueado;
+
+
 }t_proceso;
 
 
+int *convertirConfigInt(char **ana1,char **ana2);
+
+void get_config_nucleo (CONF_NUCLEO *config_nucleo);
 
 void intHandler(int dummy);
 
@@ -76,6 +115,6 @@ void *hilo_CONEXION_CPU(void *arg);
 void *hilo_HANDLER_CONEXIONES_CPU(void *arg);
 void *hilo_HANDLER_CONEXIONES_CONSOLA(void *arg);
 
-
+long long current_timestamp(void);
 
 #endif /* NUCLEO_H_ */
