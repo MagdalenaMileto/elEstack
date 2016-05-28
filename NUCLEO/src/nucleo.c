@@ -14,7 +14,8 @@
 
 
 
- #define CONFIG_NUCLEO "src/config"
+ //#define CONFIG_NUCLEO "src/config" //Cambiar esto para eclipse
+  #define CONFIG_NUCLEO "config"
 
 /* VARIABLES GLOBALES */
 int * CONSTANTE;
@@ -50,7 +51,7 @@ t_queue* cola_CPU_libres;
 //Eliminar todo lo que sea de mas de aca
 int listenningSocket,socketCliente,servidorSocket,servidorCPU,clienteSocket,losClientes,clientesCPU,umc,ultimoCPU;
 
-char mensaje[92]="¡Me gusta esa teoría! Tal vez son quintillizos.... todos se llaman Petyr, todos están ob";
+char codigo[200]="#!/usr/bin/ansisop\nbegin\n# primero declaro las variables\nvariables a, b\n\na = 20\nprint a\nend";
 
 
 /* FIN DE VARIABLES GLOBALES */
@@ -258,6 +259,12 @@ void mandarCodigoAUmc(char* codigo,int size){
   int cuantasPaginas, estado,i;
   t_header header;
 
+  int *indiceCodigo;
+  int tamanoIndiceCodigo;
+
+  t_medatada_program* metadata_program;
+  metadata_program = metadata_desde_literal(codigo);
+
   cuantasPaginas = ceil((double)size / (double)config_nucleo->SIZE_PAGINA);
 
 
@@ -269,9 +276,38 @@ void mandarCodigoAUmc(char* codigo,int size){
     header.size = sizeof(int);
 
 
-	header.data = &cuantasPaginas;
+//printf("Codigo: %s",codigo);
 
 
+
+//SACAR EL 1 SI NO PONGO EL BEGIN
+tamanoIndiceCodigo=sizeof(int)*2*(metadata_program->instrucciones_size+1);
+indiceCodigo=malloc(tamanoIndiceCodigo);
+
+
+
+//SACAR ESTO SI SACO EL BEGIN PREGINTAR
+
+indiceCodigo[0]=metadata_program->instruccion_inicio;
+indiceCodigo[1]=6; //Ver que este tamaño este bien
+
+//printf("INICIO:  %d\n ",metadata_program->instruccion_inicio);
+//printf("Instruccion %.*s\n",6,codigo+metadata_program->instruccion_inicio);
+
+
+
+for(i=0;i<metadata_program->instrucciones_size;i++){
+//printf("Instruccion %.*s\n",metadata_program->instrucciones_serializado[i].offset,codigo+metadata_program->instrucciones_serializado[i].start);
+indiceCodigo[i*2+2]=metadata_program->instrucciones_serializado[i].start;
+indiceCodigo[i*2+1+2]=metadata_program->instrucciones_serializado[i].offset;
+
+}
+
+
+	
+  header.data = &cuantasPaginas;
+
+/*
 	printf("***%d*\n",*((int*)header.data));
 
    estado=enviar_paquete(umc, header);
@@ -315,7 +351,7 @@ void mandarCodigoAUmc(char* codigo,int size){
 
 
 
-
+*/
 
 
 //(char*)codigo
@@ -626,9 +662,9 @@ void *hilo_mock_consola(void *arg){
      printf("CONSOLAMOCK:Handshake valido nucleo %d\n",consola);
 
      t_header header;
-     header.size=sizeof(mensaje);
+     header.size=sizeof(codigo);
      header.id=103;
-     header.data=mensaje;
+     header.data=codigo;
     
      enviar_paquete(consola,header);
 

@@ -25,6 +25,8 @@
  #include <commons/config.h>
 
 
+#include <parser/metadata_program.h>
+
 #include <signal.h>
 
 
