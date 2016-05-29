@@ -149,11 +149,9 @@ int32_t leer_socket (int32_t nuevo_socket, char *buffer, size_t size)
 	size_t aux = 0;
 
 	/*Comprobacion de que los parametros de entrada son correctos*/
-
 	if ((nuevo_socket == -1) || (buffer == NULL) || (size < 1)){
-return -1;
-}
-		
+		return -1;
+	}
 
 	/* Mientras no hayamos leido todos los datos solicitados*/
 	while (leido < size){

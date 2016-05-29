@@ -14,14 +14,12 @@
 #include<sys/mman.h>
 #include "socket.h"
 
-
-#define Puerto 1206
-
-char* Nombre_Swap;
-int Puerto_Swap;
-int Cantidad_Paginas;
-int Tamanio_Pagina;
-int Retardo_Compactacion;
+char* NOMBRE_SWAP;
+int PUERTO_SWAP;
+int CANTIDAD_PAGINAS;
+int TAMANIO_PAGINA;
+int RETARDO_COMPACTACION;
+int RETARDO_ACCESO;
 
 t_config* configuracion;
 long int tamanio_archivo;

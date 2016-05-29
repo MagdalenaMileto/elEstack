@@ -7,7 +7,7 @@
 
 #include "socket.h"
 
-
+// Cambiar para que sea como lo hizo nico.
 int iniciarServidor(int puerto) {
 
 	int sock_lst;  // Escuchar sobre sock_lst, nuevas conexiones sobre new_lst
