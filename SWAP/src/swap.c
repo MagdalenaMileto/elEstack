@@ -39,11 +39,11 @@ int main(int argc,char **argv) {//FALTA RETARDO ACCESO Implementarlo
 			respuesta = recibirMensaje(new_lst, mensaje);
 
 			if(respuesta != -1){
-				paqueteUMC* paquete = malloc(sizeof(paqueteUMC));
-				paquete = (paqueteUMC*)mensaje->Payload;
+				paquete* paqueteUMC = malloc(sizeof(paquete));
+				paqueteUMC = (paquete*)mensaje->Payload;
 				int flagRespuesta;
 				MPS_MSG* msjRespuesta = malloc(sizeof(MPS_MSG));
-				paqueteUMC* paqueteRta= malloc(sizeof(paqueteUMC));
+				paquete* paqueteRta= malloc(sizeof(paquete));
 
 				///////////////////////
 //				long int inicio;
@@ -54,58 +54,58 @@ int main(int argc,char **argv) {//FALTA RETARDO ACCESO Implementarlo
 				pagflag.paginaAEscribir = calloc(1,TAMANIO_PAGINA);
 				///////////////////////
 
-				switch (paquete->pedido){
+				switch (paqueteUMC->pedido){
 				case 0: {//Nuevo proceso
 					// Tiene que haber retardo?
-					printf("Se creara un nuevo proceso de %d paginas y con PID: %d \n", paquete->pagina, paquete->pid);
+					printf("Se creara un nuevo proceso de %d paginas y con PID: %d \n", paqueteUMC->pagina, paqueteUMC->pid);
 
-					paqueteRta->pid = paquete->pid;
-					int espacio = hayLugarParaNuevoProceso(paquete->pagina);
+					paqueteRta->pid = paqueteUMC->pid;
+					int espacio = hayLugarParaNuevoProceso(paqueteUMC->pagina);
 
 					if(espacio == -2){
 						compactacion();
-						int espacio2 = hayLugarParaNuevoProceso(paquete->pagina);
-						paqueteRta->flagProc = reservarProceso(paquete->pid,paquete->pagina, espacio2);
+						int espacio2 = hayLugarParaNuevoProceso(paqueteUMC->pagina);
+						paqueteRta->flagProc = reservarProceso(paqueteUMC->pid,paqueteUMC->pagina, espacio2);
 					}
 					if(espacio == -1)
 					{
 						paqueteRta->flagProc = 0;
 					}
 					else{
-						paqueteRta->flagProc = reservarProceso(paquete->pid,paquete->pagina, espacio);
+						paqueteRta->flagProc = reservarProceso(paqueteUMC->pid,paqueteUMC->pagina, espacio);
 					}
-					armarMensaje(msjRespuesta,0, sizeof(paqueteUMC), paqueteRta);
+					armarMensaje(msjRespuesta,0, sizeof(paquete), paqueteRta);
 					enviarMensaje(new_lst, msjRespuesta);
 					respuesta = -1;
 					break;
 				}
 				case 1: { //caso de Sacar proceso
 					///retardo?
-					printf("Se liberara el proceso %d \n", paquete->pid);
-					paqueteRta->flagProc = liberarProceso(paquete->pid);
-					armarMensaje(msjRespuesta,0,sizeof(paqueteUMC), paqueteRta);
+					printf("Se liberara el proceso %d \n", paqueteUMC->pid);
+					paqueteRta->flagProc = liberarProceso(paqueteUMC->pid);
+					armarMensaje(msjRespuesta,0,sizeof(paquete), paqueteRta);
 					enviarMensaje(new_lst, msjRespuesta);
 					respuesta = -1;
 					break;
 				}
 				case 2: { //caso de Escritura en disco
 					//retardo??
-					printf("Se escribira para el proceso %d \n", paquete->pid);
-					flagRespuesta = escribirPaginaProceso(paquete->pid, paquete->pagina, paquete->texto);
+					printf("Se escribira para el proceso %d \n", paqueteUMC->pid);
+					flagRespuesta = escribirPaginaProceso(paqueteUMC->pid, paqueteUMC->pagina, paqueteUMC->texto);
 					paqueteRta->flagProc = flagRespuesta;
-					armarMensaje(msjRespuesta,0,sizeof(paqueteUMC), paqueteRta);
+					armarMensaje(msjRespuesta,0,sizeof(paquete), paqueteRta);
 					enviarMensaje(new_lst,msjRespuesta);
 					respuesta = -1;
 					break;
 				}
 					//default
 				case 3: { //caso de Lectura de pagina
-					printf("Se leera la pagina: %d, del proceso %d \n", paquete->pagina, paquete->pid);
-					leerPaginaProceso(paquete->pid,paquete->pagina, &pagflag);
+					printf("Se leera la pagina: %d, del proceso %d \n", paqueteUMC->pagina, paqueteUMC->pid);
+					leerPaginaProceso(paqueteUMC->pid,paqueteUMC->pagina, &pagflag);
 
 					paqueteRta->flagProc = pagflag.flagResultado;
 					strcpy(paqueteRta->texto,pagflag.paginaAEscribir);
-					armarMensaje(msjRespuesta,0,sizeof(paqueteUMC), paqueteRta);
+					armarMensaje(msjRespuesta,0,sizeof(paquete), paqueteRta);
 					enviarMensaje(new_lst,msjRespuesta);
 					respuesta=-1;
 

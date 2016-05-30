@@ -29,7 +29,17 @@ int PUERTO, PUERTO_SWAP, MARCOS, MARCO_SIZE, MARCO_X_PROC, ENTRADAS_TLB, RETARDO
 char *IP_SWAP;
 char *ALGORITMO;
 
+typedef struct __attribute__((packed)){
+	int pid;
+	int pedido;
+	int pagina;
+	char texto[1024];
+	int flagProc;
+} paquete;
+
 int abrirConfiguracion();
+int conectarConSwap();
+int inicializarPrograma (int idProg, int cantPag, char codigo);
 void *hilo_Conexion(void *arg);
 void *hilo_mock(void *arg);
 

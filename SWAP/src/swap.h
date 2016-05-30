@@ -30,8 +30,8 @@ typedef struct __attribute__((packed)){
 	int pedido;
 	int pagina;
 	char texto[1024];
-	int flagProc; //
-} paqueteUMC;
+	int flagProc;
+} paquete;
 
 typedef struct __attribute__((packed)){
 	int ocupada;

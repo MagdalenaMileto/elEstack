@@ -15,58 +15,85 @@ struct arg_struct {
 	int socket;
 };
 
-
-
 int main(void) {
 	puts("!!!Hello World!!!"); /* prints !!!Hello World!!! */
 
     pthread_t thMOCK;
-	          pthread_create(&thMOCK, NULL, hilo_mock, NULL);
+    pthread_create(&thMOCK, NULL, hilo_mock, NULL);
+    int servidorSocket,socketCliente;
+    struct sockaddr_in addr;
+    socklen_t addrlen = sizeof(addr);
+    struct arg_struct *args;
 
-	 int servidorSocket,socketCliente;
-	     struct sockaddr_in addr;
-	     socklen_t addrlen = sizeof(addr);
-	     struct arg_struct *args;
+    servidorSocket=servidor(5002);
 
-	     servidorSocket=servidor(5002);
+    if(servidorSocket==-1){
+    	printf("El AMEO NO ME DEJA CREAR SOCKET RE GATO\n");
+    	close(servidorSocket);
+    	exit(1);
+    }
 
-	     if(servidorSocket==-1){
-	          printf("El AMEO NO ME DEJA CREAR SOCKET RE GATO\n");
-	          close(servidorSocket);
-	          exit(1);
-	     }
+    listen(servidorSocket,5);
 
-	     listen(servidorSocket,5);
+    while(1){
+    	socketCliente = accept(servidorSocket, (struct sockaddr *) &addr, &addrlen);
 
-	     while(1){
-	          socketCliente = accept(servidorSocket, (struct sockaddr *) &addr, &addrlen);
+    	args = malloc(sizeof(struct arg_struct));//cuando se termine el proceso hacer un free de esto
+    	args->socket=socketCliente;
 
-	          args = malloc(sizeof(struct arg_struct));//cuando se termine el proceso hacer un free de esto
-	          args->socket=socketCliente;
+    	pthread_t thCONEXION;
+    	pthread_create(&thCONEXION, NULL, hilo_Conexion, (void *)args);
 
-	          pthread_t thCONEXION;
-	          pthread_create(&thCONEXION, NULL, hilo_Conexion, (void *)args);
-
-	          printf("Acepté cliente: %d\n",socketCliente);
-	     }
+    	printf("Acepté cliente: %d\n",socketCliente);
+    }
 
 
-	     if (abrirConfiguracion() == -1){
-	    	 return -1;
-	     }
-
-///////////////////Conexion con Swap///////////////////
-	     int clienteSwap;
-	     clienteSwap = cliente(IP_SWAP,PUERTO_SWAP);
-
-	     if(clienteSwap==0){
-	    	 printf("UMC: No encontre SWAP me cierro. \n");
-	    	 exit (EXIT_FAILURE);
-	     }
-	     printf("UMC: Conecté bien SWAP %d\n",clienteSwap);
+    if (abrirConfiguracion() == -1){
+    	return -1;
+    }
 
 ///////////////////Conexion con Swap///////////////////
+    int clienteSwap;
 
+    clienteSwap = conectarConSwap();
+    if(clienteSwap==-1){
+    	exit (EXIT_FAILURE);
+    }
+///////////////////Conexion con Swap///////////////////
+
+	 //Caso de iniciar un nuevo programa
+    int respuesta;
+    t_header* mensajeNucleo = malloc(sizeof(t_header));
+    respuesta = recibir_paquete(clienteSwap, mensajeNucleo);
+
+    t_header* mensajeSwap = malloc(sizeof(t_header));
+    // hacer un switch con el mensaje->id y si da 0 hacer esto:
+	paquete* paqueteNucleo = malloc(sizeof(paquete));//esto lo lleno coon lo que me manda Nucleo, todavia no esta hecho el tema de los mensajes. HABLAR CON NICO.
+	paquete* paqueteASwap = malloc(sizeof(paquete));
+
+
+	printf("Se creara un nuevo proceso de %d paginas y con PID: %d \n", paqueteNucleo->pagina, paqueteNucleo->pid);
+	//La data que me llega del mensaje tiene que tener la estructura de paquete.
+	paqueteNucleo = (paquete*)mensajeNucleo->data;
+
+	//Lo pongo en 0 para que Swap sepa que es un nuevo proceso
+	paqueteNucleo->pedido = 0;
+
+    inicializarPrograma(paqueteNucleo->pid, paqueteNucleo->pagina, paqueteNucleo->texto);
+
+
+}
+
+int conectarConSwap(){
+	int clienteSwap;
+	clienteSwap = cliente(IP_SWAP,PUERTO_SWAP);
+
+	if(clienteSwap==0){
+		printf("UMC: No encontre SWAP me cierro. \n");
+		return -1;
+	}
+	printf("UMC: Conecté bien SWAP %d\n",clienteSwap);
+	return clienteSwap;
 }
 
 
@@ -215,13 +242,13 @@ Notar que las páginas recibidas por la UMC no serán cargadas en memoria princi
 
 
 //El char codigo se deberia cambiar por una estructura de programa, ej: prog->codigo
-//int inicializarPrograma (int idProg, int cantPag, char codigo){
-//	int envio;
-//
-//	envio = enviarNuevoProcesoASwap(idProg, cantPag, codigo);
-//
-//
-//}
+int inicializarPrograma (int idProg, int cantPag, char codigo){
+	//int envio;
+
+
+	//envio = enviarNuevoProcesoASwap(idProg, cantPag, codigo);
+return 0;
+}
 
 //int enviarNuevoProcesoASwap(int idProg, int cantPag, char codigo);
 //{
