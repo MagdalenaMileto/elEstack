@@ -49,19 +49,7 @@ t_puntero_instruccion irAlLabel(t_nombre_etiqueta etiqueta)
 	return 0;
 }
 
-/*t_puntero_instruccion llamarFuncion(t_nombre_etiqueta etiqueta,t_puntero donde_retornar,t_puntero_instruccion linea_en_ejecucion)
-{
-	printf("Soy la funcion llamarFuncion\n");
-	return 0;
-}*/
-
-void pearlsop_llamarSinRetorno(t_nombre_etiqueta etiqueta)
-{
-		printf("Soy la funcion llamarSinRetornol\n");
-		printf("Guardo contexto que es la etiqueta\n");
-}
-
-void pearlsop_llamarConRetorno(t_nombre_etiqueta etiqueta, t_puntero donde_retornar)
+void llamarFuncion(t_nombre_etiqueta etiqueta, t_puntero donde_retornar)
 {
 		printf("Soy la funcion llamarConRetorno\n");
 		printf("Guardo contexto que es la etiqueta y retornar el valor\n");
