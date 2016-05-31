@@ -52,7 +52,7 @@ int main(void) {
     	return -1;
     }
 
-///////////////////Conexion con Swap///////////////////
+///////////////////Conexion con Swap///////////////////FALTA LA CONEXION CON NUCLEO
     int clienteSwap;
 
     clienteSwap = conectarConSwap();
@@ -64,24 +64,29 @@ int main(void) {
 	 //Caso de iniciar un nuevo programa
     int respuesta;
     t_header* mensajeNucleo = malloc(sizeof(t_header));
-    respuesta = recibir_paquete(clienteSwap, mensajeNucleo);
+    paquete* paqueteNucleo = malloc(sizeof(paquete));
+    respuesta = recibir_paquete(servidorSocket, mensajeNucleo);
 
-    t_header* mensajeSwap = malloc(sizeof(t_header));
-    // hacer un switch con el mensaje->id y si da 0 hacer esto:
-	paquete* paqueteNucleo = malloc(sizeof(paquete));//esto lo lleno coon lo que me manda Nucleo, todavia no esta hecho el tema de los mensajes. HABLAR CON NICO.
-	paquete* paqueteASwap = malloc(sizeof(paquete));
+    switch(mensajeNucleo->id){
+    	case 0:{
+    		t_header* mensajeASwap = malloc(sizeof(t_header));
+    		paquete* paqueteASwap = malloc(sizeof(paquete));
+
+    		//La data que me llega del mensaje tiene que tener la estructura de paquete.
+    		mensajeASwap = paqueteASwap;
+    		paqueteNucleo = (paquete*)mensajeASwap->data;
+
+    		printf("Se creara un nuevo proceso de %d paginas y con PID: %d \n", paqueteNucleo->pagina, paqueteNucleo->pid);
+
+    		//Lo pongo en 0 para que Swap sepa que es un nuevo proceso
+    		paqueteNucleo->pedido = 0;
+    		respuesta = enviar_paquete(clienteSwap, mensajeASwap);
+    	}
+    	case 1:{
 
 
-	printf("Se creara un nuevo proceso de %d paginas y con PID: %d \n", paqueteNucleo->pagina, paqueteNucleo->pid);
-	//La data que me llega del mensaje tiene que tener la estructura de paquete.
-	paqueteNucleo = (paquete*)mensajeNucleo->data;
-
-	//Lo pongo en 0 para que Swap sepa que es un nuevo proceso
-	paqueteNucleo->pedido = 0;
-
-    inicializarPrograma(paqueteNucleo->pid, paqueteNucleo->pagina, paqueteNucleo->texto);
-
-
+    	}
+    }
 }
 
 int conectarConSwap(){
@@ -227,35 +232,6 @@ void *hilo_Conexion(void *arg){
      return 0;
 
 }
-
-
-
-/*
-Inicializar programa
-
-Parámetros: [Identificador del Programa] [Cantidad de Páginas totales requeridas] [Código del Programa]
-Cuando el proceso Núcleo comunique el inicio de un nuevo Programa AnSISOP, se crearán las estructuras necesarias para administrarlo correctamente.
-Para ello, UMC recibirá de este último un Identificador de programa, la cantidad de páginas totales requeridas, y el código del Programa.
-Luego, deberá informar de esta situación al Proceso Swap, reservando la cantidad de páginas a usar, y escribiendo las páginas de código.
-Notar que las páginas recibidas por la UMC no serán cargadas en memoria principal hasta que sea requerido, respetando el principio de paginación bajo demanda.
-*/
-
-
-//El char codigo se deberia cambiar por una estructura de programa, ej: prog->codigo
-int inicializarPrograma (int idProg, int cantPag, char codigo){
-	//int envio;
-
-
-	//envio = enviarNuevoProcesoASwap(idProg, cantPag, codigo);
-return 0;
-}
-
-//int enviarNuevoProcesoASwap(int idProg, int cantPag, char codigo);
-//{
-//	int envio;
-//
-//	envio =	enviar_paquete()
-//}
 
 
 char mensaje[100]="HOLA QUE TAL\n";
