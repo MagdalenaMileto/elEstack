@@ -6,22 +6,32 @@
  */
 
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <arpa/inet.h>
-#include <sys/socket.h>
-#include <sys/types.h>
-#include <netinet/in.h>
-#include <netinet/ip.h>
-#include <unistd.h>
-#include <parser/parser.h>
-#include <parser/sintax.h>
-#include <parser/metadata_program.h>
-#include "primitivas.h"
-#include "../../COMUNES/nsockets.h"
-#include "../../COMUNES/estructurasControl.h"
-#include "../../COMUNES/handshake.h"
+#include "funcionesCPU.h"
+#define ARCHIVOLOG "CPU.log"
+
+#define CONFIG_CPU "config_cpu"
+CONF_CPU *config_cpu;
+t_log* log;
+
+AnSISOP_funciones primitivas = {
+		.AnSISOP_definirVariable		= definirVariable,
+		.AnSISOP_obtenerPosicionVariable= obtenerPosicionVariable,
+		.AnSISOP_dereferenciar			= dereferenciar,
+		.AnSISOP_asignar				= asignar,
+		.AnSISOP_obtenerValorCompartida = obtenerValorCompartida,
+		.AnSISOP_asignarValorCompartida = asignarValorCompartida,
+		.AnSISOP_irAlLabel				= irAlLabel,
+		.AnSISOP_llamarConRetorno		= llamarFuncion,
+		.AnSISOP_retornar				= retornar,
+		.AnSISOP_imprimir				= imprimir,
+		.AnSISOP_imprimirTexto			= imprimirTexto,
+		.AnSISOP_entradaSalida			= entradaSalida,
+
+};
+AnSISOP_kernel primitivas_kernel = {
+		.AnSISOP_wait					=wait,
+		.AnSISOP_signal					=signal,
+};
 
 /* El programa recibe la IP y puerto del nucleo como primer y segundo parametros
  * y como tercer y cuarto parametros la direccion IP y puerto de la umc.
@@ -45,47 +55,27 @@ int main(int argc,char **argv) {
 	FD_ZERO(&readfds);
 	FD_ZERO(&masterfds);
 
-	int nucleo = cliente(argv[1],atoi(argv[2]));
+	log= log_create(ARCHIVOLOG, "CPU", 0, LOG_LEVEL_INFO);
 
-	//	if(handshakeOut('c','n',nucleo))
-	//	{
-	//		perror("No me conecte con un nucleo\n");
-	//		close(nucleo);
-	//		return 1;
-	//	}
+			log_info(log,"Iniciando CPU\n");
+		    //Levantar archivo de configuracion
+			config_cpu = malloc(sizeof(CONF_CPU));
+			get_config_cpu(config_cpu);//Crea y setea el config del cpu
+
+			//se conecta a nucleo
+			int nucleo = conectarConNucleo();
+
 
 	FD_SET(nucleo,&masterfds);	// Se agrega socket a la lista de fds
 
-	int umc = cliente(argv[3],atoi(argv[4]));
+	//se conecta con la UMC
+	int umc = conectarConUmc();
 
-	//	if(handshakeOut('c','u',umc))
-	//	{
-	//		perror("No me conecte con la UMC\n");
-	//		close(umc);
-	//		return 1;
-	//	}
 
 	FD_SET(umc,&masterfds);		// Se agrega socket a la lista de fds
 
 	t_pcb pcb;					//Declaracion e inicializacion del PCB
 	bzero(&pcb,sizeof(pcb));
-
-	AnSISOP_kernel primitivas_kernel;
-	primitivas_kernel.AnSISOP_signal = (void*)&signal;
-	primitivas_kernel.AnSISOP_wait = (void*)&wait;
-
-	AnSISOP_funciones primitivas;
-	primitivas.AnSISOP_asignar = (void*)&asignar;
-	primitivas.AnSISOP_asignarValorCompartida = (void*)&asignarValorCompartida;
-	primitivas.AnSISOP_definirVariable = (void*)&definirVariable;
-	primitivas.AnSISOP_dereferenciar = (void*)&dereferenciar;
-	primitivas.AnSISOP_entradaSalida = (void*)&entradaSalida;
-	primitivas.AnSISOP_imprimir = (void*)&imprimir;
-	primitivas.AnSISOP_imprimirTexto = (void*)&imprimirTexto;
-	primitivas.AnSISOP_irAlLabel = (void*)&irAlLabel;
-	primitivas.AnSISOP_obtenerPosicionVariable = (void*)&obtenerPosicionVariable;
-	primitivas.AnSISOP_obtenerValorCompartida = (void*)&obtenerValorCompartida;
-	primitivas.AnSISOP_retornar = (void*)&retornar;
 
 	while(1)
 	{
@@ -110,4 +100,63 @@ int main(int argc,char **argv) {
 	close(umc);
 	return EXIT_SUCCESS;
 
+}
+
+//***************************************FUNCIONES******************************************
+
+void get_config_cpu (CONF_CPU *config_cpu){
+
+	  t_config *fcpu = config_create(CONFIG_CPU);
+	  config_cpu->PUERTO_NUCLEO = config_get_int_value(fcpu,"PUERTO_NUCLEO");
+	  config_cpu->IP_NUCLEO = config_get_int_value(fcpu,"IP_NUCLEO");
+
+	  config_cpu->PUERTO_UMC = config_get_int_value(fcpu,"PUERTO_UMC");
+	  config_cpu->IP_UMC = config_get_int_value(fcpu,"IP_UMC");
+
+	  config_cpu->STACK_SIZE = config_get_int_value(fcpu,"STACK_SIZE");
+
+	  config_cpu->SIZE_PAGINA = config_get_int_value(fcpu, "SIZE_PAGINA");
+
+
+	  config_destroy(fcpu);
+
+}
+
+int conectarConUmc(){
+
+		int umc = cliente("127.0.0.1", 1207); //tendria que leer del archivo de conf de nucleo
+
+		if(umc==0){
+				log_info(log,"CPU: No encontre memoria\n");
+				exit (EXIT_FAILURE);
+		}
+
+		log_info(log,"CPU: Conecta bien memoria %d\n", umc);
+
+		//hacer el handshake???
+
+return umc;
+}
+
+int conectarConNucleo(){
+
+		int nucleo = cliente("127.0.0.1", 9997); //tendria que leer del archivo de conf del nucleo
+
+		if(nucleo==0){
+				log_info(log,"CPU: No encontre nucleo\n");
+				exit (EXIT_FAILURE);
+		}
+
+		log_info(log,"CPU: Conecta bien nucleo %d\n", nucleo);
+
+        int estado;
+        estado=handshake(nucleo, 302,301);
+
+        if(estado==1){
+        	log_info(log,"CPU:Handshake exitoso con nucleo\n");
+        }else{
+        	log_info(log,"CPU:Handshake invalido con nucleo\n");
+        }
+
+return nucleo;
 }

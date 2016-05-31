@@ -49,10 +49,10 @@ t_puntero_instruccion irAlLabel(t_nombre_etiqueta etiqueta)
 	return 0;
 }
 
-t_puntero_instruccion llamarFuncion(t_nombre_etiqueta etiqueta,t_puntero donde_retornar,t_puntero_instruccion linea_en_ejecucion)
+void llamarFuncion(t_nombre_etiqueta etiqueta, t_puntero donde_retornar)
 {
-	printf("Soy la funcion llamarFuncion\n");
-	return 0;
+		printf("Soy la funcion llamarConRetorno\n");
+		printf("Guardo contexto que es la etiqueta y retornar el valor\n");
 }
 
 t_puntero_instruccion retornar(t_valor_variable retorno)

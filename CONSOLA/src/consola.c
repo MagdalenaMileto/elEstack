@@ -4,6 +4,7 @@
  *  Created on: 23/4/2016
  *      Author: utnso
  */
+
 #include "funcionesConsola.h"
 
 int PUERTO_NUCLEO = 9997;
@@ -21,11 +22,6 @@ int main(int argc, char **argv) {
 			return EXIT_FAILURE;
 		}
 
-	if (argc != 2)
-		{
-			perror("No se paso la cantidad de parametros necesaria\n");
-			return EXIT_FAILURE;
-		}
 
 	char* script;
 	FILE *archivo;
@@ -100,7 +96,7 @@ char* leerElArchivo(FILE *archivo) {
 	long fsize = ftell(archivo);
 	fseek(archivo, 0, SEEK_SET);
 	char *script = malloc(fsize + 1);
-	size_t resp = fread(script, fsize, 1, archivo);
+	fread(script, fsize, 1, archivo);
 	script[fsize] = '\0';
 	return script;
 
@@ -134,7 +130,7 @@ return nucleo;
 int enviarInformacionAlNucleo(char * script, signed int nucleo, signed int consola){
 
 	t_header header,headerEnviar;
-	int estado;
+
 
 	 while(1){
 
@@ -149,7 +145,7 @@ int enviarInformacionAlNucleo(char * script, signed int nucleo, signed int conso
 
 	     	 if(header.id==108){
 
-	     	estado=recibir_paquete(nucleo,&header);
+	     	recibir_paquete(nucleo,&header);
 
 	     	}
 
