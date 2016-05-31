@@ -13,6 +13,27 @@
 CONF_CPU *config_cpu;
 t_log* log;
 
+AnSISOP_funciones primitivas = {
+		.AnSISOP_definirVariable		= definirVariable,
+		.AnSISOP_obtenerPosicionVariable= obtenerPosicionVariable,
+		.AnSISOP_dereferenciar			= dereferenciar,
+		.AnSISOP_asignar				= asignar,
+		.AnSISOP_obtenerValorCompartida = obtenerValorCompartida,
+		.AnSISOP_asignarValorCompartida = asignarValorCompartida,
+		.AnSISOP_irAlLabel				= irAlLabel,
+		.AnSISOP_llamarSinRetorno		= llamarSinRetorno,
+		.AnSISOP_llamarConRetorno		= llamarConRetorno,
+		.AnSISOP_retornar				= retornar,
+		.AnSISOP_imprimir				= imprimir,
+		.AnSISOP_imprimirTexto			= imprimirTexto,
+		.AnSISOP_entradaSalida			= entradaSalida,
+
+};
+AnSISOP_kernel primitivas_kernel = {
+		.AnSISOP_wait					=wait,
+		.AnSISOP_signal					=signal,
+};
+
 /* El programa recibe la IP y puerto del nucleo como primer y segundo parametros
  * y como tercer y cuarto parametros la direccion IP y puerto de la umc.
  */
@@ -56,23 +77,6 @@ int main(int argc,char **argv) {
 
 	t_pcb pcb;					//Declaracion e inicializacion del PCB
 	bzero(&pcb,sizeof(pcb));
-
-	AnSISOP_kernel primitivas_kernel;
-	primitivas_kernel.AnSISOP_signal = (void*)&signal;
-	primitivas_kernel.AnSISOP_wait = (void*)&wait;
-
-	AnSISOP_funciones primitivas;
-	primitivas.AnSISOP_asignar = (void*)&asignar;
-	primitivas.AnSISOP_asignarValorCompartida = (void*)&asignarValorCompartida;
-	primitivas.AnSISOP_definirVariable = (void*)&definirVariable;
-	primitivas.AnSISOP_dereferenciar = (void*)&dereferenciar;
-	primitivas.AnSISOP_entradaSalida = (void*)&entradaSalida;
-	primitivas.AnSISOP_imprimir = (void*)&imprimir;
-	primitivas.AnSISOP_imprimirTexto = (void*)&imprimirTexto;
-	primitivas.AnSISOP_irAlLabel = (void*)&irAlLabel;
-	primitivas.AnSISOP_obtenerPosicionVariable = (void*)&obtenerPosicionVariable;
-	primitivas.AnSISOP_obtenerValorCompartida = (void*)&obtenerValorCompartida;
-	primitivas.AnSISOP_retornar = (void*)&retornar;
 
 	while(1)
 	{
