@@ -1,0 +1,5 @@
+.cproject
+*.so
+src/*.o
+src/*.d
+/Debug/
