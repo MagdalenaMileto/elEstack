@@ -15,30 +15,44 @@
 #define ESTRUCTURASCONTROL_H_
 
 // Estructura para identificar variables con una etiqueta y una posicion en el stack
-typedef struct variables
+
+
+typedef struct __attribute__((packed))t_direccion{
+	int pagina;
+	int offset;
+	int size;
+}t_direccion;
+
+
+typedef struct __attribute__((packed))variable
 {
 	char etiqueta;
-	t_puntero pos;
-} variables;
+	t_direccion direccion;
+} t_variable;
+
+
 
 // Estructura de contexto para el stack
-typedef struct context
+typedef struct __attribute__((packed))contexto
 {
 	int pos;
-	t_puntero *args;
-	variables *vars;
+	t_direccion *args;
+	t_variable *vars;
 	int retPos;
-	t_puntero retVar;
-}context;
+	t_direccion retVar;
+}contexto;
 
 // Estructura para el PCB
 typedef struct __attribute__((packed))t_pcb{
 	int pid;
 	unsigned int pc;
-	unsigned int codePages;
-	u_int16_t *codeIndex;
-	void *labelIndex;	// Hace falta definir bien esto
-	t_puntero sc;
+	unsigned int paginasDeCodigo;
+	int *indiceDeCodigo; 
+	char *indiceDeEtiquetas;	
+	contexto *contextoActual; //Aca podria almanecar la lista de contextos en el nucleo y solo pasarle el contexto que necesito dentro del pcb?
+	int sizeContextoActual;
+	int sizeIndiceEtiquetas;
+	int sizeIndiceCodigo;
 }t_pcb;
 
 #endif /* ESTRUCTURASCONTROL_H_ */

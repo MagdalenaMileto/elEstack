@@ -51,7 +51,10 @@ t_queue* cola_CPU_libres;
 //Eliminar todo lo que sea de mas de aca
 int listenningSocket,socketCliente,servidorSocket,servidorCPU,clienteSocket,losClientes,clientesCPU,umc,ultimoCPU;
 
-char codigo[200]="#!/usr/bin/ansisop\nbegin\n# primero declaro las variables\nvariables a, b\n\na = 20\nprint a\nend";
+//char codigo[200]="#!/usr/bin/ansisop\nbegin\nvariables i,b\ni=1\n:inicio_for\ni=i+1\nprint i\nb=i­10\n:cosita\njnz b inicio_for\njnz b cosita\n#fuera del for\nend";
+
+
+char codigo[300]="#!/usr/bin/ansisop\nbegin\nvariables a, b\na=20\nprint a\nb <­- prueba\nprint b\nprint a\nend\nfunction prueba\nvariables a,b \na=2\nb=16\nprint b\nprint a\na=a+b\nreturn a\nend";
 
 
 /* FIN DE VARIABLES GLOBALES */
@@ -254,9 +257,12 @@ t_proceso* crearPrograma(int sock){
 }
 
 
-void mandarCodigoAUmc(char* codigo,int size){
+void mandarCodigoAUmc(char* codigo,int size, t_proceso *proceso){
 
-  int cuantasPaginas, estado,i;
+
+//borrar hay cosas de mas aca
+
+  int cuantasPaginasCodigo, estado,i;
   t_header header;
 
   int *indiceCodigo;
@@ -265,47 +271,33 @@ void mandarCodigoAUmc(char* codigo,int size){
   t_medatada_program* metadata_program;
   metadata_program = metadata_desde_literal(codigo);
 
-  cuantasPaginas = ceil((double)size / (double)config_nucleo->SIZE_PAGINA);
 
 
-  //printf("cuantas paginas%d size%d\n",cuantasPaginas,size);
-  
-  //Codigo de AMEO TENE X CANTIDAD DE PAGINAS?
+//Cuento cuantas paginas me va a llevar el codigo en la umc
+proceso->pcb.paginasDeCodigo=ceil((double)size / (double)config_nucleo->SIZE_PAGINA);
 
-    header.id = 204;
-    header.size = sizeof(int);
+//Tamaño del indice de etiquetas
+proceso->pcb.sizeIndiceCodigo=sizeof(int)*2*(metadata_program->instrucciones_size);
 
+proceso->pcb.indiceDeCodigo=malloc(proceso->pcb.sizeIndiceCodigo);
 
-//printf("Codigo: %s",codigo);
-
-
-
-//SACAR EL 1 SI NO PONGO EL BEGIN
-tamanoIndiceCodigo=sizeof(int)*2*(metadata_program->instrucciones_size+1);
-indiceCodigo=malloc(tamanoIndiceCodigo);
-
-
-
-//SACAR ESTO SI SACO EL BEGIN PREGINTAR
-
-indiceCodigo[0]=metadata_program->instruccion_inicio;
-indiceCodigo[1]=6; //Ver que este tamaño este bien
-
-//printf("INICIO:  %d\n ",metadata_program->instruccion_inicio);
-//printf("Instruccion %.*s\n",6,codigo+metadata_program->instruccion_inicio);
-
-
-
+//Creamos el indice de codigo
 for(i=0;i<metadata_program->instrucciones_size;i++){
-//printf("Instruccion %.*s\n",metadata_program->instrucciones_serializado[i].offset,codigo+metadata_program->instrucciones_serializado[i].start);
-indiceCodigo[i*2+2]=metadata_program->instrucciones_serializado[i].start;
-indiceCodigo[i*2+1+2]=metadata_program->instrucciones_serializado[i].offset;
-
+  //printf("Instruccion %.*s",metadata_program->instrucciones_serializado[i].offset,codigo+metadata_program->instrucciones_serializado[i].start);
+  proceso->pcb.indiceDeCodigo[i*2]=metadata_program->instrucciones_serializado[i].start;
+  proceso->pcb.indiceDeCodigo[i*2+1]=metadata_program->instrucciones_serializado[i].offset;
 }
 
+proceso->pcb.sizeIndiceEtiquetas=metadata_program->etiquetas_size;
+proceso->pcb.indiceDeEtiquetas=metadata_program->etiquetas;
 
+
+//Ver esto
+proceso->pcb.contextoActual=NULL;
 	
-  header.data = &cuantasPaginas;
+
+  
+  //header.data = &cuantasPaginas;
 
 /*
 	printf("***%d*\n",*((int*)header.data));
@@ -398,7 +390,7 @@ void *hilo_CONEXION_CONSOLA(void *arg){
             switch(estructuraARecibir.id){
               case 103:
              
-                mandarCodigoAUmc(estructuraARecibir.data,estructuraARecibir.size);
+                mandarCodigoAUmc(estructuraARecibir.data,estructuraARecibir.size,proceso);
                 pthread_mutex_lock(&mutex_cola_new);
                 queue_push(cola_new, proceso);
                 pthread_mutex_unlock(&mutex_cola_new);
@@ -583,8 +575,8 @@ void *hilo_mock(void *arg){
 
 
    pthread_create(&thmock_consola, NULL, hilo_mock_consola, NULL);
-     pthread_create(&thmock_consola2, NULL, hilo_mock_consola, NULL);
-      pthread_create(&thmock_cpu, NULL, hilo_mock_cpu, NULL);
+    // pthread_create(&thmock_consola2, NULL, hilo_mock_consola, NULL);
+    //  pthread_create(&thmock_cpu, NULL, hilo_mock_cpu, NULL);
   
 
 
