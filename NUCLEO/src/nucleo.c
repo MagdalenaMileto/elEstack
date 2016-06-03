@@ -14,8 +14,8 @@
 
 
 
- //#define CONFIG_NUCLEO "src/config" //Cambiar esto para eclipse
-  #define CONFIG_NUCLEO "config"
+ #define CONFIG_NUCLEO "src/config" //Cambiar esto para eclipse
+ // #define CONFIG_NUCLEO "config"
 
 /* VARIABLES GLOBALES */
 int * CONSTANTE;
