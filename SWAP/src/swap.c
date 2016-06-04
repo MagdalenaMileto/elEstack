@@ -54,7 +54,8 @@ int main(int argc,char **argv) {//FALTA RETARDO ACCESO Implementarlo
 				pagflag.paginaAEscribir = calloc(1,TAMANIO_PAGINA);
 				///////////////////////
 
-				switch (paqueteUMC->pedido){
+				switch (mensaje->id_payload){//arreglar bien cuando finalicemos los mensajes en comun
+				//switch (paqueteUMC->pedido){
 				case 0: {//Nuevo proceso
 					// Tiene que haber retardo?
 					printf("Se creara un nuevo proceso de %d paginas y con PID: %d \n", paqueteUMC->pagina, paqueteUMC->pid);
