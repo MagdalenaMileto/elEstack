@@ -28,8 +28,8 @@
 #include <parser/metadata_program.h>
 
 #include <signal.h>
-
-
+ #include "../../Sockets Maggie/src/socketLibrary.h"
+ #include "../../Sockets Maggie/src/socketLibrary.c"
  #include "../../COMUNES/nsockets.h"
  //#include "../../COMUNES/nsockets.c"
 
@@ -44,8 +44,8 @@
 
 
 typedef struct {
-  int PUERTO_PROG;
-  int PUERTO_CPU;
+  char* PUERTO_PROG;
+  char* PUERTO_CPU;
   int QUANTUM;
   int QUANTUM_SLEEP;
   char** SEM_IDS;
@@ -57,7 +57,7 @@ typedef struct {
 
 //Mias
   char* IP_UMC;
-  int PUERTO_UMC;
+  char* PUERTO_UMC;
   int SIZE_PAGINA;
 
 

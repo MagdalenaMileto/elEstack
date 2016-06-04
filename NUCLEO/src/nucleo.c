@@ -132,31 +132,11 @@ int main() {
 
 void conectarUmc(void) {
 
-	//Handlear errores; El programa debe salir si no conecta umc? remite conexion? que hacemo?
-
-	umc = cliente(config_nucleo->IP_UMC, config_nucleo->PUERTO_UMC);
-	if (umc == 0) {
-		printf("NUCLEO: No encontre UMC me cierro :'( \n");
-		exit (EXIT_FAILURE);
-	}
-	printf("Nucleo: Conecté bien umc %d\n", umc);
+	//No me pude conectar?
+	umc = conectar_a(config_nucleo->IP_UMC, config_nucleo->PUERTO_UMC);
 
 
-
-
-	//Handlear errores  ****** ****** ****** ****** ****** ****** ****** ****** ****** ****** ******
-
-
-	int estado;
-	estado = handshake(umc, 202, 201);
-
-	if (estado == 1) {
-		printf("NUCLEO:Handshake exitoso con umc\n");
-	} else {
-		printf("NUCLEO:Handshake invalido con umc\n");
-	}
-
-
+	//Handshake
 
 
 
@@ -197,12 +177,14 @@ void *hilo_PLP(void *arg) {
 
 
 void mandarAEjecutar(t_proceso *proceso, int sock) {
+	/*
 	t_header header; int estado;
 	header.id = 303;
 	header.data = &proceso->pcb;
 	header.size = sizeof(proceso->pcb);
 	proceso->socket_CPU = sock;
 	enviar_paquete((int)sock, header);
+	*/
 }
 
 
@@ -368,10 +350,12 @@ void *hilo_CONEXION_CONSOLA(void *arg) {
 	int estado;
 	t_proceso* proceso;
 
+/*
 	if (handshake(args->socket, 101, 102) != 1) {
 		printf("NUCLEO:Handshake invalido consola %d\n", args->socket);
 		// return;
 	}
+	*/
 	printf("NUCLEO:Handshake valido consola, creando proceso %d\n", args->socket);
 
 	proceso = crearPrograma(args->socket);
@@ -379,6 +363,7 @@ void *hilo_CONEXION_CONSOLA(void *arg) {
 	while (1) {
 		t_header estructuraARecibir; // Esto tiene que ser un puntero cambiar.....
 
+/*
 		estado = recibir_paquete(args->socket, &estructuraARecibir);
 
 		if (estado == -1) {
@@ -401,7 +386,7 @@ void *hilo_CONEXION_CONSOLA(void *arg) {
 
 		estructuraARecibir.id = 0;
 		free(estructuraARecibir.data);
-
+*/
 	}
 
 }
@@ -411,23 +396,18 @@ void *hilo_CONEXION_CONSOLA(void *arg) {
 void *hilo_HANDLER_CONEXIONES_CONSOLA(void *arg) {
 
 	int servidorSocket, socketCliente;
-	struct sockaddr_in addr;      // Esta estructura contendra los datos de la conexion del cliente. IP, puerto, etc.
-	socklen_t addrlen = sizeof(addr);
 	struct arg_struct *args; //Probar de sacar afuera esto?
 
-	servidorSocket = servidor(config_nucleo->PUERTO_PROG);
 
+	servidorSocket = socket_escucha("localhost", config_nucleo->PUERTO_PROG);
+	listen(servidorSocket, 1024);
+	
 
-	if (servidorSocket == -1) {
-		printf("NUCLEO: No puedo crear socket escucha 1200, me cierro\n");//cambiar a p error
-		close(servidorSocket);
-		exit(1);
-	}
 
 	listen(servidorSocket, 5);   //Aca maximas conexiones, ver de cambiar?
 
 	while (1) {
-		socketCliente = accept(servidorSocket, (struct sockaddr *) &addr, &addrlen);
+		socketCliente = aceptar_conexion(servidorSocket);
 
 		args = malloc(sizeof(struct arg_struct));//cuando se termine el proceso hacer un free de esto
 		args->socket = socketCliente;
@@ -453,23 +433,16 @@ void *hilo_HANDLER_CONEXIONES_CONSOLA(void *arg) {
 void *hilo_CONEXION_CPU(void *arg) {
 
 	struct arg_struct *args = (struct arg_struct *)arg;
-	int estado;
 	t_proceso* proceso;
 	queue_push(cola_CPU_libres, (void*)args->socket);
-	t_header estructuraARecibir;
+	t_paquete * elPaquete;
 	while (1) {
 
 
-		estado = recibir_paquete(args->socket, &estructuraARecibir);
+		elPaquete = recibir(args->socket);
 
 
-		if (estado == -1) {
-			printf("Nucleo: Cerro Socket cpu\n");
-			break;
-			//Aca deberia eliminar el programa pcb cerrar socket blablabla si ejecuta cpu decile ya fue man UMC
-		}
-
-		switch (estado) {
+		switch (elPaquete->codigo_operacion) {
 		case 304:
 			proceso = dameProceso(cola_exec, args->socket);
 			printf("NUCLEO: Recibi proceso %d por fin de quantum, encolando en cola ready\n", proceso->pcb.pid);
@@ -518,9 +491,6 @@ void *hilo_CONEXION_CPU(void *arg) {
 		}
 
 
-		estructuraARecibir.id = 0;
-		free(estructuraARecibir.data);
-
 	}
 
 }
@@ -530,28 +500,22 @@ void *hilo_CONEXION_CPU(void *arg) {
 
 void *hilo_HANDLER_CONEXIONES_CPU(void *arg) {
 
-	struct arg_struct *args; //Probar de sacar afuera esto?
 	int servidorSocket, socketCliente;
-	struct sockaddr_in addr;      // Esta estructura contendra los datos de la conexion del cliente. IP, puerto, etc.
-	socklen_t addrlen = sizeof(addr);
+	struct arg_struct *args; //Probar de sacar afuera esto?
 
 
-	servidorSocket = servidor(config_nucleo->PUERTO_CPU);
+	servidorSocket = socket_escucha("localhost", config_nucleo->PUERTO_CPU);
+	listen(servidorSocket, 1024);
+	
 
 
-	if (servidorSocket == -1) {
-		printf("NUCLEO: No puedo crear socket escucha 1201, me cierro\n");//cambiar a p error
-		close(servidorSocket);
-		exit(1);
-	}
-
-	listen(servidorSocket, 5); //Aca maximas conexiones, ver de cambiar?
+	listen(servidorSocket, 5);   //Aca maximas conexiones, ver de cambiar?
 
 	while (1) {
+		socketCliente = aceptar_conexion(servidorSocket);
 
-		socketCliente = accept(servidorSocket, (struct sockaddr *) &addr, &addrlen);
 
-
+		
 		args = malloc(sizeof(struct arg_struct));//cuando se termine el proceso hacer un free de esto
 		args->socket = socketCliente;
 
@@ -621,43 +585,26 @@ void *hilo_mock(void *arg) {
 
 
 
-	int estado;
-	estado = handshake(clienteUmc, 201, 202);
-
-	if (estado == 1) {
-		printf("UMCMOCK:Handshake exitoso con nucleo\n");
-	} else {
-		printf("UMCMOCK:Handshake invalido con nucleo\n");
-	}
-
-
-
-
-
-
-	t_header header, headerEnviar;
+	t_paquete * paquete_nuevo;
 
 	while (1) {
 
-		estado = recibir_paquete(clienteUmc, &header);
+		paquete_nuevo = recibir(clienteUmc);
 
-		if (header.id == 204) {
+		if (paquete_nuevo->codigo_operacion == 204) {
 			//printf("UMCMOCK: me pidió %d paginas. Le digo q si\n",*((int*)header.data));
-
+			/*
 			headerEnviar.id = 205; int a = 1;
 			headerEnviar.data = &a;
 			headerEnviar.size = sizeof(int);
 			enviar_paquete(clienteUmc, headerEnviar);
+			*/
 
 		}
 
-		if (header.id == 206) {
-			//	printf("UMCMOCK: recibo pagina: %s\n",(char*)header.data);
 
-
-		}
 		//	printf("Pase\n");
-		free(header.data);
+		
 
 
 	}
@@ -675,26 +622,27 @@ void *hilo_mock_consola(void *arg) {
 	sleep(4);
 
 	consola = cliente("127.0.0.1", 1209);
+
+
+
+
 	printf("CONSOLAMOCK: Conecté%d\n", consola);
 
 
-	if (handshake(consola, 102, 101) != 1) {
-		printf("CONSOLAMOCK:Handshake invalido nucleo %d\n", consola);
-		//return;
-	}
-	printf("CONSOLAMOCK:Handshake valido nucleo %d\n", consola);
+	enviar(consola, 103, sizeof(codigo), codigo);
 
+	/*
 	t_header header;
 	header.size = sizeof(codigo);
 	header.id = 103;
 	header.data = codigo;
 
 	enviar_paquete(consola, header);
-
+	*/
 	while (1) {}
 	// sleep(5);
 
-	close(consola);
+	
 
 
 }
@@ -710,19 +658,16 @@ void *hilo_mock_cpu(void *arg) {
 
 
 
-	t_header header, headerEnviar;
+	t_paquete * paquete_nuevo;
 
 
 
 	while (1) {
-		estado = recibir_paquete(cpu, &header);
-		if (estado == 303) {
+		paquete_nuevo = recibir(cpu);
+		if (paquete_nuevo->codigo_operacion == 303) {
 			printf("CPUMOCK: Recibi pcb... ejecutando\n");
 			sleep(2);
-			headerEnviar.id = 304;
-			headerEnviar.data = header.data;
-			headerEnviar.size = header.size;
-			enviar_paquete(cpu, headerEnviar);
+			enviar(cpu, 304, paquete_nuevo->tamanio, paquete_nuevo->data );
 
 		}
 
@@ -757,8 +702,8 @@ void get_config_nucleo (CONF_NUCLEO *config_nucleo)
 
 
 	t_config *fnucleo = config_create(CONFIG_NUCLEO);
-	config_nucleo->PUERTO_PROG = config_get_int_value(fnucleo, "PUERTO_PROG");
-	config_nucleo->PUERTO_CPU = config_get_int_value(fnucleo, "PUERTO_CPU");
+	config_nucleo->PUERTO_PROG = config_get_string_value(fnucleo, "PUERTO_PROG");
+	config_nucleo->PUERTO_CPU = config_get_string_value(fnucleo, "PUERTO_CPU");
 
 	config_nucleo->QUANTUM = config_get_int_value(fnucleo, "QUANTUM");
 	config_nucleo->QUANTUM_SLEEP = config_get_int_value(fnucleo, "QUANTUM_SLEEP");
@@ -785,7 +730,7 @@ void get_config_nucleo (CONF_NUCLEO *config_nucleo)
 
 	config_nucleo->SIZE_PAGINA = config_get_int_value(fnucleo, "SIZE_PAGINA");
 	config_nucleo->IP_UMC = config_get_string_value(fnucleo, "IP_UMC");
-	config_nucleo->PUERTO_UMC = config_get_int_value(fnucleo, "PUERTO_UMC");
+	config_nucleo->PUERTO_UMC = config_get_string_value(fnucleo, "PUERTO_UMC");
 	//config_destroy(fnucleo);//Ya no lo necesito
 
 
