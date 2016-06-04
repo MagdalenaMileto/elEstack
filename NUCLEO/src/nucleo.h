@@ -65,11 +65,20 @@ typedef struct {
   int* VALOR_SEM;
   int* VALOR_IO;
 
+  long long*VALOR_IO_EXPIRED_TIME; 
+
+
 
 }CONF_NUCLEO;
 
 
 
+typedef struct __attribute__((packed))t_blocked{
+	t_pcb pcb;
+	int sem_offset;
+	int IO_offset;
+	int IO_time;
+}t_blocked;
 
 
 
@@ -84,7 +93,7 @@ typedef struct{
 
 }t_proceso;
 
-
+long long *punteroConCero(char **ana1);
 int *convertirConfigInt(char **ana1,char **ana2);
 
 void get_config_nucleo (CONF_NUCLEO *config_nucleo);
