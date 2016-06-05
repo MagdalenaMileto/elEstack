@@ -21,19 +21,8 @@ void remove_and_destroy_all_such_that(t_list * lista, bool (*condicion)(void*),
 
 }
 
-t_list * coincide_pid(t_list * lista, int pid) {
+void * head(t_list * lista) {
 
-	bool _coincide_pid(void * elemento) {
-
-		t_entrada_tabla_de_paginas * entrada =
-				(t_entrada_tabla_de_paginas *) elemento;
-		return entrada->pid == pid;
-
-	}
-
-	t_list * resultado = list_filter(lista, _coincide_pid);
-
-	return resultado;
-
+	return list_get(lista, 0);
 }
 

@@ -14,6 +14,7 @@
 #include "../commonsV2.h"
 #include "estructuras.h"
 
+t_entrada_tabla_de_paginas * buscar_pagina_tabla_de_paginas(int numero_pagina);
 t_entrada_tabla_de_paginas * crear_nueva_entrada(int pid, int pagina);
 void eliminar_proceso_tabla_de_paginas(int pid);
 
