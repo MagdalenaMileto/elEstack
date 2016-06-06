@@ -45,7 +45,7 @@ struct arg_struct {
 };
 
 
-
+int socketconsola,socketcpu;
 
 
 //Eliminar todo lo que sea de mas de aca
@@ -179,10 +179,14 @@ void *hilo_PLP(void *arg) {
 
 
 void mandarAEjecutar(t_proceso *proceso, int sock) {
-
-	enviar(sock, 303, sizeof(proceso->pcb), &proceso->pcb );
-
-	
+	t_pcb *pcbSerializado;
+	printf("rompe?%d\n",proceso->pcb->pid);
+	pcbSerializado = serializarPCB(proceso->pcb);
+		printf("rompe?%d\n",pcbSerializado->sizeTotal);
+	enviar(sock, 303, pcbSerializado->sizeTotal, pcbSerializado);
+		printf("rompe?\n");
+	free(pcbSerializado);
+		printf("rompe?\n");
 
 }
 
@@ -229,7 +233,10 @@ t_proceso* crearPrograma(int sock) {
 
 
 	t_proceso* procesoNuevo;
+	t_pcb *pcb;
+	pcb=malloc(sizeof(t_pcb));
 	procesoNuevo = malloc(sizeof(t_proceso));
+	procesoNuevo->pcb = pcb;
 	procesoNuevo->pcb->pid = pidcounter;
 	procesoNuevo->socket_CONSOLA = sock;
 	pidcounter++;
@@ -282,6 +289,8 @@ void mandarCodigoAUmc(char* codigo, int size, t_proceso *proceso) {
 	proceso->pcb->contextoActual[0] = contextocero;
 	contextocero->sizeArgs=0;
 	contextocero->sizeVars=0;
+
+	proceso->pcb->sizeContextoActual=1;
 
 	metadata_destruir(metadata_program);
 
@@ -347,15 +356,15 @@ void *hilo_HANDLER_CONEXIONES_CONSOLA(void *arg) {
 	struct arg_struct *args; //Probar de sacar afuera esto?
 
 
-	servidorSocket = socket_escucha("localhost", config_nucleo->PUERTO_PROG);
-	listen(servidorSocket, 1024);
+	socketconsola = socket_escucha("localhost", config_nucleo->PUERTO_PROG);
+	listen(socketconsola, 1024);
 	
 
 
-	listen(servidorSocket, 5);   //Aca maximas conexiones, ver de cambiar?
+	listen(socketconsola, 5);   //Aca maximas conexiones, ver de cambiar?
 
 	while (1) {
-		socketCliente = aceptar_conexion(servidorSocket);
+		socketCliente = aceptar_conexion(socketconsola);
 
 		args = malloc(sizeof(struct arg_struct));//cuando se termine el proceso hacer un free de esto
 		args->socket = socketCliente;
@@ -454,15 +463,15 @@ void *hilo_HANDLER_CONEXIONES_CPU(void *arg) {
 	struct arg_struct *args; //Probar de sacar afuera esto?
 
 
-	servidorSocket = socket_escucha("localhost", config_nucleo->PUERTO_CPU);
-	listen(servidorSocket, 1024);
+	socketcpu = socket_escucha("localhost", config_nucleo->PUERTO_CPU);
+	listen(socketcpu, 1024);
 	
 
 
-	listen(servidorSocket, 5);   //Aca maximas conexiones, ver de cambiar?
+	listen(socketcpu, 5);   //Aca maximas conexiones, ver de cambiar?
 
 	while (1) {
-		socketCliente = aceptar_conexion(servidorSocket);
+		socketCliente = aceptar_conexion(socketcpu);
 
 
 		
@@ -483,12 +492,13 @@ void intHandler(int dummy) {
 	//clrscr();
 
 	//close(clienteSocket);
-	close(servidorSocket);
-	close(servidorCPU);
+	close(socketcpu);
+	close(socketconsola);
 	close(umc);
 
 	printf("NUCLEO: CERRÓ\n");
 	printf("cierro Todo...\n\n");
+	sleep(1);
 	exit(0);
 }
 
@@ -610,12 +620,16 @@ void *hilo_mock_cpu(void *arg) {
 
 	t_paquete * paquete_nuevo;
 
+	t_pcb *pcb;
 
 
 	while (1) {
 		paquete_nuevo = recibir(cpu);
 		if (paquete_nuevo->codigo_operacion == 303) {
-			printf("CPUMOCK: Recibi pcb... ejecutando\n");
+			printf("llegamo\n");
+			pcb=desserializarPCB(paquete_nuevo->data);
+			printf("CPUMOCK: Recibi pcb %d... ejecutando\n",pcb->pid);
+
 			sleep(2);
 			enviar(cpu, 304, paquete_nuevo->tamanio, &paquete_nuevo->data );
 			printf("CRASH1\n");
@@ -779,6 +793,8 @@ t_pcb *desserializarPCB(t_pcb *serializado){
 	memcpy(pcb,serializado,sizeof(t_pcb));
 	serializado+=sizeof(t_pcb);
 
+	printf("AA%d\n",pcb->sizeTotal);
+
 	pcb->indiceDeCodigo = malloc(pcb->sizeIndiceDeCodigo*2*sizeof(int));
 	memcpy(pcb->indiceDeCodigo,serializado,pcb->sizeIndiceDeCodigo*2*sizeof(int));
 	serializado+=pcb->sizeIndiceDeCodigo*2*sizeof(int);
@@ -813,7 +829,7 @@ t_pcb *desserializarPCB(t_pcb *serializado){
 
 t_pcb *serializarPCB(t_pcb *pcb){
 
-	int size;
+	int size=0;
 	t_pcb *retorno,*retornotemp;
 
 	size+=sizeof(t_pcb);
@@ -835,8 +851,8 @@ t_pcb *serializarPCB(t_pcb *pcb){
 
 	retorno = malloc(size);
 	retornotemp=retorno;
-
-	memcpy(retornotemp,pcb,size);
+	pcb->sizeTotal=size;
+	memcpy(retornotemp,pcb,sizeof(t_pcb));
 	retornotemp+=sizeof(t_pcb);
 
 	memcpy(retornotemp,pcb->indiceDeCodigo,pcb->sizeIndiceDeCodigo*2*sizeof(int));
@@ -858,7 +874,9 @@ t_pcb *serializarPCB(t_pcb *pcb){
 			retornotemp+=sizeof(t_variable);
 		}
 	}
-	pcb->sizeTotal=size;
+	
+	printf("size%d\n",pcb->sizeTotal);
+		printf("size%d\n",retorno->sizeTotal);
 	return retorno;
 
 

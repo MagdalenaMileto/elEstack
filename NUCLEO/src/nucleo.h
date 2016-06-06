@@ -116,7 +116,9 @@ void *hilo_mock_consola(void *arg);
 void *hilo_mock_cpu(void *arg);
 
 
-
+t_pcb *desserializarPCB(t_pcb *serializado);
+void destruirPCB(t_pcb *pcb);
+t_pcb *serializarPCB(t_pcb *pcb);
 
 
 void *hilo_CONEXION_CONSOLA(void *arg);
