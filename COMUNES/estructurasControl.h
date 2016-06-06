@@ -33,14 +33,16 @@ typedef struct __attribute__((packed))variable
 
 
 // Estructura de contexto para el stack
-typedef struct __attribute__((packed))contexto
+typedef struct __attribute__((packed))t_contexto
 {
 	int pos;
-	t_direccion *args;
-	t_variable *vars;
+	t_direccion **args;
+	t_variable **vars;
 	int retPos;
 	t_direccion retVar;
-}contexto;
+	int sizeArgs;
+	int sizeVars;
+}t_contexto;
 
 // Estructura para el PCB
 typedef struct __attribute__((packed))t_pcb{
@@ -49,10 +51,11 @@ typedef struct __attribute__((packed))t_pcb{
 	unsigned int paginasDeCodigo;
 	int *indiceDeCodigo; 
 	char *indiceDeEtiquetas;	
-	contexto *contextoActual; //Aca podria almanecar la lista de contextos en el nucleo y solo pasarle el contexto que necesito dentro del pcb?
+	t_contexto **contextoActual; //Aca podria almanecar la lista de contextos en el nucleo y solo pasarle el contexto que necesito dentro del pcb?
 	int sizeContextoActual;
-	int sizeIndiceEtiquetas;
-	int sizeIndiceCodigo;
+	int sizeIndiceDeEtiquetas;
+	int sizeIndiceDeCodigo;
+	int sizeTotal;
 }t_pcb;
 
 #endif /* ESTRUCTURASCONTROL_H_ */

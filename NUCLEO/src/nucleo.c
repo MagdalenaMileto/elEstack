@@ -14,7 +14,7 @@
 
 
 
-#define CONFIG_NUCLEO "src/config" //Cambiar esto para eclipse
+#define CONFIG_NUCLEO "config" //Cambiar esto para eclipse
 // #define CONFIG_NUCLEO "config"
 
 /* VARIABLES GLOBALES */
@@ -72,6 +72,7 @@ int main() {
 
 	//Levantar archivo de configuracion
 	config_nucleo = malloc(sizeof(CONF_NUCLEO));
+
 
 	get_config_nucleo(config_nucleo);//Crea y setea el config del kernel
 
@@ -145,6 +146,7 @@ void conectarUmc(void) {
 t_proceso* dameProceso(t_queue *cola, int sock ) {
 	int a = 0, t;
 	t_proceso *w;
+
 	while (w = (t_proceso*)list_get(cola->elements, a)) {
 
 		if (w->socket_CPU == sock) return (t_proceso*)list_remove(cola->elements, a);
@@ -166,7 +168,7 @@ void *hilo_PLP(void *arg) {
 	while (1) {
 		if (queue_size(cola_new) != 0) {
 			proceso = queue_pop(cola_new);
-			printf("Nucleo: Saco proceso  %d new, mando a ready\n", proceso->pcb.pid);
+			printf("Nucleo: Saco proceso  %d new, mando a ready\n", proceso->pcb->pid);
 			queue_push(cola_ready, proceso);
 		}
 	}
@@ -177,14 +179,11 @@ void *hilo_PLP(void *arg) {
 
 
 void mandarAEjecutar(t_proceso *proceso, int sock) {
-	/*
-	t_header header; int estado;
-	header.id = 303;
-	header.data = &proceso->pcb;
-	header.size = sizeof(proceso->pcb);
-	proceso->socket_CPU = sock;
-	enviar_paquete((int)sock, header);
-	*/
+
+	enviar(sock, 303, sizeof(proceso->pcb), &proceso->pcb );
+
+	
+
 }
 
 
@@ -210,7 +209,7 @@ void *hilo_PCP(void *arg) {
 
 			sock = (int)queue_pop(cola_CPU_libres);
 			proceso = queue_pop(cola_ready);
-			printf("Nucleo: Saco proceso %d ready, mando a exec\n", proceso->pcb.pid);
+			printf("Nucleo: Saco proceso %d ready, mando a exec\n", proceso->pcb->pid);
 
 			queue_push(cola_exec, proceso);
 			mandarAEjecutar(proceso, sock);
@@ -231,7 +230,7 @@ t_proceso* crearPrograma(int sock) {
 
 	t_proceso* procesoNuevo;
 	procesoNuevo = malloc(sizeof(t_proceso));
-	procesoNuevo->pcb.pid = pidcounter;
+	procesoNuevo->pcb->pid = pidcounter;
 	procesoNuevo->socket_CONSOLA = sock;
 	pidcounter++;
 	return procesoNuevo;
@@ -256,26 +255,26 @@ void mandarCodigoAUmc(char* codigo, int size, t_proceso *proceso) {
 
 
 //Cuento cuantas paginas me va a llevar el codigo en la umc
-	proceso->pcb.paginasDeCodigo = ceil((double)size / (double)config_nucleo->SIZE_PAGINA);
+	proceso->pcb->paginasDeCodigo = ceil((double)size / (double)config_nucleo->SIZE_PAGINA);
 
 //Tamaño del indice de etiquetas
-	proceso->pcb.sizeIndiceCodigo = sizeof(int) * 2 * (metadata_program->instrucciones_size);
+	proceso->pcb->sizeIndiceDeCodigo = sizeof(int) * 2 * (metadata_program->instrucciones_size);
 
-	proceso->pcb.indiceDeCodigo = malloc(proceso->pcb.sizeIndiceCodigo);
+	proceso->pcb->indiceDeCodigo = malloc(proceso->pcb->sizeIndiceDeCodigo);
 
 //Creamos el indice de codigo
 	for (i = 0; i < metadata_program->instrucciones_size; i++) {
 		//printf("Instruccion %.*s",metadata_program->instrucciones_serializado[i].offset,codigo+metadata_program->instrucciones_serializado[i].start);
-		proceso->pcb.indiceDeCodigo[i * 2] = metadata_program->instrucciones_serializado[i].start;
-		proceso->pcb.indiceDeCodigo[i * 2 + 1] = metadata_program->instrucciones_serializado[i].offset;
+		proceso->pcb->indiceDeCodigo[i * 2] = metadata_program->instrucciones_serializado[i].start;
+		proceso->pcb->indiceDeCodigo[i * 2 + 1] = metadata_program->instrucciones_serializado[i].offset;
 	}
 
-	proceso->pcb.sizeIndiceEtiquetas = metadata_program->etiquetas_size;
-	proceso->pcb.indiceDeEtiquetas = metadata_program->etiquetas;
+	proceso->pcb->sizeIndiceDeEtiquetas = metadata_program->etiquetas_size;
+	proceso->pcb->indiceDeEtiquetas = metadata_program->etiquetas;
 
 
 //Ver esto
-	proceso->pcb.contextoActual = NULL;
+	proceso->pcb->contextoActual = NULL;
 
 
 
@@ -361,21 +360,17 @@ void *hilo_CONEXION_CONSOLA(void *arg) {
 	proceso = crearPrograma(args->socket);
 
 	while (1) {
-		t_header estructuraARecibir; // Esto tiene que ser un puntero cambiar.....
+		t_paquete* paquete; // Esto tiene que ser un puntero cambiar.....
 
-/*
-		estado = recibir_paquete(args->socket, &estructuraARecibir);
 
-		if (estado == -1) {
-			printf("Nucleo: Cerro Socket consola\n");
-			break;
-			//Aca deberia eliminar el programa pcb cerrar socket blablabla si ejecuta cpu decile ya fue man UMC
-		}
 
-		switch (estructuraARecibir.id) {
+		paquete = recibir(args->socket);
+
+		
+		switch (paquete->codigo_operacion) {
 		case 103:
 
-			mandarCodigoAUmc(estructuraARecibir.data, estructuraARecibir.size, proceso);
+			//mandarCodigoAUmc(estructuraARecibir.data, estructuraARecibir.size, proceso);
 			pthread_mutex_lock(&mutex_cola_new);
 			queue_push(cola_new, proceso);
 			pthread_mutex_unlock(&mutex_cola_new);
@@ -384,9 +379,7 @@ void *hilo_CONEXION_CONSOLA(void *arg) {
 		}
 
 
-		estructuraARecibir.id = 0;
-		free(estructuraARecibir.data);
-*/
+
 	}
 
 }
@@ -440,19 +433,21 @@ void *hilo_CONEXION_CPU(void *arg) {
 
 
 		elPaquete = recibir(args->socket);
-
+	printf("CRASH2 %d %d\n",elPaquete->codigo_operacion,args->socket);
 
 		switch (elPaquete->codigo_operacion) {
 		case 304:
+	
 			proceso = dameProceso(cola_exec, args->socket);
-			printf("NUCLEO: Recibi proceso %d por fin de quantum, encolando en cola ready\n", proceso->pcb.pid);
+
+			printf("NUCLEO: Recibi proceso %d por fin de quantum, encolando en cola ready\n", proceso->pcb->pid);
 			queue_push(cola_ready, proceso);
 			queue_push(cola_CPU_libres, (void *)args->socket);
 			break;
 
 		case 320:
 			proceso = dameProceso(cola_exec, args->socket);
-			printf("NUCLEO: Recibi proceso %d por fin de ejecucion, encolando en cola exit\n", proceso->pcb.pid);
+			printf("NUCLEO: Recibi proceso %d por fin de ejecucion, encolando en cola exit\n", proceso->pcb->pid);
 			queue_push(cola_exit, proceso);
 			queue_push(cola_CPU_libres, (void *)args->socket);
 			break;
@@ -460,7 +455,7 @@ void *hilo_CONEXION_CPU(void *arg) {
 		case 340:
 			//Free de los proceso? ver
 			proceso = dameProceso(cola_exec, args->socket);
-			printf("NUCLEO: Recibi proceso %d  para mandar a bloquear por IO \n", proceso->pcb.pid);
+			printf("NUCLEO: Recibi proceso %d  para mandar a bloquear por IO \n", proceso->pcb->pid);
 			//DesSerializar PCB bloqueado
 			t_blocked bloqueado;
 			if (bloqueado.IO_offset) {
@@ -571,7 +566,7 @@ void *hilo_mock(void *arg) {
 
 	pthread_create(&thmock_consola, NULL, hilo_mock_consola, NULL);
 	// pthread_create(&thmock_consola2, NULL, hilo_mock_consola, NULL);
-	//  pthread_create(&thmock_cpu, NULL, hilo_mock_cpu, NULL);
+	  pthread_create(&thmock_cpu, NULL, hilo_mock_cpu, NULL);
 
 
 
@@ -667,7 +662,8 @@ void *hilo_mock_cpu(void *arg) {
 		if (paquete_nuevo->codigo_operacion == 303) {
 			printf("CPUMOCK: Recibi pcb... ejecutando\n");
 			sleep(2);
-			enviar(cpu, 304, paquete_nuevo->tamanio, paquete_nuevo->data );
+			enviar(cpu, 304, paquete_nuevo->tamanio, &paquete_nuevo->data );
+			printf("CRASH1\n");
 
 		}
 
@@ -702,7 +698,9 @@ void get_config_nucleo (CONF_NUCLEO *config_nucleo)
 
 
 	t_config *fnucleo = config_create(CONFIG_NUCLEO);
+
 	config_nucleo->PUERTO_PROG = config_get_string_value(fnucleo, "PUERTO_PROG");
+
 	config_nucleo->PUERTO_CPU = config_get_string_value(fnucleo, "PUERTO_CPU");
 
 	config_nucleo->QUANTUM = config_get_int_value(fnucleo, "QUANTUM");
@@ -797,4 +795,117 @@ long long current_timestamp(void) {
 	return milliseconds;
 }
 
+
+
+void destruirPCB(t_pcb *pcb){
+	int i,y;
+	for(i=0;i<pcb->sizeContextoActual;i++){
+		for(y=0;y<pcb->contextoActual[i]->sizeArgs;y++){
+			free(pcb->contextoActual[i]->args[y]);
+		}
+		for(y=0;y<pcb->contextoActual[i]->sizeVars;y++){
+			free(pcb->contextoActual[i]->vars[y]);
+		}
+		free(pcb->contextoActual[i]);
+	}
+	free(pcb->indiceDeCodigo);
+	free(pcb->indiceDeEtiquetas);
+	free(pcb);
+}
+
+
+
+t_pcb *desserializarPCB(t_pcb *serializado){
+
+	int size,i,y;
+	t_pcb *pcb;
+
+	pcb = malloc(sizeof(t_pcb));
+	memcpy(pcb,serializado,sizeof(t_pcb));
+	serializado+=sizeof(t_pcb);
+
+	pcb->indiceDeCodigo = malloc(pcb->sizeIndiceDeCodigo*2*sizeof(int));
+	memcpy(pcb->indiceDeCodigo,serializado,pcb->sizeIndiceDeCodigo*2*sizeof(int));
+	serializado+=pcb->sizeIndiceDeCodigo*2*sizeof(int);
+
+	pcb->indiceDeEtiquetas=malloc(pcb->sizeIndiceDeEtiquetas*sizeof(char));
+	memcpy(pcb->indiceDeEtiquetas,serializado,pcb->sizeIndiceDeEtiquetas*sizeof(char));
+	serializado+=pcb->sizeIndiceDeEtiquetas*sizeof(char);
+
+	for(i=0;i<pcb->sizeContextoActual;i++){
+		pcb->contextoActual[i] = malloc(sizeof(t_contexto));
+		memcpy(pcb->contextoActual[i],serializado,sizeof(t_contexto));		
+		serializado+=sizeof(t_contexto);
+
+		for(y=0;y<pcb->contextoActual[i]->sizeArgs;y++){
+			pcb->contextoActual[i]->args[y] = malloc(sizeof(t_direccion));
+			memcpy(pcb->contextoActual[i]->args[y],serializado,sizeof(t_direccion));		
+			serializado+=sizeof(t_direccion);
+		}
+		for(y=0;y<pcb->contextoActual[i]->sizeVars;y++){
+			pcb->contextoActual[i]->vars[y] = malloc(sizeof(t_variable));
+			memcpy(pcb->contextoActual[i]->vars[y],serializado,sizeof(t_variable));		
+			serializado+=sizeof(t_variable);
+		}
+	}
+
+	return pcb;
+
+
+}
+
+
+
+t_pcb *serializarPCB(t_pcb *pcb){
+
+	int size;
+	t_pcb *retorno,*retornotemp;
+
+	size+=sizeof(t_pcb);
+
+	size+=pcb->sizeIndiceDeEtiquetas*sizeof(char);;
+	size+=pcb->sizeIndiceDeCodigo*2*sizeof(int);;
+	int i,y;
+	for(i=0;i<pcb->sizeContextoActual;i++){
+		size+=sizeof(t_contexto);
+		int y;
+		for(y=0;y<pcb->contextoActual[i]->sizeArgs;y++){
+			size+=sizeof(t_direccion);
+		}
+		for(y=0;y<pcb->contextoActual[i]->sizeVars;y++){
+
+			size+=sizeof(t_variable);
+		}
+	}
+
+	retorno = malloc(size);
+	retornotemp=retorno;
+
+	memcpy(retornotemp,pcb,size);
+	retornotemp+=sizeof(t_pcb);
+
+	memcpy(retornotemp,pcb->indiceDeCodigo,pcb->sizeIndiceDeCodigo*2*sizeof(int));
+	retornotemp+=pcb->sizeIndiceDeCodigo*2*sizeof(int);
+
+	memcpy(retornotemp,pcb->indiceDeEtiquetas,pcb->sizeIndiceDeEtiquetas*sizeof(char));
+	retornotemp+=pcb->sizeIndiceDeEtiquetas*sizeof(char);
+
+	for(i=0;i<pcb->sizeContextoActual;i++){
+		memcpy(retornotemp,pcb->contextoActual[i],sizeof(t_contexto));		
+		retornotemp+=sizeof(t_contexto);
+
+		for(y=0;y<pcb->contextoActual[i]->sizeArgs;y++){
+			memcpy(retornotemp,pcb->contextoActual[i]->args[y],sizeof(t_direccion));		
+			retornotemp+=sizeof(t_direccion);
+		}
+		for(y=0;y<pcb->contextoActual[i]->sizeVars;y++){
+			memcpy(retornotemp,pcb->contextoActual[i]->vars[y],sizeof(t_variable));		
+			retornotemp+=sizeof(t_variable);
+		}
+	}
+	pcb->sizeTotal=size;
+	return retorno;
+
+
+}
 

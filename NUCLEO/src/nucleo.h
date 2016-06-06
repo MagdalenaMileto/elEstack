@@ -86,7 +86,7 @@ typedef struct __attribute__((packed))t_blocked{
 typedef struct{
   int socket_CPU;
   int socket_CONSOLA;
-  t_pcb pcb;
+  t_pcb *pcb;
   long long tiempoBloqueado;
   char semaforoBloqueado;
 
