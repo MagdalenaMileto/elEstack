@@ -258,9 +258,9 @@ void mandarCodigoAUmc(char* codigo, int size, t_proceso *proceso) {
 	proceso->pcb->paginasDeCodigo = ceil((double)size / (double)config_nucleo->SIZE_PAGINA);
 
 //Tamaño del indice de etiquetas
-	proceso->pcb->sizeIndiceDeCodigo = sizeof(int) * 2 * (metadata_program->instrucciones_size);
+	proceso->pcb->sizeIndiceDeCodigo =  (metadata_program->instrucciones_size);
 
-	proceso->pcb->indiceDeCodigo = malloc(proceso->pcb->sizeIndiceDeCodigo);
+	proceso->pcb->indiceDeCodigo = malloc(proceso->pcb->sizeIndiceDeCodigo*2*sizeof(int));
 
 //Creamos el indice de codigo
 	for (i = 0; i < metadata_program->instrucciones_size; i++) {
@@ -269,66 +269,21 @@ void mandarCodigoAUmc(char* codigo, int size, t_proceso *proceso) {
 		proceso->pcb->indiceDeCodigo[i * 2 + 1] = metadata_program->instrucciones_serializado[i].offset;
 	}
 
+
+//Hacerlo con memcopy 
 	proceso->pcb->sizeIndiceDeEtiquetas = metadata_program->etiquetas_size;
-	proceso->pcb->indiceDeEtiquetas = metadata_program->etiquetas;
+	proceso->pcb->indiceDeEtiquetas=malloc(proceso->pcb->sizeIndiceDeEtiquetas*sizeof(char));
+	memcpy(proceso->pcb->indiceDeEtiquetas,metadata_program->etiquetas,proceso->pcb->sizeIndiceDeEtiquetas*sizeof(char));		
+
 
 
 //Ver esto
-	proceso->pcb->contextoActual = NULL;
+	t_contexto *contextocero = malloc(sizeof(t_contexto));
+	proceso->pcb->contextoActual[0] = contextocero;
+	contextocero->sizeArgs=0;
+	contextocero->sizeVars=0;
 
-
-
-	//header.data = &cuantasPaginas;
-
-	/*
-		printf("***%d*\n",*((int*)header.data));
-
-	   estado=enviar_paquete(umc, header);
-		//Verificar error envio (desconexion)
-
-
-		estado=recibir_paquete(umc,&header);
-
-
-
-			//Verificar error recepcion(desconexion)
-
-		if(header.id==205){
-		  if(*((int*)header.data)==1){
-			//Hay espacio, mando paginas
-
-			for(i=0;i<cuantasPaginas;i++){
-
-
-			   header.id = 206;
-			   header.size = config_nucleo->SIZE_PAGINA;
-			   header.data = codigo+i*(config_nucleo->SIZE_PAGINA);
-
-			   estado=enviar_paquete(umc, header);
-
-
-
-			}
-
-		  }else{
-			//No hay espacio, retorno error
-
-		  }
-
-		}else{
-		  //no me deberia haber mandado esto
-
-		}
-
-
-
-
-
-	*/
-
-
-//(char*)codigo
-
+	metadata_destruir(metadata_program);
 
 }
 
