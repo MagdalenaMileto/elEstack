@@ -7,7 +7,7 @@
 
 #ifndef SRC_UMC_H_
 #define SRC_UMC_H_
-
+#include <theDebuggers/socketLibrary.h>
 #include "globales.h"
 #include "hilos/cpu.h"
 #include "hilos/nucleo.h"
@@ -19,7 +19,7 @@
 #include <stdlib.h>
 
 #include <commons/config.h>
-#include <theDebuggers/socketLibrary.h>
+
 
 void inicializar_semaforos();
 void levantar_configuraciones();
