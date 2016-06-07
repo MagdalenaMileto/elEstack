@@ -51,10 +51,10 @@ int socketconsola,socketcpu;
 //Eliminar todo lo que sea de mas de aca
 int listenningSocket, socketCliente, servidorSocket, servidorCPU, clienteSocket, losClientes, clientesCPU, umc, ultimoCPU;
 
-//char codigo[200]="#!/usr/bin/ansisop\nbegin\nvariables i,b\ni=1\n:inicio_for\ni=i+1\nprint i\nb=i­10\n:cosita\njnz b inicio_for\njnz b cosita\n#fuera del for\nend";
+char codigo[200]="#!/usr/bin/ansisop\nbegin\nvariables i,b\ni=1\n:inicio_for\ni=i+1\nprint i\nb=i­10\n:cosita\njnz b inicio_for\njnz b cosita\n#fuera del for\nend";
 
 
-char codigo[300] = "#!/usr/bin/ansisop\nbegin\nvariables a, b\na=20\nprint a\nb <­- prueba\nprint b\nprint a\nend\nfunction prueba\nvariables a,b \na=2\nb=16\nprint b\nprint a\na=a+b\nreturn a\nend";
+//char codigo[300] = "#!/usr/bin/ansisop\nbegin\nvariables a, b\na=20\nprint a\nb <­- prueba\nprint b\nprint a\nend\nfunction prueba\nvariables a,b \na=2\nb=16\nprint b\nprint a\na=a+b\nreturn a\nend";
 
 
 /* FIN DE VARIABLES GLOBALES */
@@ -181,7 +181,7 @@ void *hilo_PLP(void *arg) {
 
 void mandarAEjecutar(t_proceso *proceso, int sock) {
 	t_pcb *pcbSerializado;
-	pcbSerializado = serializarPCB(proceso->pcb);
+	pcbSerializado = (t_pcb*)serializarPCB(proceso->pcb);
 	enviar(sock, 303, pcbSerializado->sizeTotal, pcbSerializado);
 	free(pcbSerializado);
 	proceso->socket_CPU=sock;
@@ -279,6 +279,7 @@ void mandarCodigoAUmc(char* codigo, int size, t_proceso *proceso) {
 	}
 
 
+
 //Hacerlo con memcopy 
 	proceso->pcb->sizeIndiceDeEtiquetas = metadata_program->etiquetas_size;
 	proceso->pcb->indiceDeEtiquetas=malloc(proceso->pcb->sizeIndiceDeEtiquetas*sizeof(char));
@@ -345,6 +346,7 @@ void *hilo_CONEXION_CONSOLA(void *arg) {
 		case 103:
 
 			mandarCodigoAUmc(paquete->data, paquete->tamanio, proceso);
+			printf("**Paginas de codigo:%s\n",proceso->pcb->indiceDeEtiquetas);
 			pthread_mutex_lock(&mutex_cola_new);
 			queue_push(cola_new, proceso);
 			pthread_mutex_unlock(&mutex_cola_new);
@@ -415,13 +417,14 @@ void *hilo_CONEXION_CPU(void *arg) {
 			t_pcb *temp;
 			temp=desserializarPCB(elPaquete->data);
 			printf("NUCLEO: Recibi proceso %d por fin de quantum, encolando en cola ready\n",proceso->pcb->pid);
-			/*
-			int i;for(i=0;i<temp->sizeContextoActual;i++){
+		
+			int i;for(i=0;i<temp->sizeContextoActual;i++)
 				printf("POS: %d\n",temp->contextoActual[i]->pos);
-			}*/
+			
 			proceso->pcb=temp;
 			queue_push(cola_ready, proceso);
 			queue_push(cola_CPU_libres, (void *)args->socket);
+			printf("Paginas de codigo:%s\n",proceso->pcb->indiceDeEtiquetas);
 			break;
 
 		case 320:
@@ -658,7 +661,7 @@ void *hilo_mock_cpu(void *arg) {
 
 			t_pcb * serializado;
 		
-			serializado = serializarPCB(pcb);
+			serializado = (t_pcb*)serializarPCB(pcb);
 
 			enviar(cpu, 304, serializado->sizeTotal, serializado );
 			printf("CPUMOCK: envie PCB a nucleo\n");
@@ -813,10 +816,19 @@ void destruirPCB(t_pcb *pcb){
 	free(pcb);
 }
 
+void printbuf(const char* buffer, int len) {
+	int i;
+	printf("\x1b[31m INICIO PRINT\n");
+    for ( i = 0; i < len; ++i)
+    	if(buffer[i]>=48&&buffer[i]<=122) printf("%c", buffer[i]);
+    else  printf("*");
 
+    printf("\nFIN PRINT\n\x1b[0m");
+}
 
-t_pcb *desserializarPCB(t_pcb *serializado){
-
+t_pcb *desserializarPCB(char *serializado){
+	char  * serini = serializado;
+	int temp;
 	int size,i,y;
 	t_pcb *pcb;
 
@@ -832,6 +844,7 @@ t_pcb *desserializarPCB(t_pcb *serializado){
 	
 	pcb->indiceDeEtiquetas=malloc(pcb->sizeIndiceDeEtiquetas*sizeof(char));
 	memcpy(pcb->indiceDeEtiquetas,serializado,pcb->sizeIndiceDeEtiquetas*sizeof(char));
+	
 	serializado+=pcb->sizeIndiceDeEtiquetas*sizeof(char);
 
 
@@ -846,7 +859,8 @@ t_pcb *desserializarPCB(t_pcb *serializado){
 		pcb->contextoActual[i] = malloc(sizeof(t_contexto));
 		
 		memcpy(pcb->contextoActual[i],serializado,sizeof(t_contexto));	
-		printf("DES %d %d\n",i,pcb->contextoActual[i]->pos);
+	
+
 		serializado+=sizeof(t_contexto);
 
 		for(y=0;y<pcb->contextoActual[i]->sizeArgs;y++){
@@ -877,10 +891,6 @@ void agregarContexto(t_pcb *pcb,t_contexto *contexto){
 	memcpy(pcb->contextoActual,viejo,(pcb->sizeContextoActual-1)*sizeof(t_contexto*));
 	
 	pcb->contextoActual[pcb->sizeContextoActual-1]=contexto;
-	//memcpy(pcb->contextoActual[pcb->sizeContextoActual-1],contexto,sizeof(t_contexto));
-	
-	//printf("*POS:%d\n",contexto->pos);
-	//printf("*POS:%d\n",pcb->contextoActual[pcb->sizeContextoActual-1]->pos);
 
 	free(viejo);
 
@@ -894,10 +904,10 @@ void eliminarContexto(t_pcb *pcb){
 
 
 
-t_pcb *serializarPCB(t_pcb *pcb){
+char *serializarPCB(t_pcb *pcb){
 
 	int size=0;
-	t_pcb *retorno,*retornotemp;
+	char *retorno,*retornotemp,*retornotempp;
 
 	size+=sizeof(t_pcb);
 
@@ -928,16 +938,18 @@ t_pcb *serializarPCB(t_pcb *pcb){
 	retornotemp+=pcb->sizeIndiceDeCodigo*2*sizeof(int);
 
 	memcpy(retornotemp,pcb->indiceDeEtiquetas,pcb->sizeIndiceDeEtiquetas*sizeof(char));
+	retornotempp=retornotemp;
+
 	retornotemp+=pcb->sizeIndiceDeEtiquetas*sizeof(char);
+
+
 
 	memcpy(retornotemp,pcb->contextoActual,pcb->sizeContextoActual*sizeof(t_contexto*));
 	retornotemp+=pcb->sizeContextoActual*sizeof(t_contexto*);
 
-
 	for(i=0;i<pcb->sizeContextoActual;i++){
 		memcpy(retornotemp,pcb->contextoActual[i],sizeof(t_contexto));	
-		retorno->contextoActual[i]=pcb->contextoActual[i];
-		//printf("%dSER %.*X\n",pcb->contextoActual[i]->pos,sizeof(t_contexto),pcb->contextoActual[i]);
+
 		retornotemp+=sizeof(t_contexto);
 
 		for(y=0;y<pcb->contextoActual[i]->sizeArgs;y++){
@@ -950,7 +962,6 @@ t_pcb *serializarPCB(t_pcb *pcb){
 		}
 	}
 
-	//printf("%.*X\n",size,(unsigned int)retorno);
 	return retorno;
 
 
