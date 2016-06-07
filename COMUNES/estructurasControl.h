@@ -24,7 +24,7 @@ typedef struct __attribute__((packed))t_direccion{
 }t_direccion;
 
 
-typedef struct __attribute__((packed))variable
+typedef struct __attribute__((packed))t_variable
 {
 	char etiqueta;
 	t_direccion direccion;

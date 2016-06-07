@@ -111,6 +111,8 @@ void mandarAEjecutar(t_proceso *proceso,int sock);
 
 void *hilo_mock(void *arg);
 
+void agregarContexto(t_pcb *pcb,t_contexto *contexto);
+void eliminarContexto(t_pcb *pcb);
 
 void *hilo_mock_consola(void *arg);
 void *hilo_mock_cpu(void *arg);
