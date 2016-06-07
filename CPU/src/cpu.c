@@ -13,6 +13,7 @@
 CONF_CPU *config_cpu;
 t_log* log;
 
+
 AnSISOP_funciones primitivas = {
 		.AnSISOP_definirVariable		= definirVariable,
 		.AnSISOP_obtenerPosicionVariable= obtenerPosicionVariable,
@@ -33,19 +34,12 @@ AnSISOP_kernel primitivas_kernel = {
 		.AnSISOP_signal					=signal,
 };
 
-/* El programa recibe la IP y puerto del nucleo como primer y segundo parametros
- * y como tercer y cuarto parametros la direccion IP y puerto de la umc.
- */
+
+
 
 int main(int argc,char **argv) {
 
-	if (argc != 5) {
-		perror("No se ingreso la cantidad de parametros correspondientes");
-		return EXIT_FAILURE;
-	}
-
 	int maxfd = 3;				// Indice de maximo FD
-	char buffer[100];			// Bufer para send/recv
 
 	struct timeval tv;			// Estructura para select()
 	tv.tv_sec = 2;
@@ -56,47 +50,55 @@ int main(int argc,char **argv) {
 	FD_ZERO(&masterfds);
 
 	log= log_create(ARCHIVOLOG, "CPU", 0, LOG_LEVEL_INFO);
-
 	log_info(log,"Iniciando CPU\n");
 
 	config_cpu = malloc(sizeof(CONF_CPU));
-
 	get_config_cpu(config_cpu);//Crea y setea el config del cpu
 
 	int nucleo = conectarConNucleo();
-
 	FD_SET(nucleo,&masterfds);	// Se agrega socket a la lista de fds
 
 	int umc = conectarConUmc();
-
-
 	FD_SET(umc,&masterfds);		// Se agrega socket a la lista de fds
-	t_pcb pcb;					//Declaracion e inicializacion del PCB
-	bzero(&pcb,sizeof(pcb));
+
+	t_pcb* pcb;					//Declaracion e inicializacion del PCB
+	t_paquete* paquete_recibido;
+	mensaje_CPU_UMC* mensajeAMandar;
 
 	while(1)
 	{
 		readfds = masterfds;	// Copio el struct con fds al auxiliar para read
 		select(maxfd+1,&readfds,NULL,NULL,&tv);
+
 		if (FD_ISSET(nucleo, &readfds))		// Si el nucleo envio algo
 		{
-			recv(nucleo,buffer,sizeof(buffer),MSG_DONTWAIT);
-			printf("CPU: El nucleo informa lo siguiente: %s\nMensaje enviado a la UMC.\n",buffer);
-			send(umc,buffer,sizeof(buffer),0);
-			FD_CLR(nucleo,&masterfds);
-			analizadorLinea("a = b + c",&primitivas,&primitivas_kernel);
-			printf("CPU: Cierra\n");
-			return EXIT_SUCCESS;
+			paquete_recibido = recibirPCB(nucleo);
+
+			if(paquete_recibido->codigo_operacion==304){
+
+				pcb = desserializarPCB(paquete_recibido->data);
+				log_info(log,"Recibi pcb %d... ejecturando\n",pcb->pid);
+				enviarInstruccionAMemoria(umc, mensajeAMandar);
+
+				FD_CLR(nucleo,&masterfds);
+				analizadorLinea("a = b + c",&primitivas,&primitivas_kernel);
+
+				free(pcb);
+				printf("CPU: Cierra\n");
+				return EXIT_SUCCESS;
 		}
-		//recv(nucleo,&pcb,sizeof(pcb),0);		// El CPU nos envia una copia del PCB o nos envia su direccion en la UMC?
-		close(nucleo);
-		close(umc);
+
+
+	close(nucleo);
+	close(umc);
 	}
+
 
 	close(nucleo);
 	close(umc);
 	return EXIT_SUCCESS;
 
+}
 }
 
 //***************************************FUNCIONES******************************************
@@ -166,4 +168,31 @@ int conectarConNucleo(){
 			}
 
 return nucleo;
+}
+
+
+t_paquete* recibirPCB(int nucleo){
+
+	t_paquete* pcb_recibido= recibir(nucleo);
+	pcb_recibido=malloc(sizeof(t_pcb));
+
+return pcb_recibido;
+}
+
+
+void enviarInstruccionAMemoria(int umc, mensaje_CPU_UMC* mensajeAMandar)
+{
+	if(mensajeAMandar->texto==NULL) mensajeAMandar->tamTexto=0;
+
+	void*buffer= malloc(sizeof(instruccion_t)+3*sizeof(uint32_t)+(mensajeAMandar->tamTexto));
+
+	memcpy(buffer,&(mensajeAMandar->instruccion),sizeof(instruccion_t));
+	memcpy(buffer+sizeof(instruccion_t),&(mensajeAMandar->pid),sizeof(uint32_t));
+	memcpy(buffer+sizeof(instruccion_t)+sizeof(uint32_t),&(mensajeAMandar->parametro),sizeof(uint32_t));
+	memcpy(buffer+sizeof(instruccion_t)+2*sizeof(uint32_t),&(mensajeAMandar->tamTexto),sizeof(uint32_t));
+	memcpy(buffer+sizeof(instruccion_t)+3*sizeof(uint32_t),mensajeAMandar->texto,mensajeAMandar->tamTexto);
+
+	enviar(umc, 404,sizeof(instruccion_t)+3*sizeof(uint32_t)+(mensajeAMandar->tamTexto),mensajeAMandar);  //puse como codigo de operacion 404// como segundo argumento habia puesto buffer pero me tira un warning
+
+	free(buffer);
 }
