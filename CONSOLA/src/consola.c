@@ -112,7 +112,7 @@ char* leerElArchivo(FILE *archivo) {
 
 int conectarConElNucleo(){
 
-	int nucleo= conectar_a("127.0.0.1", PUERTO_NUCLEO);
+	int nucleo= conectar_a(ip_nucleo, puerto_nucleo);
 
 	if(nucleo==0){
 		printf("CONSOLA: No encontre NUCLEO\n");

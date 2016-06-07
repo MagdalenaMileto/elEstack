@@ -57,23 +57,20 @@ int main(int argc,char **argv) {
 
 	log= log_create(ARCHIVOLOG, "CPU", 0, LOG_LEVEL_INFO);
 
-			log_info(log,"Iniciando CPU\n");
-		    //Levantar archivo de configuracion
-			config_cpu = malloc(sizeof(CONF_CPU));
-			get_config_cpu(config_cpu);//Crea y setea el config del cpu
+	log_info(log,"Iniciando CPU\n");
 
-			//se conecta a nucleo
-			int nucleo = conectarConNucleo();
+	config_cpu = malloc(sizeof(CONF_CPU));
 
+	get_config_cpu(config_cpu);//Crea y setea el config del cpu
+
+	int nucleo = conectarConNucleo();
 
 	FD_SET(nucleo,&masterfds);	// Se agrega socket a la lista de fds
 
-	//se conecta con la UMC
 	int umc = conectarConUmc();
 
 
 	FD_SET(umc,&masterfds);		// Se agrega socket a la lista de fds
-
 	t_pcb pcb;					//Declaracion e inicializacion del PCB
 	bzero(&pcb,sizeof(pcb));
 
@@ -124,7 +121,7 @@ void get_config_cpu (CONF_CPU *config_cpu){
 
 int conectarConUmc(){
 
-		int umc = cliente("127.0.0.1", 1207); //tendria que leer del archivo de conf de nucleo
+		int umc = conectar_a(config_cpu->IP_UMC, config_cpu->PUERTO_UMC);
 
 		if(umc==0){
 				log_info(log,"CPU: No encontre memoria\n");
@@ -133,14 +130,22 @@ int conectarConUmc(){
 
 		log_info(log,"CPU: Conecta bien memoria %d\n", umc);
 
-		//hacer el handshake???
+		bool estado = realizar_handshake(umc);
+
+					if (!estado) {
+						log_info(log,"CPU:Handshake invalido con memoria\n");
+						exit(EXIT_FAILURE);
+					}
+					else{
+						log_info(log,"CPU:Handshake exitoso con memoria\n");
+					}
 
 return umc;
 }
 
 int conectarConNucleo(){
 
-		int nucleo = cliente("127.0.0.1", 9997); //tendria que leer del archivo de conf del nucleo
+		int nucleo = conectar_a(config_cpu->IP_NUCLEO, config_cpu->PUERTO_NUCLEO);
 
 		if(nucleo==0){
 				log_info(log,"CPU: No encontre nucleo\n");
@@ -149,14 +154,16 @@ int conectarConNucleo(){
 
 		log_info(log,"CPU: Conecta bien nucleo %d\n", nucleo);
 
-        int estado;
-        estado=handshake(nucleo, 302,301);
 
-        if(estado==1){
-        	log_info(log,"CPU:Handshake exitoso con nucleo\n");
-        }else{
-        	log_info(log,"CPU:Handshake invalido con nucleo\n");
-        }
+		bool estado = realizar_handshake(nucleo);
+
+			if (!estado) {
+				log_info(log,"CPU:Handshake invalido con nucleo\n");
+				exit(EXIT_FAILURE);
+			}
+			else{
+				log_info(log,"CPU:Handshake exitoso con nucleo\n");
+			}
 
 return nucleo;
 }
