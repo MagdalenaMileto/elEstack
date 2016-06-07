@@ -5,6 +5,7 @@
  *      Author: utnso
  */
 
+
 #include "funcionesConsola.h"
 
 int PUERTO_NUCLEO = 9997;
@@ -32,24 +33,22 @@ int main(int argc, char **argv) {
 
 
 	consola=iniciarConsola();
+	archivoDeConfiguracion();
 
 	if(consola!=1){
 
 		strcpy(nomArchivo,argv[1]);
 
-				if ((archivo = fopen("nomArchivo", "r")) == NULL){
-					printf("No se pudo acceder al script.\n");
-					return EXIT_FAILURE;
-				}
+		if ((archivo = fopen("nomArchivo", "r")) == NULL){
+				printf("No se pudo acceder al script.\n");
+				return EXIT_FAILURE;
+		}
 
-				else{
-
-						script = leerElArchivo(archivo);					//lee el archivo y reserva memoria
-						fclose(archivo);
-						printf("Exito en lectura de scrit.\n");
-
-
-				}
+		else{
+				script = leerElArchivo(archivo);					//lee el archivo y reserva memoria
+				fclose(archivo);
+				printf("Exito en lectura de scrit.\n");
+		}
 
 	nucleo= conectarConElNucleo();
 	estado= enviarInformacionAlNucleo(script, nucleo, consola);
@@ -87,6 +86,15 @@ int iniciarConsola() {
 	return consola;
 }
 
+void archivoDeConfiguracion() {
+
+	t_config * archivo_configuracion = config_create("./consola.confg");
+
+	puerto_consola = config_get_string_value(archivo_configuracion, "PUERTO");
+	ip_nucleo = config_get_string_value(archivo_configuracion, "IP_NUCLEO");
+	puerto_nucleo = config_get_string_value(archivo_configuracion, "PUERTO_NUCLEO");
+
+}
 
 
 
@@ -104,21 +112,17 @@ char* leerElArchivo(FILE *archivo) {
 
 int conectarConElNucleo(){
 
+	int nucleo= conectar_a("127.0.0.1", PUERTO_NUCLEO);
 
-int nucleo = cliente("127.0.0.1", PUERTO_NUCLEO);
-
-if(nucleo==0){
-	printf("CONSOLA: No encontre NUCLEO\n");
-	exit (EXIT_FAILURE);
+	if(nucleo==0){
+		printf("CONSOLA: No encontre NUCLEO\n");
+		exit (EXIT_FAILURE);
 	}
 
-printf("CONSOLA: Conecta bien nucleo %d\n", nucleo);
+	printf("CONSOLA: Conecta bien nucleo %d\n", nucleo);
 
 
-        int estado;
-        estado=handshake(nucleo, 102,101);
-
-        if(estado==1){
+        if(realizar_handshake(nucleo)){
             printf("CONSOLA:Handshake exitoso con nucleo\n");
         }else{
             printf("CONSOLA:Handshake invalido con nucleo\n");
@@ -127,38 +131,35 @@ printf("CONSOLA: Conecta bien nucleo %d\n", nucleo);
 return nucleo;
 }
 
+
 int enviarInformacionAlNucleo(char * script, signed int nucleo, signed int consola){
 
-	t_header header,headerEnviar;
+	t_paquete* paquete,paqueteEnviar;
 
 
 	 while(1){
 
-	     	if(header.id==103){
+	     	if(paquete->codigo_operacion==103){   //codigo operacion no oficial
 
-	     		headerEnviar.id=205;int a=1;
-	     		headerEnviar.data=&a;
-	     		headerEnviar.size=sizeof(int);
-	     		enviar_paquete(nucleo,headerEnviar);
+	     		paqueteEnviar.codigo_operacion=205;  //codigo operacion no oficial
+	     		paqueteEnviar.data=&script;
+	     		paqueteEnviar.tamanio=sizeof(int);
+
+	     		enviar(nucleo, 101, paqueteEnviar.tamanio, paqueteEnviar.data); //segundo parametro cambiar cod de op
+	     	}
+
+	     	 if(paquete->codigo_operacion==108){ //no oficial codigo operacion
+
+	     	paquete =recibir(nucleo);
 
 	     	}
 
-	     	 if(header.id==108){
-
-	     	recibir_paquete(nucleo,&header);
-
-	     	}
-
-	     //	printf("Pase\n");
-	     	free(header.data);
+	     	liberar_paquete(paquete);
 
 	 	 }
 
 return 0;
 }
-
-
-
 
 
 
