@@ -94,6 +94,47 @@ void agregarContexto(t_pcb *pcb,t_contexto *contexto){
 
 
 
+char *serializarBLOQUEO(t_blocked *bloqueo,t_pcb *pcb){
+	char *retorno,*retornotemp;int size=0;
+
+	t_pcb *pcbSerializado;
+	pcbSerializado = (t_pcb*)serializarPCB(pcb);
+
+	bloqueo->sizePcbSerializado =pcbSerializado->sizeTotal;
+	bloqueo->sizeTotal=(sizeof(char)*pcbSerializado->sizeTotal+sizeof(char)*(bloqueo->semaforoSize+bloqueo->ioSize)+sizeof(t_blocked));
+
+	retorno=malloc(sizeof(char)*pcbSerializado->sizeTotal+sizeof(char)*(bloqueo->semaforoSize+bloqueo->ioSize)+sizeof(t_blocked));
+	retorno = retornotemp;
+
+	memcpy(retornotemp,bloqueo,sizeof(t_blocked));
+	retornotemp+=sizeof(t_blocked);
+
+	memcpy(retornotemp,pcbSerializado,pcbSerializado->sizeTotal);
+	retornotemp+=pcbSerializado->sizeTotal;
+
+	if(!bloqueo->semaforoSize){
+			memcpy(retornotemp,bloqueo->semaforo,bloqueo->semaforoSize);
+			retornotemp+=bloqueo->semaforoSize;
+	}
+
+	if(!bloqueo->ioSize){
+			memcpy(retornotemp,bloqueo->io,bloqueo->ioSize);
+			retornotemp+=bloqueo->ioSize;
+	}
+
+
+
+
+
+
+
+	return(retorno);
+
+
+
+}
+
+
 char *serializarPCB(t_pcb *pcb){
 
 	int size=0;

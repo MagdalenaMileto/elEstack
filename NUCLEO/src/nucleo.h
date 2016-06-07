@@ -73,13 +73,6 @@ typedef struct {
 
 
 
-typedef struct __attribute__((packed))t_blocked{
-	t_pcb pcb;
-	int sem_offset;
-	int IO_offset;
-	int IO_time;
-}t_blocked;
-
 
 
 

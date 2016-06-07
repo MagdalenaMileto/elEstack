@@ -58,9 +58,104 @@ typedef struct __attribute__((packed))t_pcb{
 	int sizeTotal;
 }t_pcb;
 
+
+
+typedef struct __attribute__((packed))t_blocked{
+	int sizePcbSerializado;
+	char* semaforo;
+	char* io;
+	int IO_time;
+	int semaforoSize;
+	int ioSize;
+	int sizeTotal;
+}t_blocked;
+
+
+
+
+
 char *serializarPCB(t_pcb *pcb);
 void agregarContexto(t_pcb *pcb,t_contexto *contexto);
 t_pcb *desserializarPCB(char *serializado);
 void destruirPCB(t_pcb *pcb);
+char *serializarBLOQUEO(t_blocked *bloqueo,t_pcb *pcb);
 
 #endif /* ESTRUCTURASCONTROL_H_ */
+
+
+
+
+/*
+
+
+DEVUELVO UN PCB POR FIN DE QUANTUM
+
+
+	t_pcb *pcbSerializado;
+	pcbSerializado = (t_pcb*)serializarPCB(proceso->pcb);
+	enviar(sock, 304, pcbSerializado->sizeTotal, pcbSerializado);
+
+	//hacer free de pcbserializado y destruccion de pcb
+
+
+
+
+	
+RECIBO UN PCB
+
+
+		paquete_nuevo = recibir(cpu);
+		if (paquete_nuevo->codigo_operacion == 303) {
+		
+			pcb=desserializarPCB(paquete_nuevo->data);
+			printf("CPUMOCK: Recibi pcb %d... ejecutando\n",pcb->pid);
+
+
+
+
+ESTA NO LA PROBE
+
+ENVIO PCB A BLOQUEARSE
+
+
+
+typedef struct __attribute__((packed))t_blocked{
+	int sizePcbSerializado;
+	int sizeTotal;
+	char* semaforo;
+	char* io;
+	int IO_time;
+	int semaforoSize;
+	int ioSize;
+}t_blocked;
+
+
+t_blocked *bloqueo;
+
+bloqueo=malloc (sizeof(t_blocked));
+
+bloqueo->sizesemaforo=0
+
+bloqueo->io = PUNTERO AL STRING DEL IO
+bloqueo->sizeio = sizeof PUNTERO AL STRING DEL IO o strlen (no se como viene la estructura)
+
+ESTO ES AL REVES SI QUIERO BLOQUEAR POR SEMAFORO, pongo en 0 el size del otro bla bla
+
+t_blocked *blockedSerializado;
+	blockedSerializado = (t_blocked *)serializarBLOQUEO(bloqueo,pcb);
+	enviar(sock, 340, blockedSerializado->sizeTotal, blockedSerializado);
+
+
+serializarBLOQUEO serializa el pcb, no darselo serializado.
+
+
+
+
+
+
+
+
+
+
+
+*/

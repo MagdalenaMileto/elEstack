@@ -439,6 +439,8 @@ void *hilo_CONEXION_CPU(void *arg) {
 			proceso = dameProceso(cola_exec, args->socket);
 			printf("NUCLEO: Recibi proceso %d  para mandar a bloquear por IO \n", proceso->pcb->pid);
 			//DesSerializar PCB bloqueado
+			/*
+
 			t_blocked bloqueado;
 			if (bloqueado.IO_offset) {
 				//El bloqueo es por IO
@@ -462,7 +464,7 @@ void *hilo_CONEXION_CPU(void *arg) {
 
 
 			}
-
+	*/
 			break;
 
 		}
