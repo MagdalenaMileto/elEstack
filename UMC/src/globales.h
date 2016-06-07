@@ -20,6 +20,8 @@ int socket_swap, socket_nucleo, socket_conexiones_nuevas;
 
 int proceso_actual;
 
+int numero_operacion_actual;
+
 pthread_mutex_t semaforo_mutex_cpu;
 
 void * memoria;
@@ -27,6 +29,8 @@ void * memoria;
 t_list * tabla_de_paginas;
 
 t_list * tlb;
+
+t_list * control_de_marcos;
 
 pthread_t hilo_nucleo, hilo_cpu;
 

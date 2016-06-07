@@ -17,34 +17,6 @@ context(commons) {
 			lista = list_create();
 		}end
 
-		describe("Coincide pid") {
-
-			it("La funcion me devuelve los pids que matchean") {
-
-				list_add(lista,crear_nueva_entrada(1,1));
-				list_add(lista,crear_nueva_entrada(1,2));
-				list_add(lista,crear_nueva_entrada(2,1));
-				list_add(lista,crear_nueva_entrada(1,3));
-				list_add(lista,crear_nueva_entrada(2,2));
-
-				t_list * lista_nueva = coincide_pid(lista, 2);
-
-				should_int(list_size(lista_nueva)) be equal to(2);
-
-			}end
-
-			it("Si no matchea nadie devuelve null") {
-
-				list_add(lista,crear_nueva_entrada(1,1));
-				list_add(lista,crear_nueva_entrada(1,2));
-
-				t_list * lista_nueva = coincide_pid(lista, 2);
-
-				should_int(list_size(lista_nueva)) be equal to(0);
-
-			}end
-
-		}end
 
 		describe("Remover y destruir") {
 

@@ -22,4 +22,9 @@ typedef struct {
 	int ultima_vez_usado;
 } t_entrada_tabla_de_paginas;
 
+typedef struct {
+	bool disponible;
+	int numero;
+} t_control_marco;
+
 #endif /* SRC_TABLA_DE_PAGINAS_ESTRUCTURAS_H_ */

@@ -86,7 +86,7 @@ typedef struct __attribute__((packed))t_blocked{
 typedef struct{
   int socket_CPU;
   int socket_CONSOLA;
-  t_pcb pcb;
+  t_pcb *pcb;
   long long tiempoBloqueado;
   char semaforoBloqueado;
 
@@ -111,12 +111,16 @@ void mandarAEjecutar(t_proceso *proceso,int sock);
 
 void *hilo_mock(void *arg);
 
+void agregarContexto(t_pcb *pcb,t_contexto *contexto);
+void eliminarContexto(t_pcb *pcb);
 
 void *hilo_mock_consola(void *arg);
 void *hilo_mock_cpu(void *arg);
 
 
-
+t_pcb *desserializarPCB(t_pcb *serializado);
+void destruirPCB(t_pcb *pcb);
+t_pcb *serializarPCB(t_pcb *pcb);
 
 
 void *hilo_CONEXION_CONSOLA(void *arg);

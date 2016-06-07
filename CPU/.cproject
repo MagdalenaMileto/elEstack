@@ -35,6 +35,7 @@
 							<tool id="cdt.managedbuild.tool.gnu.c.linker.exe.debug.702513499" name="GCC C Linker" superClass="cdt.managedbuild.tool.gnu.c.linker.exe.debug">
 								<option id="gnu.c.link.option.libs.1004484040" name="Libraries (-l)" superClass="gnu.c.link.option.libs" valueType="libs">
 									<listOptionValue builtIn="false" value="parser-ansisop"/>
+									<listOptionValue builtIn="false" value="theDebuggers"/>
 									<listOptionValue builtIn="false" value="COMUNES"/>
 									<listOptionValue builtIn="false" value="commons"/>
 								</option>
@@ -43,7 +44,7 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/COMUNES/Debug}&quot;"/>
 								</option>
 								<option id="gnu.c.link.option.soname.1122988609" name="Shared object name (-Wl,-soname=)" superClass="gnu.c.link.option.soname" value="handshake" valueType="string"/>
-								<option id="gnu.c.link.option.userobjs.962304316" name="Other objects" superClass="gnu.c.link.option.userobjs" valueType="userObjs"/>
+								<option id="gnu.c.link.option.userobjs.962304316" name="Other objects" superClass="gnu.c.link.option.userobjs"/>
 								<inputType id="cdt.managedbuild.tool.gnu.c.linker.input.1289633318" superClass="cdt.managedbuild.tool.gnu.c.linker.input">
 									<additionalInput kind="additionalinputdependency" paths="$(USER_OBJS)"/>
 									<additionalInput kind="additionalinput" paths="$(LIBS)"/>

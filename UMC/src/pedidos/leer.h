@@ -13,10 +13,12 @@
 
 #include "../commonsV2.h"
 #include "../globales.h"
+#include "../tabla_de_paginas/marcos.h"
 
 #include "../pedidos/interfaces/swap.h"
 
 void * leer_una_pagina(int numero_pagina, int offset, int tamanio);
-void * buscar_pagina_tabla_de_paginas(int numero_pagina);
+t_entrada_tabla_de_paginas * buscar_pagina_tabla_de_paginas(int numero_pagina);
+t_entrada_tabla_de_paginas * buscar_tlb(int numero_pagina);
 
 #endif /* SRC_PEDIDOS_LEER_H_ */
