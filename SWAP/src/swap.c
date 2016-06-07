@@ -15,108 +15,123 @@ int contadorProcesos;
 char * discoSwapMapped;
 char* discoMapped;
 char * discoParaleloNoVirtual;
+#define FALLORESERVARMEMORIA 15;
+#define EXITORESERVARMEMORIA 10;
+#define PROCESOLIBERADO 11;
+#define EXITOLECTURA 12;
+#define FALLOLECTURA 16;
+#define EXITOESCRITURA 13;
+#define FALLOESCRITURA 17;
 
 
-int main(int argc,char **argv) {//FALTA RETARDO ACCESO Implementarlo
+int main(int argc,char **argv) {
 
 	int sock_lst;
 	int new_lst;
+	char * codigo;
+	int pid, pagina, tamanio_codigo;
 
-	if(abrirConfiguracion() == -1){
-		return -1;
-	}
+	if(abrirConfiguracion() == -1){return -1;};
 
 	crearArchivo();
 	mapearArchivo();
 
-	sock_lst = iniciarServidor(PUERTO_SWAP);
+	sock_lst = socket_escucha("localhost", PUERTO_SWAP);
+	listen(sock_lst, 1024);
+
+
 	while(1){
-		new_lst = establecerConexion(sock_lst);
-		MPS_MSG *mensaje = calloc(1,sizeof(MPS_MSG));
+		new_lst = aceptar_conexion(sock_lst);
+		t_paquete *mensaje;
 
 		while(1){
-			int respuesta = -1;
-			respuesta = recibirMensaje(new_lst, mensaje);
+			mensaje = recibir(new_lst);
+			int flagRespuesta;
 
-			if(respuesta != -1){
-				paquete* paqueteUMC = malloc(sizeof(paquete));
-				paqueteUMC = (paquete*)mensaje->Payload;
-				int flagRespuesta;
-				MPS_MSG* msjRespuesta = malloc(sizeof(MPS_MSG));
-				paquete* paqueteRta= malloc(sizeof(paquete));
+			switch (mensaje->codigo_operacion) {
+			case 0: {//Nuevo proceso
+				//Deserializar Mensaje
+				memcpy(&pid, mensaje->data, sizeof(int));
+				memcpy(&pagina, mensaje->data + sizeof(int), sizeof(int));
+				memcpy(&tamanio_codigo, mensaje->data + sizeof(int) * 2, sizeof(int));
+				codigo = malloc(tamanio_codigo);
+				memcpy(codigo, mensaje->data + sizeof(int) * 3, tamanio_codigo);
 
-				///////////////////////
-//				long int inicio;
-//				long int final;
-//				int i;
-//				int flag;
-				flagParaPag pagflag;
-				pagflag.paginaAEscribir = calloc(1,TAMANIO_PAGINA);
-				///////////////////////
+				printf("Se creara un nuevo proceso de %d paginas y con PID: %d \n", pagina, pid);
+				sleep(RETARDO_ACCESO);
 
-				switch (mensaje->id_payload){//arreglar bien cuando finalicemos los mensajes en comun
-				//switch (paqueteUMC->pedido){
-				case 0: {//Nuevo proceso
-					// Tiene que haber retardo?
-					printf("Se creara un nuevo proceso de %d paginas y con PID: %d \n", paqueteUMC->pagina, paqueteUMC->pid);
+				flagRespuesta = FALLORESERVARMEMORIA;
+				int espacio = hayLugarParaNuevoProceso(pagina);
 
-					paqueteRta->pid = paqueteUMC->pid;
-					int espacio = hayLugarParaNuevoProceso(paqueteUMC->pagina);
-
-					if(espacio == -2){
-						compactacion();
-						int espacio2 = hayLugarParaNuevoProceso(paqueteUMC->pagina);
-						paqueteRta->flagProc = reservarProceso(paqueteUMC->pid,paqueteUMC->pagina, espacio2);
-					}
-					if(espacio == -1)
-					{
-						paqueteRta->flagProc = 0;
-					}
-					else{
-						paqueteRta->flagProc = reservarProceso(paqueteUMC->pid,paqueteUMC->pagina, espacio);
-					}
-					armarMensaje(msjRespuesta,0, sizeof(paquete), paqueteRta);
-					enviarMensaje(new_lst, msjRespuesta);
-					respuesta = -1;
-					break;
+				if(espacio == -2){
+					compactacion();
+					int espacio2 = hayLugarParaNuevoProceso(pagina);
+					flagRespuesta = reservarProceso(pid, pagina, espacio2);
 				}
+				if(espacio == -1)
+				{
+					flagRespuesta = FALLORESERVARMEMORIA;//No se puede asignar
+				}
+				else{
+					flagRespuesta = reservarProceso(pid, pagina, espacio);
+				}
+
+				//No deberia ser otro valor en vez de 4?
+				enviar(new_lst, flagRespuesta, 4, &pid);
+				free(codigo);
+
+				break;
+			}
 				case 1: { //caso de Sacar proceso
-					///retardo?
-					printf("Se liberara el proceso %d \n", paqueteUMC->pid);
-					paqueteRta->flagProc = liberarProceso(paqueteUMC->pid);
-					armarMensaje(msjRespuesta,0,sizeof(paquete), paqueteRta);
-					enviarMensaje(new_lst, msjRespuesta);
-					respuesta = -1;
+					//Deserializar Mensaje
+					memcpy(&pid, mensaje->data, sizeof(int));
+
+					printf("Se liberara el proceso %d \n", pid);
+					sleep(RETARDO_ACCESO);
+
+					flagRespuesta = liberarProceso(pid);
+
+					//Creo que no es necesario enviar.
+					enviar(new_lst, flagRespuesta, 4, (void *) &pid);
 					break;
 				}
 				case 2: { //caso de Escritura en disco
-					//retardo??
-					printf("Se escribira para el proceso %d \n", paqueteUMC->pid);
-					flagRespuesta = escribirPaginaProceso(paqueteUMC->pid, paqueteUMC->pagina, paqueteUMC->texto);
-					paqueteRta->flagProc = flagRespuesta;
-					armarMensaje(msjRespuesta,0,sizeof(paquete), paqueteRta);
-					enviarMensaje(new_lst,msjRespuesta);
-					respuesta = -1;
+					//Deserializar Mensaje
+					memcpy(&pid, mensaje->data, sizeof(int));
+					memcpy(&pagina, mensaje->data + sizeof(int), sizeof(int));
+					memcpy(&tamanio_codigo, mensaje->data + sizeof(int) * 2, sizeof(int));
+					codigo = malloc(tamanio_codigo);
+					memcpy(codigo, mensaje->data + sizeof(int) * 3, tamanio_codigo);
+
+					printf("Se escribira para el proceso %d \n", pid);
+					sleep(RETARDO_ACCESO);
+					flagRespuesta = escribirPaginaProceso(pid, pagina, codigo);
+					enviar(new_lst, flagRespuesta, 4, (void*)&pid);
+
 					break;
 				}
-					//default
+
 				case 3: { //caso de Lectura de pagina
-					printf("Se leera la pagina: %d, del proceso %d \n", paqueteUMC->pagina, paqueteUMC->pid);
-					leerPaginaProceso(paqueteUMC->pid,paqueteUMC->pagina, &pagflag);
+					char *paginaALeer;
+					paginaALeer = malloc(TAMANIO_PAGINA);
 
-					paqueteRta->flagProc = pagflag.flagResultado;
-					strcpy(paqueteRta->texto,pagflag.paginaAEscribir);
-					armarMensaje(msjRespuesta,0,sizeof(paquete), paqueteRta);
-					enviarMensaje(new_lst,msjRespuesta);
-					respuesta=-1;
+					memcpy(&pid, mensaje->data, sizeof(int));
+					memcpy(&pagina, mensaje->data + sizeof(int), sizeof(int));
 
+					printf("Se leera la pagina: %d, del proceso %d \n", pagina, pid);
+					sleep(RETARDO_ACCESO);
+					flagRespuesta = leerPaginaProceso(pid, pagina, paginaALeer);
+//					if (flagRespuesta == FALLOLECTURA){
+//						return -1;
+//					}
+
+					int tamanio_codigo = string_length(paginaALeer);
+					void * data = malloc(tamanio_codigo);
+					memcpy(data, paginaALeer, tamanio_codigo);
+					enviar(new_lst, flagRespuesta, tamanio_codigo, data);
 					break;
 				}
-				default: printf("idOrden incorrecto");
-				}
-			} else
-			{
-				break;
+				default: printf("Pedido incorrecto");
 			}
 		}
 	}
@@ -132,9 +147,9 @@ int abrirConfiguracion() {
 		return -1;
 	}
 
-	if(config_has_property(configuracion, "Puerto_Escucha")){
-		PUERTO_SWAP = config_get_int_value(configuracion, "Puerto_Escucha");
-		printf("El puerto habilitado es el %d \n", PUERTO_SWAP);
+	if(config_has_property(configuracion, "PUERTO_ESCUCHA")){
+		PUERTO_SWAP = config_get_string_value(configuracion, "PUERTO_ESCUCHA");
+		printf("El puerto habilitado es el %s \n", PUERTO_SWAP);
 	}else{
 		perror("No se encontro el puerto en el archivo de configuracion");
 		error = 1;
@@ -178,6 +193,7 @@ int abrirConfiguracion() {
 	}
 	if(error){
 		return -1;
+
 	}else{
 		return 0;
 	}
@@ -243,7 +259,6 @@ int hayLugarParaNuevoProceso(int cantPagsNecesita){
 	int j=ultimaPagLibre();
 	int i = j;
 	int totalLibres = 0;
-	//no me convence al 100%
 	while(1){
 		if(j == -1){
 			//no hay paginas libres
@@ -316,16 +331,16 @@ int ultimaPagLibre(){
 
 int reservarProceso(int pidProceso, int cantPags , int pagAPartir){
 	int error;
-	error = asignarEspacio(cantPags, contadorProcesos, pidProceso, pagAPartir);
+	error = asignarEspacio(cantPags, pidProceso, pagAPartir);
 	if(error == -1){
 		printf("Hubo error al asignar el proceso %d \n", pidProceso);
-		return 0;
+		return FALLORESERVARMEMORIA;
 	}
 	printf("Se reservo el espacio para el proceso con PID: %d de %d paginas \n", pidProceso, cantPags);
-	return 1;
+	return EXITORESERVARMEMORIA;
 }
 
-int asignarEspacio(int cantPagsAAsignar, int contadorP, int proceso, int inicio){
+int asignarEspacio(int cantPagsAAsignar, int proceso, int inicio){
 	int primerPaginaLibre = inicio;
 	int i;
 	if(inicio +cantPagsAAsignar > CANTIDAD_PAGINAS)
@@ -456,7 +471,7 @@ int liberarProceso(int idProc){
 	}
 
 	printf("Se libero el proceso %d \n", idProc);
-	return 0;
+	return PROCESOLIBERADO;
 }
 
 int getPrimerPagProc(int idProceso){
@@ -487,11 +502,11 @@ int escribirPaginaProceso(int idProceso, int nroPag, char*data){
 	int posProc = getPosicionDelProceso(idProceso);
 	int primeraPagProceso = getPrimerPagProc(idProceso);
 	int cantidadPagsQueUsa = procesos[posProc].cantPagsUsando;
-	int paginaAEscribir = nroPag + primeraPagProceso; //lo mismo que la linea de leer pagina, para volver a antes poner -1
+	int paginaAEscribir = nroPag + primeraPagProceso;
 	if(nroPag > cantidadPagsQueUsa)
 	{
 		printf("No puede escribir en %d, no esta en su rango \n", nroPag);
-		return 0;
+		return FALLOESCRITURA;
 	}
 	printf("Se escribira la pagina %d del proceso: %d, cuya asociada es %d \n", nroPag,idProceso,paginaAEscribir);
 	resultado = escribirPagina(paginaAEscribir, data);
@@ -517,10 +532,11 @@ int escribirPagina(int nroPag, char*dataPagina){
 	{
 		printf("Pagina %d, copiada con exito! Contenido de la misma: %s \n", nroPag, dataPagina);
 	}
-	return 1;
+	return EXITOESCRITURA;
 }
 
-int leerPaginaProceso(int idProceso, int nroPag, flagParaPag* flagParaPag){
+int leerPaginaProceso(int idProceso, int nroPag, char* paginaALeer){
+	int flagResult;
 	int posProc = getPosicionDelProceso(idProceso);
 	int primerPag=getPrimerPagProc(idProceso);
 	int cantPagsEnUso = procesos[posProc].cantPagsUsando;
@@ -528,18 +544,21 @@ int leerPaginaProceso(int idProceso, int nroPag, flagParaPag* flagParaPag){
 	if(nroPag>cantPagsEnUso)
 	{
 		printf("No puede leer la pagina %d, no tiene permisos \n",nroPag);
-		return 0;
+		return FALLOLECTURA;
 	}
 	long int inicio,fin;
-	flagParaPag->flagResultado = leerPagina(posPag,&inicio,&fin);
+	flagResult = leerPagina(posPag,&inicio,&fin); //con esto determino los valores de inicio de lectura y de fin
+	if (flagResult == -1){
+		return FALLOLECTURA;
+	}
 	int i;
 	char*dataLeida = malloc(TAMANIO_PAGINA);
 	for(i=0;i<TAMANIO_PAGINA; i++)
 	{
 		dataLeida[i]= discoMapped[inicio +i];
 	}
-	strcpy(flagParaPag->paginaAEscribir,dataLeida);
-	return 1;
+	strcpy(paginaALeer,dataLeida);
+	return EXITOLECTURA;
 }
 
 int inicializarEstructuraPaginas(){

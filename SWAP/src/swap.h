@@ -13,9 +13,11 @@
 #include<commons/txt.h>
 #include<sys/mman.h>
 #include "socket.h"
+#include <theDebuggers/socketLibrary.h>
+
 
 char* NOMBRE_SWAP;
-int PUERTO_SWAP;
+char* PUERTO_SWAP;
 int CANTIDAD_PAGINAS;
 int TAMANIO_PAGINA;
 int RETARDO_COMPACTACION;
@@ -23,15 +25,6 @@ int RETARDO_ACCESO;
 
 t_config* configuracion;
 long int tamanio_archivo;
-
-
-typedef struct __attribute__((packed)){
-	int pid;
-	int pedido;
-	int pagina;
-	char texto[1024];
-	int flagProc;
-} paquete;
 
 typedef struct __attribute__((packed)){
 	int ocupada;
@@ -43,15 +36,10 @@ typedef struct __attribute__((packed)){
 	int idProceso;
 }proceso;
 
-typedef struct __attribute__((packed)){
-	int flagResultado;
-	char *paginaAEscribir;
-}flagParaPag;
-
 int	abrirConfiguracion();
 int	crearArchivo();
 int mapearArchivo();
-int asignarEspacio(int cantPagsAAsignar, int contadorP, int proceso, int inicio);
+int asignarEspacio(int cantPagsAAsignar, int proceso, int inicio);
 int ultimaPagLibre();
 int compactacion();
 int hayLugarParaNuevoProceso(int cantPagsNecesita);
@@ -68,7 +56,7 @@ int getPrimerPagProc(int idProceso);
 int getPosicionDelProceso(int idProc);
 int escribirPaginaProceso(int idProceso, int nroPag, char*data);
 int escribirPagina(int nroPag, char*dataPagina);
-int leerPaginaProceso(int idProceso, int nroPag, flagParaPag* flagParaPag);
+int leerPaginaProceso(int idProceso, int nroPag, char* paginaALeer);
 int inicializarEstructuraPaginas();
 void llenarprocPags();
 
