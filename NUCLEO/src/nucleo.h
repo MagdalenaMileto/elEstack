@@ -32,8 +32,8 @@
  #include "../../Sockets Maggie/src/socketLibrary.c"
  #include "../../COMUNES/nsockets.h"
  //#include "../../COMUNES/nsockets.c"
-
  #include "../../COMUNES/estructurasControl.h"
+ #include "../../COMUNES/estructurasControl.c"
 
 
 
@@ -111,16 +111,12 @@ void mandarAEjecutar(t_proceso *proceso,int sock);
 
 void *hilo_mock(void *arg);
 
-void agregarContexto(t_pcb *pcb,t_contexto *contexto);
-void eliminarContexto(t_pcb *pcb);
+
 
 void *hilo_mock_consola(void *arg);
 void *hilo_mock_cpu(void *arg);
 
 
-t_pcb *desserializarPCB(char *serializado);
-void destruirPCB(t_pcb *pcb);
-char *serializarPCB(t_pcb *pcb);
 
 
 void *hilo_CONEXION_CONSOLA(void *arg);
