@@ -18,6 +18,9 @@
 #include <unistd.h>
 #include <pthread.h>
 
+
+//#include <event2/event.h>
+
 #include <event.h>
 #include <sys/time.h>
 
@@ -25,24 +28,24 @@
 #include <commons/collections/node.h>
 #include <commons/collections/queue.h>
 #include <commons/collections/list.h>
- #include <commons/config.h>
+#include <commons/config.h>
 
 
 #include <parser/metadata_program.h>
 
 #include <signal.h>
- #include "../../Sockets Maggie/src/socketLibrary.h"
- #include "../../Sockets Maggie/src/socketLibrary.c"
- #include "../../COMUNES/nsockets.h"
- //#include "../../COMUNES/nsockets.c"
- #include "../../COMUNES/estructurasControl.h"
- #include "../../COMUNES/estructurasControl.c"
+#include "../../Sockets Maggie/src/socketLibrary.h"
+#include "../../Sockets Maggie/src/socketLibrary.c"
+#include "../../COMUNES/nsockets.h"
+//#include "../../COMUNES/nsockets.c"
+#include "../../COMUNES/estructurasControl.h"
+#include "../../COMUNES/estructurasControl.c"
 
 
 
 #define PUERTO "9997"
-#define BACKLOG 5			// Define cuantas conexiones vamos a mantener pendientes al mismo tiempo
-#define PACKAGESIZE 1024	// Define cual va a ser el size maximo del paquete a enviar
+#define BACKLOG 5     // Define cuantas conexiones vamos a mantener pendientes al mismo tiempo
+#define PACKAGESIZE 1024  // Define cual va a ser el size maximo del paquete a enviar
 
 
 
@@ -68,18 +71,18 @@ typedef struct {
   int* VALOR_SEM;
   int* VALOR_IO;
 
-  long long*VALOR_IO_EXPIRED_TIME; 
+  long long*VALOR_IO_EXPIRED_TIME;
 
 
 
-}CONF_NUCLEO;
+} CONF_NUCLEO;
 
 
 
 
 
 
-typedef struct{
+typedef struct {
   int socket_CPU;
   int socket_CONSOLA;
   t_pcb *pcb;
@@ -87,19 +90,19 @@ typedef struct{
   char semaforoBloqueado;
 
 
-}t_proceso;
+} t_proceso;
 
 
 
 
-void bloqueoIoManager(t_proceso *proceso,char *ioString,int sizeString,int unidadesBloqueado);
+void bloqueoIoManager(t_proceso *proceso, char *ioString, int sizeString, int unidadesBloqueado);
 
 
 
 
 
 //long long *punteroConCero(char **ana1);
-int *convertirConfigInt(char **ana1,char **ana2);
+int *convertirConfigInt(char **ana1, char **ana2);
 
 void get_config_nucleo (CONF_NUCLEO *config_nucleo);
 
@@ -112,16 +115,27 @@ void *hilo_PCP(void *arg);
 
 
 t_proceso* dameProceso(t_queue *cola, int sock );
-void mandarAEjecutar(t_proceso *proceso,int sock);
+void mandarAEjecutar(t_proceso *proceso, int sock);
 
 void *hilo_mock(void *arg);
+
+
+
+#define CLOCKID CLOCK_REALTIME
+#define SIG SIGUSR1
+
+static int makeTimer( timer_t *timerID, int expireMS, int intervalMS );
+
+
+
+
 
 
 
 void *hilo_mock_consola(void *arg);
 void *hilo_mock_cpu(void *arg);
 
-void analizarIO(int fd, short event, void *arg);
+void analizarIO(int sig, siginfo_t *si, void *uc);
 
 
 void *hilo_CONEXION_CONSOLA(void *arg);
