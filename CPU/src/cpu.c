@@ -5,7 +5,6 @@
  *      Author: Franco Albornoz
  */
 
-
 #include "funcionesCPU.h"
 #define ARCHIVOLOG "CPU.log"
 
@@ -63,7 +62,7 @@ int main(int argc,char **argv) {
 
 	t_pcb* pcb;					//Declaracion e inicializacion del PCB
 	t_paquete* paquete_recibido;
-	mensaje_CPU_UMC* mensajeAMandar;
+	t_paquete* paquete_posicion_instruccion;
 
 	while(1)
 	{
@@ -77,11 +76,19 @@ int main(int argc,char **argv) {
 			if(paquete_recibido->codigo_operacion==304){
 
 				pcb = desserializarPCB(paquete_recibido->data);
+				pcb->pc= pcb->pc +1;
 				log_info(log,"Recibi pcb %d... ejecturando\n",pcb->pid);
-				enviarInstruccionAMemoria(umc, mensajeAMandar);
+
+				paquete_posicion_instruccion = enviarInstruccionAMemoria(umc, pcb);
 
 				FD_CLR(nucleo,&masterfds);
 				analizadorLinea("a = b + c",&primitivas,&primitivas_kernel);
+
+				//void ejecutarInstruccion(....quantium);  hacer esta funcion
+								/*al ejecutar: actuliza los valores del programa de umc
+												acualiza el pc del pcb
+												notifica al nucleo que concluyo el quantium
+								*/
 
 				free(pcb);
 				printf("CPU: Cierra\n");
@@ -170,7 +177,6 @@ int conectarConNucleo(){
 return nucleo;
 }
 
-
 t_paquete* recibirPCB(int nucleo){
 
 	t_paquete* pcb_recibido= recibir(nucleo);
@@ -179,20 +185,15 @@ t_paquete* recibirPCB(int nucleo){
 return pcb_recibido;
 }
 
+t_paquete* enviarInstruccionAMemoria(int umc, t_pcb* pcb){
 
-void enviarInstruccionAMemoria(int umc, mensaje_CPU_UMC* mensajeAMandar)
-{
-	if(mensajeAMandar->texto==NULL) mensajeAMandar->tamTexto=0;
+	enviar(umc, 404, pcb->sizeIndiceDeCodigo, pcb->indiceDeCodigo); //le envio el indice de codigo a umc
+	//destruir_pcb(pcb);  hacer esta funcion
 
-	void*buffer= malloc(sizeof(instruccion_t)+3*sizeof(uint32_t)+(mensajeAMandar->tamTexto));
-
-	memcpy(buffer,&(mensajeAMandar->instruccion),sizeof(instruccion_t));
-	memcpy(buffer+sizeof(instruccion_t),&(mensajeAMandar->pid),sizeof(uint32_t));
-	memcpy(buffer+sizeof(instruccion_t)+sizeof(uint32_t),&(mensajeAMandar->parametro),sizeof(uint32_t));
-	memcpy(buffer+sizeof(instruccion_t)+2*sizeof(uint32_t),&(mensajeAMandar->tamTexto),sizeof(uint32_t));
-	memcpy(buffer+sizeof(instruccion_t)+3*sizeof(uint32_t),mensajeAMandar->texto,mensajeAMandar->tamTexto);
-
-	enviar(umc, 404,sizeof(instruccion_t)+3*sizeof(uint32_t)+(mensajeAMandar->tamTexto),mensajeAMandar);  //puse como codigo de operacion 404// como segundo argumento habia puesto buffer pero me tira un warning
-
-	free(buffer);
+	t_paquete* paquete= recibir(umc);									//recibo un paquete con la direc en memoria de la prox sentencia a ejectuar
+																		//hay que organizarnos con los C_O de umc a cpu puede ser 403?
+	if(paquete->codigo_operacion != 403) log_debug(log,"Error de lectura, cierro la ejecución del programa");
+	return paquete;
+	liberar_paquete(paquete);
 }
+

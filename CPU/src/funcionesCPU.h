@@ -47,16 +47,7 @@ typedef struct {
   int SIZE_PAGINA;
 }CONF_CPU;
 
-typedef enum{begin, jump, jz, jnz, print, textPrint,end}instruccion_t;
 
-typedef struct mensaje_CPU_UMC_t
-{
-instruccion_t instruccion;
-uint32_t pid;
-uint32_t parametro; // cant paginas, nunero pagina,
-uint32_t tamTexto;
-char* texto;
-}mensaje_CPU_UMC;
 
 
 
@@ -64,6 +55,7 @@ void get_config_cpu (CONF_CPU *config_cpu);
 int conectarConUmc();
 int conectarConNucleo();
 t_paquete* recibirPCB(int nucleo);
-void enviarInstruccionAMemoria(int umc, mensaje_CPU_UMC* mensajeAMandar);
+t_paquete* enviarInstruccionAMemoria(int umc, t_pcb* pcb);
+
 
 #endif /* FUNCIONESCPU_H_ */
