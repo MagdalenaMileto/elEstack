@@ -328,15 +328,31 @@ void bloqueoIoManager(t_proceso *proceso,char *ioString,int sizeString,int unida
 
 	//Esto es si tengo el \0 verificar como me lo manda cpu
 	int i;
+	int x=0;
 
-	for(i=0;i<strlen((char*)config_nucleo->IO_IDS);i++){
-		if(strcmp((char*)config_nucleo->IO_IDS[i], ioString)==0){
+
+
+
+	for(i=0;i<strlen((char*)config_nucleo->IO_IDS)/sizeof(char*);i++){
+		
+	//	printf("%s\n",(char*)config_nucleo->IO_IDS[i]);
+		
+	if(strcmp((char*)config_nucleo->IO_IDS[i], ioString)==0){
+		
+			printf("ES MATCH\n");
+
 			//Tenemos match
 			//pusheamos, si no tenemos ninguno disparamos.
 			proceso->unidadesBloqueado=unidadesBloqueado;
+		
+
+
 			if(queue_size(colas_ios[i])==0){
+
+
 				printf("No habia ninguno, disparo timer IO\n");
 				
+			
 				struct event ev;
 				struct timeval tv;
 	
@@ -344,32 +360,40 @@ void bloqueoIoManager(t_proceso *proceso,char *ioString,int sizeString,int unida
   				tv.tv_usec = 1000*config_nucleo->VALOR_IO[i]*unidadesBloqueado;
 
 				int a=i;
-
-  				evtimer_set(&ev,analizarIO,&a);
+			printf("ver error no bloqueo\n");
+  				evtimer_set(&ev,analizarIO,(void*)a);
   				evtimer_add(&ev, &tv);
 
    				event_loop(EVLOOP_NONBLOCK);
+   				queue_push(colas_ios[i], proceso);
    				event_dispatch();
-
+   		printf("volvio\n");
+   		return;
 			}else{
 				printf("Habia uno, no disparo timer IO\n");
 			}
 			queue_push(colas_ios[i], proceso);
+			return;
+
+
 		}
 
 	}
+	printf("No encontre IO id, exit\n");
 
 	//Handlear que pasa si no lee semaforo
-	printf("error no encontre semaforo\n");exit(0);
+	exit(0);
 
 }
 
 void analizarIO(int fd, short event, void *arg){
-	//printf("esta%d\n\n\n\n\n",(int)arg);
+	
+	printf("Saco proceso de Cola IO %d mando READY\n",(int)arg);
 	t_proceso *proceso;
 	proceso=queue_pop(colas_ios[(int)arg]);
-	printf("Saco proceso de Cola IO %d mando READY\n",(int)arg);
+
 	queue_push(cola_ready, proceso);
+
 	if(queue_size(colas_ios[(int)arg])!=0){
 		printf("VER QUE EL 0 FUNQUE NICO**************\n");
 		proceso=(t_proceso*)list_get(colas_ios[(int)arg]->elements, 0);
@@ -392,6 +416,7 @@ void analizarIO(int fd, short event, void *arg){
 
 
 
+	sleep(1);
 }
 
 
@@ -523,11 +548,17 @@ void *hilo_CONEXION_CPU(void *arg) {
 		case 340:
 			proceso = dameProceso(cola_exec, args->socket);
 			t_blocked *bloqueo;
+
 			bloqueo = desserializarBLOQUEO(elPaquete->data);
+			int a=0;
+
 			proceso->pcb=bloqueo->pcb;
+
 			if(bloqueo->ioSize){
 				//Hay bloqueo por IO
+		
 				bloqueoIoManager(proceso,bloqueo->io,bloqueo->ioSize,bloqueo->IO_time);
+				
 			}
 			if(bloqueo->semaforoSize){
 				//Hay bloqueo por semaforo
@@ -702,28 +733,30 @@ void *hilo_mock_consola(void *arg) {
 void *hilo_mock_cpu(void *arg) {
 	int cpu, estado;
 
-
+	char ss[7]  = "Disco\0";
 	sleep(5);
 	cpu = cliente("127.0.0.1", 1202);
 	printf("CPUMOCK: Conecté%d\n", cpu);
 
-
+t_blocked *bloqueado,*bloqueadoSerializado;
 
 	t_paquete * paquete_nuevo;
 
 	t_pcb *pcb;
-
+int i=0;
 
 	while (1) {
 		paquete_nuevo = recibir(cpu);
+
 		if (paquete_nuevo->codigo_operacion == 303) {
 		
 			pcb=desserializarPCB(paquete_nuevo->data);
 			printf("CPUMOCK: Recibi pcb %d... ejecutando\n",pcb->pid);
 
-			sleep(2);
 		
-
+		
+			/*
+			//Test agregar contexto
 			t_contexto *contexto;
 			contexto = malloc(sizeof(t_contexto));
 			contexto->pos=pcb->sizeContextoActual;
@@ -735,7 +768,30 @@ void *hilo_mock_cpu(void *arg) {
 
 			enviar(cpu, 304, serializado->sizeTotal, serializado );
 			printf("CPUMOCK: envie PCB a nucleo\n");
+			*/
+
+		
 			
+			bloqueado = malloc(sizeof(t_blocked));
+
+			bloqueado->IO_time=2;
+			bloqueado->ioSize=sizeof(ss);
+			bloqueado->io=ss;
+			bloqueado->pcb=pcb;
+			bloqueado->semaforoSize=0;
+		
+	
+			bloqueadoSerializado=(t_blocked*)serializarBLOQUEO(bloqueado);
+
+
+			if(i==0){enviar(cpu, 340, bloqueadoSerializado->sizeTotal, bloqueadoSerializado );}
+
+			printf("CPUMOCK: envie proceso a bloqueo disco\n");
+			free(bloqueadoSerializado);
+			free(bloqueado);
+		printf("repos\n");
+ //i++;
+
 
 		}
 

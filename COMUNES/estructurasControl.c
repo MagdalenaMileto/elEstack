@@ -86,6 +86,7 @@ void agregarContexto(t_pcb *pcb, t_contexto *contexto) {
 
 t_blocked *desserializarBLOQUEO(char *serializado) {
 	t_blocked *retorno;	t_pcb *pcb;
+	int i=0;
 
 	retorno = malloc(sizeof(t_blocked));
 	memcpy(retorno, serializado, sizeof(t_blocked));
@@ -93,8 +94,8 @@ t_blocked *desserializarBLOQUEO(char *serializado) {
 
 	pcb = malloc(sizeof(t_pcb));
 	pcb = desserializarPCB(serializado);
-	memcpy(pcb, serializado, retorno->sizePcbSerializado);
-	serializado += sizeof(t_pcb);
+	//memcpy(pcb, serializado, sizeof(t_pcb));
+	serializado += retorno->sizePcbSerializado;
 
 	if (retorno->semaforoSize) {
 		retorno->semaforo = malloc(retorno->semaforoSize);
@@ -104,9 +105,11 @@ t_blocked *desserializarBLOQUEO(char *serializado) {
 
 
 	if (retorno->ioSize) {
+
 		retorno->io = malloc(retorno->ioSize);
 		memcpy(retorno->io , serializado, retorno->ioSize);
 		serializado += retorno->ioSize;
+		
 	}
 
 	retorno->pcb=pcb;
@@ -117,7 +120,7 @@ t_blocked *desserializarBLOQUEO(char *serializado) {
 
 char *serializarBLOQUEO(t_blocked *bloqueo) {
 	char *retorno, *retornotemp; int size = 0;
-
+	
 	t_pcb *pcbSerializado;
 	pcbSerializado = (t_pcb*)serializarPCB(bloqueo->pcb);
 
@@ -125,7 +128,7 @@ char *serializarBLOQUEO(t_blocked *bloqueo) {
 	bloqueo->sizeTotal = (sizeof(char) * pcbSerializado->sizeTotal + sizeof(char) * (bloqueo->semaforoSize + bloqueo->ioSize) + sizeof(t_blocked));
 
 	retorno = malloc(sizeof(char) * pcbSerializado->sizeTotal + sizeof(char) * (bloqueo->semaforoSize + bloqueo->ioSize) + sizeof(t_blocked));
-	retorno = retornotemp;
+	retornotemp=retorno;
 
 	memcpy(retornotemp, bloqueo, sizeof(t_blocked));
 	retornotemp += sizeof(t_blocked);
@@ -133,16 +136,18 @@ char *serializarBLOQUEO(t_blocked *bloqueo) {
 	memcpy(retornotemp, pcbSerializado, pcbSerializado->sizeTotal);
 	retornotemp += pcbSerializado->sizeTotal;
 	free(pcbSerializado);
-
 	if (bloqueo->semaforoSize) {
 		memcpy(retornotemp, bloqueo->semaforo, bloqueo->semaforoSize);
 		retornotemp += bloqueo->semaforoSize;
 	}
 
+
 	if (bloqueo->ioSize) {
 		memcpy(retornotemp, bloqueo->io, bloqueo->ioSize);
+		//printf("%dEntreee%s\n",bloqueo->ioSize,retornotemp);
 		retornotemp += bloqueo->ioSize;
 	}
+
 
 	return (retorno);
 
@@ -204,6 +209,6 @@ char *serializarPCB(t_pcb *pcb) {
 			retornotemp += sizeof(t_variable);
 		}
 	}
-
+	//printf("SIZE%d\n",size);
 	return retorno;
 }
