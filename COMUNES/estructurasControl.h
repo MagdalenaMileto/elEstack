@@ -62,6 +62,7 @@ typedef struct __attribute__((packed))t_pcb{
 
 typedef struct __attribute__((packed))t_blocked{
 	int sizePcbSerializado;
+	t_pcb *pcb;
 	char* semaforo;
 	char* io;
 	int IO_time;
@@ -73,12 +74,12 @@ typedef struct __attribute__((packed))t_blocked{
 
 
 
-
+t_blocked *desserializarBLOQUEO(char *serializado);
 char *serializarPCB(t_pcb *pcb);
 void agregarContexto(t_pcb *pcb,t_contexto *contexto);
 t_pcb *desserializarPCB(char *serializado);
 void destruirPCB(t_pcb *pcb);
-char *serializarBLOQUEO(t_blocked *bloqueo,t_pcb *pcb);
+char *serializarBLOQUEO(t_blocked *bloqueo);
 
 #endif /* ESTRUCTURASCONTROL_H_ */
 

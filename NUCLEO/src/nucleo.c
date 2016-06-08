@@ -30,6 +30,11 @@ t_queue* cola_exec;
 t_queue* cola_ready;
 t_queue* cola_block;
 
+//Cola IO
+t_queue** colas_ios;
+//Colas sem
+t_queue** colas_semaforos;
+
 pthread_mutex_t mutex_cola_new;
 
 int pidcounter = 0;
@@ -85,10 +90,18 @@ int main() {
 //MOCKS
 
 
+ 
+  event_init();
+
+ 
+
+
+
 	pthread_t mock;
 	pthread_create(&mock, NULL, hilo_mock, NULL);
 
 	sleep(3);
+
 
 
 
@@ -122,6 +135,7 @@ int main() {
 
 	pthread_join(thPCP, NULL);
 	pthread_join(thPLP, NULL);
+
 
 
 
@@ -291,22 +305,94 @@ void mandarCodigoAUmc(char* codigo, int size, t_proceso *proceso) {
 	proceso->pcb->contextoActual = malloc(1*sizeof(proceso->pcb->contextoActual));
 	t_contexto *contextocero;
 	contextocero=malloc(sizeof(t_contexto));
-		printf("oo\n");
+	
 	proceso->pcb->contextoActual[0]=contextocero;
 
-	printf("pp\n");
+
 	proceso->pcb->contextoActual[0]->sizeArgs=0;
 		proceso->pcb->contextoActual[0]->pos=0;
-			printf("mau%d\n",proceso->pcb->contextoActual[0]->pos);
+
 	//contextocero->sizeVars=0;
 
 	proceso->pcb->sizeContextoActual=1;
 
 	metadata_destruir(metadata_program);
-	printf("ARRARARA\n");
+
 
 }
 
+
+void bloqueoIoManager(t_proceso *proceso,char *ioString,int sizeString,int unidadesBloqueado){
+
+	//config_nucleo->IO_IDS
+
+	//Esto es si tengo el \0 verificar como me lo manda cpu
+	int i;
+
+	for(i=0;i<strlen((char*)config_nucleo->IO_IDS);i++){
+		if(strcmp((char*)config_nucleo->IO_IDS[i], ioString)==0){
+			//Tenemos match
+			//pusheamos, si no tenemos ninguno disparamos.
+			proceso->unidadesBloqueado=unidadesBloqueado;
+			if(queue_size(colas_ios[i])==0){
+				printf("No habia ninguno, disparo timer IO\n");
+				
+				struct event ev;
+				struct timeval tv;
+	
+				tv.tv_sec = 0;
+  				tv.tv_usec = 1000*config_nucleo->VALOR_IO[i]*unidadesBloqueado;
+
+				int a=i;
+
+  				evtimer_set(&ev,analizarIO,&a);
+  				evtimer_add(&ev, &tv);
+
+   				event_loop(EVLOOP_NONBLOCK);
+   				event_dispatch();
+
+			}else{
+				printf("Habia uno, no disparo timer IO\n");
+			}
+			queue_push(colas_ios[i], proceso);
+		}
+
+	}
+
+	//Handlear que pasa si no lee semaforo
+	printf("error no encontre semaforo\n");exit(0);
+
+}
+
+void analizarIO(int fd, short event, void *arg){
+	//printf("esta%d\n\n\n\n\n",(int)arg);
+	t_proceso *proceso;
+	proceso=queue_pop(colas_ios[(int)arg]);
+	printf("Saco proceso de Cola IO %d mando READY\n",(int)arg);
+	queue_push(cola_ready, proceso);
+	if(queue_size(colas_ios[(int)arg])!=0){
+		printf("VER QUE EL 0 FUNQUE NICO**************\n");
+		proceso=(t_proceso*)list_get(colas_ios[(int)arg]->elements, 0);
+		struct event ev;
+		struct timeval tv;
+	
+		tv.tv_sec = 0;
+  		tv.tv_usec = 1000*config_nucleo->VALOR_IO[(int)arg]*proceso->unidadesBloqueado;
+
+		int a=(int)arg;
+
+  		evtimer_set(&ev,analizarIO,&a);
+  		evtimer_add(&ev, &tv);
+
+   		event_loop(EVLOOP_NONBLOCK);
+   		event_dispatch();
+
+
+	}
+
+
+
+}
 
 
 /********************************************************************************
@@ -435,36 +521,21 @@ void *hilo_CONEXION_CPU(void *arg) {
 			break;
 
 		case 340:
-			//Free de los proceso? ver
 			proceso = dameProceso(cola_exec, args->socket);
-			printf("NUCLEO: Recibi proceso %d  para mandar a bloquear por IO \n", proceso->pcb->pid);
-			//DesSerializar PCB bloqueado
-			/*
-
-			t_blocked bloqueado;
-			if (bloqueado.IO_offset) {
-				//El bloqueo es por IO
-
-				int tiempoDeBloqueo;
-
-				tiempoDeBloqueo = bloqueado.IO_time * config_nucleo->VALOR_IO[bloqueado.IO_offset];
-
-				if (config_nucleo->VALOR_IO_EXPIRED_TIME[bloqueado.IO_offset] < current_timestamp()) {
-
-					config_nucleo->VALOR_IO_EXPIRED_TIME[bloqueado.IO_offset] = tiempoDeBloqueo + current_timestamp();
-
-				} else {
-					config_nucleo->VALOR_IO_EXPIRED_TIME[bloqueado.IO_offset] = tiempoDeBloqueo + config_nucleo->VALOR_IO_EXPIRED_TIME[bloqueado.IO_offset];
-
-				}
-				proceso->tiempoBloqueado = config_nucleo->VALOR_IO_EXPIRED_TIME[bloqueado.IO_offset];
-
-				queue_push(cola_block, proceso);
-
-
-
+			t_blocked *bloqueo;
+			bloqueo = desserializarBLOQUEO(elPaquete->data);
+			proceso->pcb=bloqueo->pcb;
+			if(bloqueo->ioSize){
+				//Hay bloqueo por IO
+				bloqueoIoManager(proceso,bloqueo->io,bloqueo->ioSize,bloqueo->IO_time);
 			}
-	*/
+			if(bloqueo->semaforoSize){
+				//Hay bloqueo por semaforo
+				//bloqueoSemaforoManager(proceso,bloqueo->semaforo,bloqueo->semaforoSize);
+			}
+
+			//Hacer los free aca
+			queue_push(cola_CPU_libres, (void *)args->socket);
 			break;
 
 		}
@@ -651,14 +722,11 @@ void *hilo_mock_cpu(void *arg) {
 			printf("CPUMOCK: Recibi pcb %d... ejecutando\n",pcb->pid);
 
 			sleep(2);
-			t_contexto *contexto;
-
-			contexto = malloc(sizeof(t_contexto));
 		
-			
-			
+
+			t_contexto *contexto;
+			contexto = malloc(sizeof(t_contexto));
 			contexto->pos=pcb->sizeContextoActual;
-	
 			agregarContexto(pcb,contexto);
 
 			t_pcb * serializado;
@@ -746,13 +814,31 @@ void get_config_nucleo (CONF_NUCLEO *config_nucleo)
 	config_nucleo->VALOR_IO = convertirConfigInt(config_nucleo->IO_SLEEP, config_nucleo->IO_IDS);
 	config_nucleo->VALOR_SEM = convertirConfigInt(config_nucleo->SEM_INIT, config_nucleo->SEM_IDS);
 
-	config_nucleo->VALOR_IO_EXPIRED_TIME = punteroConCero(config_nucleo->IO_IDS);
+	//config_nucleo->VALOR_IO_EXPIRED_TIME = punteroConCero(config_nucleo->IO_IDS);
 
+	//Crear colar IO
+	//t_queue** colas_IO;
 
+	colas_ios=malloc(strlen((char*)config_nucleo->IO_SLEEP)*sizeof(char*));
 
+	int i;
+	for(i=0;i<strlen((char*)config_nucleo->IO_SLEEP);i++){
+
+		colas_ios[i]= malloc(sizeof(t_queue*));
+		colas_ios[i] = queue_create();
+	}
+
+	colas_semaforos=malloc(strlen((char*)config_nucleo->SEM_INIT)*sizeof(char*));
+
+	for(i=0;i<strlen((char*)config_nucleo->SEM_INIT);i++){
+
+		colas_semaforos[i]= malloc(sizeof(t_queue*));
+		colas_semaforos[i] = queue_create();
+	}
 	return;
 }
 
+/*
 long long *punteroConCero(char **ana1) {
 
 	int i;
@@ -769,6 +855,8 @@ long long *punteroConCero(char **ana1) {
 
 
 }
+
+*/
 
 int *convertirConfigInt(char **ana1, char **ana2) {
 

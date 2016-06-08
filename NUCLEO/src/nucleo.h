@@ -18,6 +18,9 @@
 #include <unistd.h>
 #include <pthread.h>
 
+#include <event.h>
+#include <sys/time.h>
+
 
 #include <commons/collections/node.h>
 #include <commons/collections/queue.h>
@@ -80,13 +83,22 @@ typedef struct{
   int socket_CPU;
   int socket_CONSOLA;
   t_pcb *pcb;
-  long long tiempoBloqueado;
+  int unidadesBloqueado;
   char semaforoBloqueado;
 
 
 }t_proceso;
 
-long long *punteroConCero(char **ana1);
+
+
+
+void bloqueoIoManager(t_proceso *proceso,char *ioString,int sizeString,int unidadesBloqueado);
+
+
+
+
+
+//long long *punteroConCero(char **ana1);
 int *convertirConfigInt(char **ana1,char **ana2);
 
 void get_config_nucleo (CONF_NUCLEO *config_nucleo);
@@ -109,7 +121,7 @@ void *hilo_mock(void *arg);
 void *hilo_mock_consola(void *arg);
 void *hilo_mock_cpu(void *arg);
 
-
+void analizarIO(int fd, short event, void *arg);
 
 
 void *hilo_CONEXION_CONSOLA(void *arg);
