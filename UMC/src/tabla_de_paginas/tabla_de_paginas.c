@@ -27,6 +27,8 @@ t_entrada_tabla_de_paginas * crear_nueva_entrada(int pid, int pagina) {
 	nueva_entrada->marco = -1;
 	nueva_entrada->presencia = false;
 	nueva_entrada->modificado = false;
+	nueva_entrada->puntero = false;
+	nueva_entrada->uso = true;
 
 	return nueva_entrada;
 }

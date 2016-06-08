@@ -26,7 +26,7 @@ struct addrinfo* _configurar_addrinfo(char *IP, char* Port) {
 	} else
 		error = getaddrinfo(IP, Port, &hints, &serverInfo);
 	if (error) {
-		error_show("Problema con el getaddrinfo()!: %s", gai_strerror(error));
+		error_show("Problema con el getaddrinfo()!: %s\n", gai_strerror(error));
 		exit(EXIT_FAILURE);
 	}
 	return serverInfo;
@@ -40,7 +40,7 @@ un_socket conectar_a(char *IP, char* Port) {
 	int serverSocket = socket(serverInfo->ai_family, serverInfo->ai_socktype,
 			serverInfo->ai_protocol);
 	if (serverSocket == -1) {
-		error_show("\n No se pudo conectar",
+		error_show("\n No se pudo conectar\n",
 		errno);
 		exit(EXIT_FAILURE);
 	}
@@ -48,7 +48,7 @@ un_socket conectar_a(char *IP, char* Port) {
 			== -1) {
 		puts("\n");
 		error_show(
-				"No se pudo conectar con el proceso que hace de servidor, error: %d",
+				"No se pudo conectar con el proceso que hace de servidor, error: %d\n",
 				errno);
 		close(serverSocket);
 		exit(EXIT_FAILURE);

@@ -25,5 +25,6 @@
 bool swap_inicializar_proceso(int pid, int cantidad_paginas, char * codigo);
 void swap_finalizar_proceso(int pid);
 char * swap_leer(int proceso_actual, int numero_pagina);
+void swap_escribir(int pid, int numero_pagina);
 
 #endif /* SRC_PEDIDOS_INTERFACES_SWAP_H_ */

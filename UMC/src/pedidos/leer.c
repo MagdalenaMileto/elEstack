@@ -8,12 +8,10 @@ void * leer_una_pagina(int numero_pagina, int offset, int tamanio) {
 
 		char * contenido_faltante = swap_leer(proceso_actual, numero_pagina);
 
-		pagina_encontrada->marco = marco_nuevo();
+		marco_nuevo(pagina_encontrada);
 
 		int desplazamiento = pagina_encontrada->marco * tamanio_marco;
 		memcpy(memoria + desplazamiento, contenido_faltante, tamanio_marco);
-
-		pagina_encontrada->presencia = true;
 
 	}
 

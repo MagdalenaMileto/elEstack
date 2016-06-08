@@ -19,7 +19,7 @@ context( nucleo) {
 			}end
 
 			it(
-					"La función me devuelve si se crean exitosamente las paginas de un proceso") {
+					"se crean exitosamente las paginas de un proceso") {
 
 				inicializar_programa(1, 4);
 

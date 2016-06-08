@@ -33,12 +33,12 @@ void swap_finalizar_proceso(int pid) {
 	enviar(socket_swap, SWAP_FINALIZAR, sizeof(int), (void *) &pid);
 }
 
-char * swap_leer(int proceso_actual, int numero_pagina){
+char * swap_leer(int pid, int numero_pagina) {
 
-	int tamanio_paquete = sizeof(int)*2;
+	int tamanio_paquete = sizeof(int) * 2;
 	void * data = malloc(tamanio_paquete);
 
-	memcpy(data, &proceso_actual, sizeof(int));
+	memcpy(data, &pid, sizeof(int));
 	memcpy(data, &numero_pagina, sizeof(int));
 
 	enviar(socket_swap, SWAP_LEER, tamanio_paquete, data);
@@ -47,4 +47,8 @@ char * swap_leer(int proceso_actual, int numero_pagina){
 
 	return (char *) paquete->data;
 
+}
+
+void swap_escribir(int pid, int numero_pagina) {
+//TODO
 }

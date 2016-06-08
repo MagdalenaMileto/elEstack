@@ -8,7 +8,7 @@
 #ifndef SRC_TABLA_DE_PAGINAS_ESTRUCTURAS_H_
 #define SRC_TABLA_DE_PAGINAS_ESTRUCTURAS_H_
 
-//#include <stdbool.h>
+#include <stdbool.h>
 
 #include <commons/collections/list.h>
 
@@ -18,6 +18,7 @@ typedef struct {
 	int marco;
 	bool uso;
 	bool modificado;
+	bool puntero;
 	bool presencia;
 	int ultima_vez_usado;
 } t_entrada_tabla_de_paginas;
