@@ -11,6 +11,8 @@
 #include <pthread.h>
 #include <commons/collections/list.h>
 
+#include "tabla_de_paginas/estructuras.h"
+
 char *puerto_umc, *ip_swap, *puerto_swap;
 
 int cantidad_marcos, tamanio_marco, cantidad_maxima_marcos, entradas_TLB,
@@ -31,6 +33,8 @@ t_list * tabla_de_paginas;
 t_list * tlb;
 
 t_list * control_de_marcos;
+
+t_entrada_tabla_de_paginas * puntero_algoritmo_clock;
 
 pthread_t hilo_nucleo, hilo_cpu;
 

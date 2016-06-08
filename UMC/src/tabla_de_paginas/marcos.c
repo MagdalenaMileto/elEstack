@@ -11,8 +11,7 @@ int marco_nuevo() {
 
 	if (tiene_cantidad_maxima_marcos_asignados(proceso_actual)) {
 
-		//TODO desalojar
-		return 2;
+		return algoritmo_remplazo();
 
 	} else {
 
@@ -65,4 +64,9 @@ void inicializar_marcos() {
 		list_add(control_de_marcos, entrada);
 
 	}
+}
+
+int algoritmo_remplazo() {
+
+	return 1;
 }

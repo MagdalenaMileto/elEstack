@@ -17,6 +17,7 @@
 int marco_nuevo();
 bool tiene_cantidad_maxima_marcos_asignados(int proceso_actual);
 void inicializar_marcos();
+int algoritmo_remplazo();
 
 
 #endif /* TABLA_DE_PAGINAS_MARCOS_H_ */
