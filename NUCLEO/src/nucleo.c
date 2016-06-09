@@ -35,10 +35,16 @@ t_queue** colas_ios;
 
 timer_t** timers;
 
+
+//semaforos
+sem_t sem_ready;
+sem_t sem_cpu;
+sem_t sem_new;
+
 //Colas sem
 t_queue** colas_semaforos;
 
-pthread_mutex_t mutex_cola_new;
+pthread_mutex_t mutex_cola_new,mutex_cola_ready,mutex_variables;
 
 int pidcounter = 0;
 
@@ -84,7 +90,9 @@ int main() {
 
 
 //MOCKS
-
+sem_init(&sem_cpu, 0, 0);
+	sem_init(&sem_new, 0, 0);
+	sem_init(&sem_ready, 0, 0);
 
 
 	pthread_t mock;
@@ -100,6 +108,9 @@ int main() {
 	cola_block = queue_create();
 	cola_exit = queue_create();
 	cola_CPU_libres = queue_create();
+
+	
+
 
 	pthread_mutex_init(&mutex_cola_new, NULL);
 
@@ -171,11 +182,14 @@ void *hilo_PLP(void *arg) {
 //hacerlo con semafoto para que bloquee
 
 	while (1) {
-		if (queue_size(cola_new) != 0) {
+
+			sem_wait(&sem_new); 
+			
 			proceso = queue_pop(cola_new);
 			printf("NUCLEO: Saco proceso  %d new, mando a ready\n", proceso->pcb->pid);
 			queue_push(cola_ready, proceso);
-		}
+			sem_post(&sem_ready);
+		
 	}
 
 }
@@ -213,7 +227,8 @@ void *hilo_PCP(void *arg) {
 	t_proceso *proceso; int sock;
 	while (1) {
 
-		if (queue_size(cola_ready) != 0 && queue_size(cola_CPU_libres) != 0) {
+			sem_wait(&sem_ready);  sem_wait(&sem_cpu); 
+
 
 
 			sock = (int)queue_pop(cola_CPU_libres);
@@ -227,7 +242,7 @@ void *hilo_PCP(void *arg) {
 
 
 
-		}
+		
 
 
 
@@ -308,12 +323,115 @@ void mandarCodigoAUmc(char* codigo, int size, t_proceso *proceso) {
 	//contextocero->sizeVars=0;
 
 	proceso->pcb->sizeContextoActual = 1;
-
+	proceso->pcb->pc = 0;
 	metadata_destruir(metadata_program);
 
 
 }
 
+int *pideSemaforo(char *semaforo, int semaforoSize) {
+	int i;
+	printf("NUCLEO: pide sem %s\n", semaforo);
+
+	for (i = 0; i < strlen((char*)config_nucleo->SEM_IDS) / sizeof(char*); i++) {
+		if (strcmp((char*)config_nucleo->SEM_IDS[i], semaforo) == 0) {
+
+			//Encontre el sem
+
+			if (config_nucleo->VALOR_SEM[i] == 0) {return &config_nucleo->VALOR_SEM[i];}
+			config_nucleo->VALOR_SEM[i]--;
+			return (&config_nucleo->VALOR_SEM[i]);
+		}
+	}
+
+	printf("No encontre SEM id, exit\n");
+	//Handlear que pasa si no lee semaforo
+	exit(0);
+
+}
+
+int *pideVariable(char *variable, int tamanio) {
+	int i;
+	printf("NUCLEO: pide variable %s\n", variable);
+
+	for (i = 0; i < strlen((char*)config_nucleo->SHARED_VARS) / sizeof(char*); i++) {
+		if (strcmp((char*)config_nucleo->SHARED_VARS[i], variable) == 0) {
+
+			//Encontre el sem
+
+			return &config_nucleo->VALOR_SHARED_VARS[i];
+		}
+	}
+
+	printf("No encontre variable id, exit\n");
+	//Handlear que pasa si no lee semaforo
+	exit(0);
+
+
+}
+
+
+void escribeVariable(char *variable, int tamanio) {
+	int *valor = (int*)variable;
+	variable += sizeof(int);
+	int i;
+
+	for (i = 0; i < strlen((char*)config_nucleo->SHARED_VARS) / sizeof(char*); i++) {
+
+		if (strcmp((char*)config_nucleo->SHARED_VARS[i], variable) == 0) {
+			memcpy(&config_nucleo->VALOR_SHARED_VARS[i], valor, sizeof(int));
+			return;
+		}
+	}
+
+	printf("No encontre VAR id, exit\n");
+	//Handlear que pasa si no lee semaforo
+	exit(0);
+
+}
+
+
+void liberaSemaforo(char *semaforo, int semaforoSize) {
+	int i; t_proceso *proceso;
+	printf("NUCLEO: libera sem %s\n", semaforo);
+	for (i = 0; i < strlen((char*)config_nucleo->SEM_IDS) / sizeof(char*); i++) {
+		if (strcmp((char*)config_nucleo->SEM_IDS[i], semaforo) == 0) {
+			//Encontre el sem
+			config_nucleo->VALOR_SEM[i]++;
+			if (proceso = queue_pop(colas_semaforos[i])) {
+				config_nucleo->VALOR_SEM[i]--;
+				queue_push(cola_ready, proceso);
+				sem_post(&sem_ready); 
+			}
+			return;
+		}
+	}
+
+	printf("No encontre SEM id, exit\n");
+	//Handlear que pasa si no lee semaforo
+	exit(0);
+
+}
+
+
+void  bloqueoSemaforoManager(t_proceso *proceso, char *semaforo, int semSize) {
+	int i;
+	printf("NUCLEO: mando proceso %d a BLOCK por SEM\n", proceso->pcb->pid);
+
+	for (i = 0; i < strlen((char*)config_nucleo->SEM_IDS) / sizeof(char*); i++) {
+		if (strcmp((char*)config_nucleo->SEM_IDS[i], semaforo) == 0) {
+			//Encontre el sem
+			queue_push(colas_semaforos[i], proceso);
+			return;
+
+		}
+	}
+
+	printf("No encontre SEM id, exit\n");
+	//Handlear que pasa si no lee semaforo
+	exit(0);
+
+}
 
 void bloqueoIoManager(t_proceso *proceso, char *ioString, int sizeString, int unidadesBloqueado) {
 
@@ -414,14 +532,12 @@ void analizarIO(int sig, siginfo_t *si, void *uc) {
 
 	}
 
-
-
-
 	t_proceso *proceso;
 
 	proceso = queue_pop(colas_ios[io]);
-	printf("\x1b[32m NUCLEO: Saco proceso %d de Cola IO %d mando READY\n\x1b[0m", proceso->pcb->pid, io);
+	printf("\x1b[32mNUCLEO: Saco proceso %d de Cola IO %d mando READY\n\x1b[0m", proceso->pcb->pid, io);
 	queue_push(cola_ready, proceso);
+	sem_post(&sem_ready); 
 
 	if (queue_size(colas_ios[io]) != 0) {
 
@@ -475,6 +591,7 @@ void *hilo_CONEXION_CONSOLA(void *arg) {
 			mandarCodigoAUmc(paquete->data, paquete->tamanio, proceso);
 			pthread_mutex_lock(&mutex_cola_new);
 			queue_push(cola_new, proceso);
+			sem_post(&sem_new);
 			pthread_mutex_unlock(&mutex_cola_new);
 			break;
 
@@ -530,6 +647,7 @@ void *hilo_CONEXION_CPU(void *arg) {
 	struct arg_struct *args = (struct arg_struct *)arg;
 	t_proceso* proceso;
 	queue_push(cola_CPU_libres, (void*)args->socket);
+	sem_post(&sem_cpu);
 	t_paquete * elPaquete;
 	int b = 0;
 	while (1) {
@@ -547,10 +665,13 @@ void *hilo_CONEXION_CPU(void *arg) {
 
 			int i; for (i = 0; i < temp->sizeContextoActual; i++)
 
+				destruirPCB(proceso->pcb);
 
-				proceso->pcb = temp;
+			proceso->pcb = temp;
 			queue_push(cola_ready, proceso);
+			sem_post(&sem_ready); 
 			queue_push(cola_CPU_libres, (void *)args->socket);
+			sem_post(&sem_cpu); 
 
 			break;
 
@@ -559,62 +680,86 @@ void *hilo_CONEXION_CPU(void *arg) {
 			printf("NUCLEO: Recibi proceso %d por fin de ejecucion, encolando en cola exit\n", proceso->pcb->pid);
 			queue_push(cola_exit, proceso);
 			queue_push(cola_CPU_libres, (void *)args->socket);
+			sem_post(&sem_cpu); 
 			break;
 
 		case 340:
-
-
 			proceso = dameProceso(cola_exec, args->socket);
 			t_blocked *bloqueo;
 
 			bloqueo = desserializarBLOQUEO(elPaquete->data);
-
+			destruirPCB(proceso->pcb);
 			proceso->pcb = bloqueo->pcb;
 
 			if (bloqueo->ioSize) {
 				//Hay bloqueo por IO
-
 				bloqueoIoManager(proceso, bloqueo->io, bloqueo->ioSize, bloqueo->IO_time);
-
 			}
 			if (bloqueo->semaforoSize) {
 				//Hay bloqueo por semaforo
-				//bloqueoSemaforoManager(proceso,bloqueo->semaforo,bloqueo->semaforoSize);
+				bloqueoSemaforoManager(proceso, bloqueo->semaforo, bloqueo->semaforoSize);
 			}
 
 			//Hacer los free aca
 			queue_push(cola_CPU_libres, (void *)args->socket);
+			sem_post(&sem_cpu); 
+			break;
+
+		case 341: //Pide semaforo
+			proceso = dameProceso(cola_exec, args->socket);
+			queue_push(cola_exec, proceso);
+			enviar(args->socket, 342, sizeof(int), pideSemaforo(elPaquete->data, elPaquete->tamanio));
 
 			break;
 
+		case 343: //Libera semaforo
+			proceso = dameProceso(cola_exec, args->socket);
+			queue_push(cola_exec, proceso);
+			liberaSemaforo(elPaquete->data, elPaquete->tamanio);
+			break;
+
+
+		case 350: //Escribe variable
+			proceso = dameProceso(cola_exec, args->socket);
+			queue_push(cola_exec, proceso);
+			escribeVariable(elPaquete->data, elPaquete->tamanio);
+			break;
+
+
+		case 351: //Pide variable
+			proceso = dameProceso(cola_exec, args->socket);
+			queue_push(cola_exec, proceso);
+
+			enviar(args->socket, 352, sizeof(int), pideVariable(elPaquete->data, elPaquete->tamanio));
+			break;
+
+		case 360: //imprimir
+			proceso = dameProceso(cola_exec, args->socket);
+			queue_push(cola_exec, proceso);
+			enviar(proceso->socket_CONSOLA, 160, elPaquete->tamanio, elPaquete->data);
+
+		case 361: //imprimir texto
+			proceso = dameProceso(cola_exec, args->socket);
+			queue_push(cola_exec, proceso);
+			enviar(proceso->socket_CONSOLA, 161, elPaquete->tamanio, elPaquete->data);
 		}
+
+
 
 
 	}
 
 }
 
-
-
-
 void *hilo_HANDLER_CONEXIONES_CPU(void *arg) {
-
 	int servidorSocket, socketCliente;
 	struct arg_struct *args; //Probar de sacar afuera esto?
-
-
 	socketcpu = socket_escucha("localhost", config_nucleo->PUERTO_CPU);
 	listen(socketcpu, 1024);
-
-
-
 	listen(socketcpu, 5);   //Aca maximas conexiones, ver de cambiar?
 
 	while (1) {
 		socketCliente = aceptar_conexion(socketcpu);
-
-
-
 		args = malloc(sizeof(struct arg_struct));//cuando se termine el proceso hacer un free de esto
 		args->socket = socketCliente;
 
@@ -626,22 +771,14 @@ void *hilo_HANDLER_CONEXIONES_CPU(void *arg) {
 
 }
 
-
-
 void intHandler(int dummy) {
-	//clrscr();
-
-	//close(clienteSocket);
 	close(socketcpu);
 	close(socketconsola);
 	close(umc);
-
 	printf("NUCLEO: CERRÓ\n");
 	printf("cierro Todo...\n\n");
-//	sleep(1);
 	exit(0);
 }
-
 
 
 /********************************************************************************
@@ -655,105 +792,48 @@ void intHandler(int dummy) {
 
 
 
-
-
-
 int umcMock, clienteUmc;
 
 void *hilo_mock(void *arg) {
 
-
 	struct sockaddr_in addr;  socklen_t addrlen = sizeof(addr);
-
 	pthread_t thmock_consola, thmock_consola2, thmock_consola3, thmock_cpu;
-
-
-
 	pthread_create(&thmock_consola, NULL, hilo_mock_consola, NULL);
 	pthread_create(&thmock_consola2, NULL, hilo_mock_consola, NULL);
 	// pthread_create(&thmock_consola3, NULL, hilo_mock_consola, NULL);
 
-
 	pthread_create(&thmock_cpu, NULL, hilo_mock_cpu, NULL);
-
-
 
 	umcMock = servidor(1207);
 	listen(umcMock, 5);
 	clienteUmc = accept(umcMock, (struct sockaddr *) &addr, &addrlen);
 
-
-
 	printf("\x1b[31mUMCMOCK: Acepte conexion%d\n\x1b[0m", clienteUmc);
-
-
 
 	t_paquete * paquete_nuevo;
 
 	while (1) {
-
 		paquete_nuevo = recibir(clienteUmc);
-
 		if (paquete_nuevo->codigo_operacion == 204) {
-			//printf("UMCMOCK: me pidió %d paginas. Le digo q si\n",*((int*)header.data));
-			/*
-			headerEnviar.id = 205; int a = 1;
-			headerEnviar.data = &a;
-			headerEnviar.size = sizeof(int);
-			enviar_paquete(clienteUmc, headerEnviar);
-			*/
-
 		}
 
-
-		//	printf("Pase\n");
-
-
-
 	}
-
-
-
-
 }
-
-
 
 void *hilo_mock_consola(void *arg) {
 	int consola;
-
 	sleep(4);
-
 	consola = cliente("127.0.0.1", 1209);
-
-
-
-
 	printf("\x1b[36mCONSOLAMOCK: Conecté%d \n \x1b[0m", consola);
-
-
 	enviar(consola, 103, sizeof(codigo), codigo);
-
-	/*
-	t_header header;
-	header.size = sizeof(codigo);
-	header.id = 103;
-	header.data = codigo;
-
-	enviar_paquete(consola, header);
-	*/
 	while (1) {}
-	// sleep(5);
-
-
-
-
 }
 
 
 void *hilo_mock_cpu(void *arg) {
 	int cpu, estado;
-
+	char var[8]  = "!Global\0";
+	char sem[5]  = "SEM1\0";
 	char ss[7]  = "Disco\0";
 	char ee[8]  = "Scanner\0";
 	sleep(5);
@@ -771,29 +851,38 @@ void *hilo_mock_cpu(void *arg) {
 		paquete_nuevo = recibir(cpu);
 
 		if (paquete_nuevo->codigo_operacion == 303) {
-
+			/*MODIFICAR Y PEDIR RECIBIR VARIABLE
 			pcb = desserializarPCB(paquete_nuevo->data);
 			printf("\x1b[31mCPUMOCK: Recibi pcb %d... ejecutando\n\x1b[0m", pcb->pid);
 
+			char *mandar;
+			mandar=malloc(sizeof(int)+sizeof(var));
+			int a=3;
+			memcpy(mandar, &a, sizeof(a));
+			memcpy(mandar+sizeof(a), var, sizeof(var));
 
 
-			/*
+			enviar(cpu, 350, sizeof(int)+sizeof(var), mandar );
+			enviar(cpu, 351, sizeof(var), var );
+			*/
+
 			//Test agregar contexto
-			t_contexto *contexto;
-			contexto = malloc(sizeof(t_contexto));
-			contexto->pos=pcb->sizeContextoActual;
-			agregarContexto(pcb,contexto);
+			//t_contexto *contexto;
+			//contexto = malloc(sizeof(t_contexto));
+			//contexto->pos=pcb->sizeContextoActual;
+			//agregarContexto(pcb,contexto);
 
 			t_pcb * serializado;
-
+			pcb = desserializarPCB(paquete_nuevo->data);
 			serializado = (t_pcb*)serializarPCB(pcb);
 
 			enviar(cpu, 304, serializado->sizeTotal, serializado );
 			printf("CPUMOCK: envie PCB a nucleo\n");
-			*/
 
 
 
+			/*
+			//TEST IO
 
 			if (i % 2 == 0) {
 
@@ -832,19 +921,68 @@ void *hilo_mock_cpu(void *arg) {
 				enviar(cpu, 340, bloqueadoSerializado->sizeTotal, bloqueadoSerializado );
 			}
 
-			printf("\x1b[31mCPUMOCK: envie proceso a bloqueo disco\n\x1b[0m");
+			printf("\x1b[31mCPUMOCK: envie proceso a bloqueo disco\x1b[0m\n");
 			free(bloqueadoSerializado);
 			free(bloqueado);
 
 			i++;
 
+			*/
+
+			/*
+			test bloqueado
+			if (i%3==0){
+				enviar(cpu, 341, sizeof(sem), sem );
+
+			}
+			if (i%3== 2 ) {
+				enviar(cpu, 343, sizeof(sem), sem );
+				t_pcb * serializado;
+				serializado = (t_pcb*)serializarPCB(pcb);
+				enviar(cpu, 304, serializado->sizeTotal, serializado );
+				printf("CPUMOCK: envie PCB a nucleo\n");
+			}
+
+			*/
+		}//End if paquete
+
+		/* test bloqueado
+		if (paquete_nuevo->codigo_operacion == 342) {
+
+
+			if(i%3==1){
+				bloqueado = malloc(sizeof(t_blocked));
+
+				bloqueado->IO_time = 0;
+				bloqueado->ioSize = 0;
+				bloqueado->io = NULL;
+				bloqueado->pcb = pcb;
+				bloqueado->semaforoSize = sizeof(sem);
+				bloqueado->semaforo = sem;
+
+				bloqueadoSerializado = (t_blocked*)serializarBLOQUEO(bloqueado);
+
+				printf("\x1b[31mCPUMOCK: envie proceso a bloqueo SEM\x1b[0m\n");
+				enviar(cpu, 340, bloqueadoSerializado->sizeTotal, bloqueadoSerializado );
+			}//FIN I
+			}
+
+			*/
+
+		/* RECIBIR VARIABLE
+		if (paquete_nuevo->codigo_operacion == 352) {
+			int *a=(int*)paquete_nuevo->data;
+			printf("\x1b[31mCPUMOCK: Recibi variable %d... \n\x1b[0m",*a );
 
 		}
 
+		*/
 
-	}
+		i++;
+		//printf("NUEVO I%d\n",i);
+	}//FIN WHILE
 
-}
+} //FIN MOCK CPU
 
 
 
@@ -909,7 +1047,7 @@ void get_config_nucleo (CONF_NUCLEO *config_nucleo)
 
 
 
-	//config_nucleo->VALOR_SHARED_VARS= convertirConfigInt(?????????,config_nucleo->variables_compartidas);
+	config_nucleo->VALOR_SHARED_VARS = convertirConfig0(config_nucleo->SHARED_VARS);
 	//Iniciar en 0
 	//Hacer
 
@@ -942,7 +1080,50 @@ void get_config_nucleo (CONF_NUCLEO *config_nucleo)
 	return;
 }
 
-/*
+
+int *convertirConfigInt(char **ana1, char **ana2) {
+
+	int i;
+	int *resul;
+
+	resul = malloc(((strlen((char*)ana1)) / sizeof(char*)) * sizeof(int));
+	for (i = 0; i < (strlen((char*)ana1)) / sizeof(char*); i++) {
+		resul[i] = atoi(ana1[i]);
+
+	}
+	return resul;
+
+}
+
+
+
+int *convertirConfig0(char **ana1) {
+
+	int i;
+	int *resul;
+
+	resul = malloc(((strlen((char*)ana1)) / sizeof(char*)) * sizeof(int));
+	for (i = 0; i < (strlen((char*)ana1)) / sizeof(char*); i++) {
+		resul[i] = 0;
+
+	}
+	return resul;
+
+}
+
+
+
+/* eliminar
+
+
+
+long long current_timestamp(void) {
+	struct timeval te;
+	gettimeofday(&te, NULL);
+	long long milliseconds = te.tv_sec * 1000LL + te.tv_usec / 1000;
+	return milliseconds;
+}
+
 long long *punteroConCero(char **ana1) {
 
 	int i;
@@ -960,36 +1141,8 @@ long long *punteroConCero(char **ana1) {
 
 }
 
-*/
-
-int *convertirConfigInt(char **ana1, char **ana2) {
-
-	int i;
-	int *resul;
-
-	/*
-	if((strlen(ana1))/sizeof(char*)!=(strlen(ana1))/sizeof(char*))
-	{exit(EXIT_FAILURE);//Error en arhcivo conf
-	}
-	*/
-	resul = malloc(((strlen((char*)ana1)) / sizeof(char*)) * sizeof(int));
-	for (i = 0; i < (strlen((char*)ana1)) / sizeof(char*); i++) {
-		resul[i] = atoi(ana1[i]);
-
-	}
-	return resul;
-
-}
 
 
-
-
-long long current_timestamp(void) {
-	struct timeval te;
-	gettimeofday(&te, NULL);
-	long long milliseconds = te.tv_sec * 1000LL + te.tv_usec / 1000;
-	return milliseconds;
-}
 
 
 void printbuf(const char* buffer, int len) {
@@ -1002,4 +1155,4 @@ void printbuf(const char* buffer, int len) {
 	printf("\nFIN PRINT\n\x1b[0m");
 }
 
-
+*/
