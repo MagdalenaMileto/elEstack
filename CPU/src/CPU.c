@@ -50,16 +50,58 @@ int main(int argc,char **argv){
 	t_paquete* datos_kernel=recibir(nucleo);  //una vez que nucleo se conecta con cpu debe mandar t_datos_kernel..
 	t_datos_kernel* info_kernel = desserializarDatosKernel(datos_kernel->data);
 
-	int quantum = info_kernel->QUANTUM;
 
 	while(sigusr1_desactivado){
+
+		int quantum = info_kernel->QUANTUM;
+		int tamanioPag = info_kernel->TAMPAG;//hay que declararlo en t_datos_kernel
 
 		t_paquete* paquete_recibido = recibirPCB(nucleo);
 		t_pcb* pcb = desserializarPCB(paquete_recibido->data);
 
-		t_direccion* datos_para_umc = crearEstructuraParaUMC (pcb->indiceDeCodigo);
+		int pid = pcb->pid;
+		enviar(umc, 405, sizeof(int), pid); // codigo 405: cambio de proceso activo NUCLEO - UMC
 
-		enviar(umc, 404, datos_para_umc->size, datos_para_umc);
+		int programaBloqueado = 0;
+		int programaFinalizado = 0;
+		int programaAbortado = 0;
+
+		while(quantum && !programaBloqueado && !programaFinalizado &&
+				!programaAbortado){
+
+			t_direccion* datos_para_umc = crearEstructuraParaUMC (pcb, info_kernel);
+
+			enviar(umc, 404, datos_para_umc->size, datos_para_umc);
+			t_paquete* instruccion=recibir(umc);
+			char* sentencia= instruccion->data;
+			analizadorLinea(depurarSentencia(strdup(sentencia)), &primitivas,
+					&primitivas_kernel);
+
+			pcb->pc++;
+			quantum--;
+			usleep(info_kernel->QUANTUM_SLEEP);
+
+			if (programaBloqueado){
+				log_info(log, "El programa salió por bloqueo");
+					}
+					if (programaAbortado){
+						log_info(log, "El programa aborto");
+						//transformar pcb en *paquete y enviar a nucleo
+						//enviar(nucleo, 306, sizeof(t_paquete*), ); //codigo de ope 306, pcb abortado
+					}
+					if (programaFinalizado){
+						log_debug(logs, "El programa finalizo");
+					}
+					if(quantum &&!programaFinalizado&&!programaBloqueado&&!programaAbortado){
+						//transformar pcb en *paquete y enviar a nucleo
+						//enviar(nucleo, 307, sizeof(t_paquete*), ); //codigo de ope 307, pcb salio por quantum
+					}
+		}
+
+		close(nucleo);
+		close(umc);
+
+		return 0;
 	}
 
 
@@ -113,12 +155,14 @@ return pcb_recibido;
 }
 
 
-t_direccion*  crearEstructuraParaUMC (int* indice){
+t_direccion*  crearEstructuraParaUMC (t_pcb* pcb, t_datos_kernel* info_kernel){
 
 	t_direccion* info;
-	info->pagina=0;  // como sacar estos valores
-	info->offset=0;
-	info->size=0;
+	info->pagina==pcb->indiceDeCodigo[pcb->pc][0] / info_kernel->TAMPAG;
+	info->offset=pcb->indiceDeCodigo[pcb->pc][0];
+	info->size=pcb->indiceDeCodigo[pcb->pc][1];
+	 // como sacar estos valores
+
 
 	return info;
 
@@ -138,4 +182,8 @@ void levantar_configuraciones() {
 	config_cpu->STACK_SIZE = config_get_int_value(archivo_configuracion, "STACK_SIZE");
 	config_cpu->SIZE_PAGINA = config_get_int_value(archivo_configuracion,"SIZE_PAGINA");
 
+}
+
+char* depurarSentencia(char* sentencia){
+	return sentencia; //Aca hay que sacarle el /n del final a la sentencia
 }
