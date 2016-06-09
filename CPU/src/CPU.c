@@ -34,11 +34,6 @@ AnSISOP_kernel primitivas_kernel = {
 		.AnSISOP_signal					=signal,
 };
 
-typedef struct {
-	 int QUANTUM;
-	 int QUANTUM_SLEEP;
-	 int TAMPAG;
-} t_datos_kernel;
 
 int main(int argc,char **argv){
 

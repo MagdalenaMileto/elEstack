@@ -35,6 +35,12 @@
 #include <commons/collections/list.h>
 #include <theDebuggers/socketLibrary.h>
 
+typedef struct {
+	 int QUANTUM;
+	 int QUANTUM_SLEEP;
+	 int TAMPAG;
+} t_datos_kernel;
+
 
 typedef struct {
   int PUERTO_NUCLEO;
