@@ -49,7 +49,6 @@ int main(int argc,char **argv){
 	t_paquete* datos_kernel=recibir(nucleo);  //una vez que nucleo se conecta con cpu debe mandar t_datos_kernel..
 	t_datos_kernel* info_kernel = desserializarDatosKernel(datos_kernel->data);
 
-
 	while(sigusr1_desactivado){
 
 		int quantum = info_kernel->QUANTUM;
@@ -57,6 +56,7 @@ int main(int argc,char **argv){
 
 		t_paquete* paquete_recibido = recibirPCB(nucleo);
 		t_pcb* pcb = desserializarPCB(paquete_recibido->data);
+		liberar_paquete(paquete_recibido);
 
 		int pid = pcb->pid;
 		enviar(umc, 405, sizeof(int), pid); // codigo 405: cambio de proceso activo NUCLEO - UMC
@@ -83,18 +83,21 @@ int main(int argc,char **argv){
 			if (programaBloqueado){
 				log_info(log, "El programa salió por bloqueo");
 					}
-					if (programaAbortado){
-						log_info(log, "El programa aborto");
-						//transformar pcb en *paquete y enviar a nucleo
-						//enviar(nucleo, 306, sizeof(t_paquete*), ); //codigo de ope 306, pcb abortado
-					}
-					if (programaFinalizado){
-						log_debug(log, "El programa finalizo");
-					}
-					if(quantum &&!programaFinalizado&&!programaBloqueado&&!programaAbortado){
-						//transformar pcb en *paquete y enviar a nucleo
-						//enviar(nucleo, 307, sizeof(t_paquete*), ); //codigo de ope 307, pcb salio por quantum
-					}
+
+			if (programaAbortado){
+				log_info(log, "El programa aborto");
+					//transformar pcb en *paquete y enviar a nucleo
+					//enviar(nucleo, 306, sizeof(t_paquete*), ); //codigo de ope 306, pcb abortado
+			}
+
+			if (programaFinalizado){
+				log_debug(log, "El programa finalizo");
+			}
+
+			if(quantum &&!programaFinalizado&&!programaBloqueado&&!programaAbortado){
+				//transformar pcb en *paquete y enviar a nucleo
+				//enviar(nucleo, 307, sizeof(t_paquete*), ); //codigo de ope 307, pcb salio por quantum
+			}
 		}
 
 		close(nucleo);
@@ -157,14 +160,11 @@ return pcb_recibido;
 t_direccion*  crearEstructuraParaUMC (t_pcb* pcb, t_datos_kernel* info_kernel){
 
 	t_direccion* info;
-	info->pagina = pcb->indiceDeCodigo[pcb->pc][0] / info_kernel->TAMPAG;
-	info->offset = pcb->indiceDeCodigo[pcb->pc][0];
-	info->size = pcb->indiceDeCodigo[pcb->pc][1];
-
+	info->pagina=pcb->indiceDeCodigo [pcb->pc][0]/ info_kernel->TAMPAG;
+	info->offset=pcb->indiceDeCodigo [pcb->pc][0];
+	info->size=pcb->indiceDeCodigo [pcb->pc][1];
 	return info;
-
 }
-
 
 t_datos_kernel* desserializarDatosKernel(char* paquete_kernel){
 

@@ -52,12 +52,6 @@ typedef struct {
 } t_datos_kernel;
 
 
-typedef struct {
-	t_puntero_instruccion start;
-	t_size offset;
-} t_instruccion;
-
-
 void get_config_cpu (CONF_CPU *config_cpu);
 int conectarConUmc();
 int conectarConNucleo();
