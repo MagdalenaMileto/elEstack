@@ -18,6 +18,7 @@
 #include <unistd.h>
 #include <pthread.h>
 
+#include <semaphore.h>
 
 //#include <event2/event.h>
 
@@ -92,14 +93,17 @@ typedef struct {
 
 } t_proceso;
 
+void escribeVariable(char *variable,int tamanio);
+int *pideVariable(char *variable,int tamanio);
 
-
-
+void liberaSemaforo(char *semaforo,int semaforoSize);
+int *pideSemaforo(char *semaforo,int semaforoSize);
+void  bloqueoSemaforoManager(t_proceso *proceso,char *semaforo,int semSize);
 void bloqueoIoManager(t_proceso *proceso, char *ioString, int sizeString, int unidadesBloqueado);
 
 
 
-
+int *convertirConfig0(char **ana1);
 
 //long long *punteroConCero(char **ana1);
 int *convertirConfigInt(char **ana1, char **ana2);
