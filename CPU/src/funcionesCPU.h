@@ -48,6 +48,7 @@ typedef struct {
 typedef struct {
 	 int QUANTUM;
 	 int QUANTUM_SLEEP;
+	 int TAMPAG;
 } t_datos_kernel;
 
 
@@ -61,8 +62,9 @@ void get_config_cpu (CONF_CPU *config_cpu);
 int conectarConUmc();
 int conectarConNucleo();
 t_paquete* recibirPCB(int nucleo);
-t_direccion*  crearEstructuraParaUMC (int* indice);
-t_datos_kernel* desserializarDatosKernel(t_paquete* paquete_kernel);
+t_datos_kernel* desserializarDatosKernel(char* paquete_kernel);
+char* depurarSentencia(char* sentencia);
+t_direccion*  crearEstructuraParaUMC (t_pcb* pcb, t_datos_kernel* info_kernel);
 
 
 #endif /* FUNCIONESCPU_H_ */

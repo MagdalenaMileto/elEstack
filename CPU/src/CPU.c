@@ -6,12 +6,11 @@
  */
 
 #include "funcionesCPU.h"
-
-#define ARCHIVOLOG "CPU.log"
-
-#define CONFIG_CPU "config_cpu"
-CONF_CPU *config_cpu;
 #include <commons/config.h>
+#define ARCHIVOLOG "CPU.log"
+#define CONFIG_CPU "config_cpu"
+CONF_CPU config_cpu;
+
 t_log* log;  //en COMUNES tendrian que estar las estructuras del log?
 
 
@@ -54,7 +53,7 @@ int main(int argc,char **argv){
 	while(sigusr1_desactivado){
 
 		int quantum = info_kernel->QUANTUM;
-		int tamanioPag = info_kernel->TAMPAG;//hay que declararlo en t_datos_kernel
+		int tamanioPag = info_kernel->TAMPAG;
 
 		t_paquete* paquete_recibido = recibirPCB(nucleo);
 		t_pcb* pcb = desserializarPCB(paquete_recibido->data);
@@ -90,7 +89,7 @@ int main(int argc,char **argv){
 						//enviar(nucleo, 306, sizeof(t_paquete*), ); //codigo de ope 306, pcb abortado
 					}
 					if (programaFinalizado){
-						log_debug(logs, "El programa finalizo");
+						log_debug(log, "El programa finalizo");
 					}
 					if(quantum &&!programaFinalizado&&!programaBloqueado&&!programaAbortado){
 						//transformar pcb en *paquete y enviar a nucleo
@@ -111,7 +110,7 @@ int main(int argc,char **argv){
 //*******************************************FUNCIONES**********************************************************
 
 int conectarConUmc(){
-		int umc = conectar_a(config_cpu->IP_UMC, config_cpu->PUERTO_UMC);
+		int umc = conectar_a(config_cpu.IP_UMC, config_cpu.PUERTO_UMC);
 		if(umc==-1){
 			log_info(log,"CPU: No encontre memoria\n");
 			exit (EXIT_FAILURE);
@@ -130,7 +129,7 @@ return umc;
 
 
 int conectarConNucleo(){
-		int nucleo = conectar_a(config_cpu->IP_NUCLEO, config_cpu->PUERTO_NUCLEO);
+		int nucleo = conectar_a(config_cpu.IP_NUCLEO, config_cpu.PUERTO_NUCLEO);
 		if(nucleo==-1){
 			log_info(log,"CPU: No encontre nucleo\n");
 			exit (EXIT_FAILURE);
@@ -158,31 +157,52 @@ return pcb_recibido;
 t_direccion*  crearEstructuraParaUMC (t_pcb* pcb, t_datos_kernel* info_kernel){
 
 	t_direccion* info;
-	info->pagina==pcb->indiceDeCodigo[pcb->pc][0] / info_kernel->TAMPAG;
-	info->offset=pcb->indiceDeCodigo[pcb->pc][0];
-	info->size=pcb->indiceDeCodigo[pcb->pc][1];
-	 // como sacar estos valores
-
+	info->pagina = pcb->indiceDeCodigo[pcb->pc][0] / info_kernel->TAMPAG;
+	info->offset = pcb->indiceDeCodigo[pcb->pc][0];
+	info->size = pcb->indiceDeCodigo[pcb->pc][1];
 
 	return info;
 
 }
 
 
-t_datos_kernel* desserializarDatosKernel(t_paquete* paquete_kernel); //hacer la deserializacion
+t_datos_kernel* desserializarDatosKernel(char* paquete_kernel){
+
+	t_datos_kernel* info = malloc(sizeof(t_datos_kernel));
+	memcpy(info, paquete_kernel, sizeof(t_datos_kernel));
+	paquete_kernel += sizeof(t_datos_kernel);
+
+	info->QUANTUM = malloc(sizeof(int));
+	memcpy(info->QUANTUM, paquete_kernel, sizeof(int));
+	paquete_kernel += sizeof(int);
+
+	info->QUANTUM_SLEEP = malloc(sizeof(int));
+	memcpy(info->QUANTUM_SLEEP, paquete_kernel, sizeof(int));
+	paquete_kernel += sizeof(int);
+
+
+	info->TAMPAG = malloc(sizeof(int));
+	memcpy(info->TAMPAG, paquete_kernel, sizeof(int));
+	paquete_kernel += sizeof(int);
+
+	return info;
+}
+
+
 
 void levantar_configuraciones() {
 
 	t_config * archivo_configuracion = config_create("./CPU.confg");
 
-	config_cpu->PUERTO_NUCLEO = config_get_string_value(archivo_configuracion, "PUERTO_NUCLEO");
-	config_cpu->IP_NUCLEO = config_get_string_value(archivo_configuracion, "IP_NUCLEO");
-	config_cpu->PUERTO_UMC = config_get_string_value(archivo_configuracion, "PUERTO_UMC");
-	config_cpu->IP_UMC = config_get_int_value(archivo_configuracion, "IP_UMC");
-	config_cpu->STACK_SIZE = config_get_int_value(archivo_configuracion, "STACK_SIZE");
-	config_cpu->SIZE_PAGINA = config_get_int_value(archivo_configuracion,"SIZE_PAGINA");
+	config_cpu.PUERTO_NUCLEO = config_get_string_value(archivo_configuracion, "PUERTO_NUCLEO");
+	config_cpu.IP_NUCLEO = config_get_string_value(archivo_configuracion, "IP_NUCLEO");
+	config_cpu.PUERTO_UMC = config_get_string_value(archivo_configuracion, "PUERTO_UMC");
+	config_cpu.IP_UMC = config_get_int_value(archivo_configuracion, "IP_UMC");
+	config_cpu.STACK_SIZE = config_get_int_value(archivo_configuracion, "STACK_SIZE");
+	config_cpu.SIZE_PAGINA = config_get_int_value(archivo_configuracion,"SIZE_PAGINA");
 
 }
+
 
 char* depurarSentencia(char* sentencia){
 	return sentencia; //Aca hay que sacarle el /n del final a la sentencia
