@@ -45,12 +45,6 @@ typedef struct {
   int SIZE_PAGINA;
 }CONF_CPU;
 
-typedef struct {
-	 int QUANTUM;
-	 int QUANTUM_SLEEP;
-	 int TAMPAG;
-} t_datos_kernel;
-
 
 void get_config_cpu (CONF_CPU *config_cpu);
 int conectarConUmc();

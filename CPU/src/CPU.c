@@ -34,6 +34,11 @@ AnSISOP_kernel primitivas_kernel = {
 		.AnSISOP_signal					=signal,
 };
 
+typedef struct {
+	 int QUANTUM;
+	 int QUANTUM_SLEEP;
+	 int TAMPAG;
+} t_datos_kernel;
 
 int main(int argc,char **argv){
 
@@ -160,8 +165,8 @@ return pcb_recibido;
 t_direccion*  crearEstructuraParaUMC (t_pcb* pcb, t_datos_kernel* info_kernel){
 
 	t_direccion* info;
-	info->pagina=pcb->indiceDeCodigo [pcb->pc][0]/ info_kernel->TAMPAG;
-	info->offset=pcb->indiceDeCodigo [pcb->pc][0];
+	info->pagina=pcb->indiceDeCodigo [(pcb->pc)*2]/ info_kernel->TAMPAG;
+	info->offset=pcb->indiceDeCodigo [((pcb->pc)*2)+1];
 	info->size=pcb->indiceDeCodigo [pcb->pc][1];
 	return info;
 }

@@ -44,6 +44,12 @@ typedef struct __attribute__((packed))t_contexto
 	int sizeVars;
 }t_contexto;
 
+typedef struct {
+	 int QUANTUM;
+	 int QUANTUM_SLEEP;
+	 int TAMPAG;
+} t_datos_kernel;
+
 // Estructura para el PCB
 typedef struct __attribute__((packed))t_pcb{
 	int pid;
