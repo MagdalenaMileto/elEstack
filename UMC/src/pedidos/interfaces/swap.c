@@ -39,7 +39,7 @@ char * swap_leer(int pid, int numero_pagina) {
 	void * data = malloc(tamanio_paquete);
 
 	memcpy(data, &pid, sizeof(int));
-	memcpy(data, &numero_pagina, sizeof(int));
+	memcpy(data + sizeof(int), &numero_pagina, sizeof(int));
 
 	enviar(socket_swap, SWAP_LEER, tamanio_paquete, data);
 
