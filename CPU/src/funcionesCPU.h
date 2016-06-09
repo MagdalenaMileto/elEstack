@@ -8,7 +8,6 @@
 #ifndef FUNCIONESCPU_H_
 #define FUNCIONESCPU_H_
 
-
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -47,6 +46,32 @@ typedef struct {
   int SIZE_PAGINA;
 }CONF_CPU;
 
+typedef struct {
+	 int QUANTUM;
+	 int QUANTUM_SLEEP;
+} t_datos_kernel;
+
+
+typedef struct {
+	t_puntero_instruccion start;
+	t_size offset;
+} t_instruccion;
+
+
+t_puntero_instruccion buscar_etiqueta(const t_nombre_etiqueta objetivo, const char *etiquetas, const t_size etiquetas_size);
+//hacer el diccionario de etiquetas
+//t_puntero_instruccion seria la estrucutra con la las instrucciones..
+
+typedef struct {
+	t_puntero_instruccion instruccion_inicio; //El numero de la primera instruccion (Begin)
+	t_size instrucciones_size; // Cantidad de instrucciones
+	t_intructions* instrucciones_serializado; // Instrucciones del programa
+	t_size etiquetas_size; // Tamaño del mapa serializado de etiquetas
+	char* etiquetas; // La serializacion de las etiquetas
+	int	cantidad_de_funciones;
+	int	cantidad_de_etiquetas;
+} t_data_programa;
+
 
 
 
@@ -55,7 +80,9 @@ void get_config_cpu (CONF_CPU *config_cpu);
 int conectarConUmc();
 int conectarConNucleo();
 t_paquete* recibirPCB(int nucleo);
-t_paquete* enviarInstruccionAMemoria(int umc, t_pcb* pcb);
+t_paquete* crearPaquete(void* data, int codigo, int size);
+t_paquete* enviarInstruccionAMemoria(int umc, int* indice, int32_t offset, uint32_t tamanio);
+void ejecutarInstruccion(t_pcb* pcb, int umc, int QUANTUM_SLEEP);
 
 
 #endif /* FUNCIONESCPU_H_ */

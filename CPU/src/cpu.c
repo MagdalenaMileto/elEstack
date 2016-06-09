@@ -10,7 +10,7 @@
 
 #define CONFIG_CPU "config_cpu"
 CONF_CPU *config_cpu;
-t_log* log;
+t_log* log;  //en COMUNES tendrian que estar las estructuras del log?
 
 
 AnSISOP_funciones primitivas = {
@@ -37,6 +37,9 @@ AnSISOP_kernel primitivas_kernel = {
 
 
 int main(int argc,char **argv) {
+
+	t_datos_kernel kernel_data;
+	kernel_data.QUANTUM_SLEEP=3;
 
 	int maxfd = 3;				// Indice de maximo FD
 
@@ -76,13 +79,13 @@ int main(int argc,char **argv) {
 			if(paquete_recibido->codigo_operacion==304){
 
 				pcb = desserializarPCB(paquete_recibido->data);
-				pcb->pc= pcb->pc +1;
+				pcb->pc ++;
 				log_info(log,"Recibi pcb %d... ejecturando\n",pcb->pid);
 
-				paquete_posicion_instruccion = enviarInstruccionAMemoria(umc, pcb);
+				//paquete_posicion_instruccion = enviarInstruccionAMemoria(umc, pcb);
 
-				FD_CLR(nucleo,&masterfds);
-				analizadorLinea("a = b + c",&primitivas,&primitivas_kernel);
+				//FD_CLR(nucleo,&masterfds);
+				//analizadorLinea("a = b + c",&primitivas,&primitivas_kernel);
 
 				//void ejecutarInstruccion(....quantium);  hacer esta funcion
 								/*al ejecutar: actuliza los valores del programa de umc
@@ -90,7 +93,10 @@ int main(int argc,char **argv) {
 												notifica al nucleo que concluyo el quantium
 								*/
 
-				free(pcb);
+				// hacer la funcion que carga los datos del kernel.....(se sacan del archivo de configuracion?)
+				ejecutarInstruccion(pcb, umc, kernel_data.QUANTUM_SLEEP);
+				//falta avisar al nucleo que termino el quantum
+				//liberar_pcb(pcb);   crear esta funcion
 				printf("CPU: Cierra\n");
 				return EXIT_SUCCESS;
 		}
@@ -128,6 +134,7 @@ void get_config_cpu (CONF_CPU *config_cpu){
 
 }
 
+
 int conectarConUmc(){
 
 		int umc = conectar_a(config_cpu->IP_UMC, config_cpu->PUERTO_UMC);
@@ -151,6 +158,7 @@ int conectarConUmc(){
 
 return umc;
 }
+
 
 int conectarConNucleo(){
 
@@ -177,6 +185,7 @@ int conectarConNucleo(){
 return nucleo;
 }
 
+
 t_paquete* recibirPCB(int nucleo){
 
 	t_paquete* pcb_recibido= recibir(nucleo);
@@ -185,15 +194,72 @@ t_paquete* recibirPCB(int nucleo){
 return pcb_recibido;
 }
 
-t_paquete* enviarInstruccionAMemoria(int umc, t_pcb* pcb){
 
-	enviar(umc, 404, pcb->sizeIndiceDeCodigo, pcb->indiceDeCodigo); //le envio el indice de codigo a umc
-	//destruir_pcb(pcb);  hacer esta funcion
+t_paquete* crearPaquete(void* data, int codigo, int size)
+{
+	t_paquete* paquete = malloc(sizeof(t_paquete));
 
-	t_paquete* paquete= recibir(umc);									//recibo un paquete con la direc en memoria de la prox sentencia a ejectuar
-																		//hay que organizarnos con los C_O de umc a cpu puede ser 403?
-	if(paquete->codigo_operacion != 403) log_debug(log,"Error de lectura, cierro la ejecución del programa");
+	paquete->codigo_operacion = codigo;
+	paquete->tamanio = size;
+	paquete->data = malloc(size);
+
+	memcpy(paquete->data, data, size);
 	return paquete;
+}
+
+
+t_paquete* enviarInstruccionAMemoria(int umc, int* indice, int32_t offset, uint32_t tamanio) {
+
+	t_direccion *info = malloc(sizeof(*info)); // esta bien esta medida?
+
+	info->pagina = indice;
+	info->offset = offset;
+	info->size = tamanio;
+
+	t_paquete* paquete = crearPaquete(info, 403, sizeof(*info));  ///403 o 404
+
+	enviar(umc, 404, paquete->tamanio, paquete->data);
+
 	liberar_paquete(paquete);
+
+	t_paquete* paquete_recibido = recibir(umc);
+
+	if (paquete_recibido->codigo_operacion != 403) { ////403 o 404
+		log_debug(log,"Hubo un error de lectura, cierro la ejecución del programa");
+	}
+	else return paquete_recibido;
+
+	liberar_paquete(paquete_recibido);
+	return NULL;
+}
+
+
+//creo que lo que mas dudoso esta es esta arte... revisar la forma de ejecusion..
+
+void ejecutarInstruccion(t_pcb* pcb, int umc, int QUANTUM_SLEEP) {  //el retardo lo saco de nucleo
+
+	uint32_t offset = pcb->pc * sizeof(t_instruccion); // asi se calcula el offset
+
+	t_paquete* infoPaquete = enviarInstruccionAMemoria(umc, pcb->indiceDeCodigo, offset, sizeof(t_instruccion));
+
+	t_instruccion* info= (t_instruccion*) (infoPaquete->data);///// analizar esta estructura
+	//buscando instruccion
+
+	t_paquete* instruccionPaquete = enviarInstruccionAMemoria(umc, pcb->indiceDeCodigo, info->start, info->offset);
+
+	char* laInstruccion = malloc(instruccionPaquete->tamanio + 1);
+	memcpy(laInstruccion,instruccionPaquete->data,instruccionPaquete->tamanio);
+	laInstruccion[instruccionPaquete->tamanio] = '\0';
+	// instruccion encontrada
+
+	pcb->pc ++;
+
+	analizadorLinea((char * const ) laInstruccion, &primitivas, &primitivas_kernel);
+	free(laInstruccion);
+
+	liberar_paquete(instruccionPaquete);
+	liberar_paquete(infoPaquete);
+
+	sleep(QUANTUM_SLEEP); //el programa espere durante un período de tiempo especificado en milisegundos
 }
 
