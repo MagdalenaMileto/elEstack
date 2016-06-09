@@ -45,6 +45,7 @@ int main(int argc,char **argv){
 	int sigusr1_desactivado =1;
 	log= log_create(ARCHIVOLOG, "CPU", 0, LOG_LEVEL_INFO);
 	log_info(log,"Iniciando CPU\n");
+	t_pcb * serializado;
 
 	levantar_configuraciones();
 
@@ -91,17 +92,17 @@ int main(int argc,char **argv){
 
 			if (programaAbortado){
 				log_info(log, "El programa aborto");
-					//transformar pcb en *paquete y enviar a nucleo
-					//enviar(nucleo, 306, sizeof(t_paquete*), ); //codigo de ope 306, pcb abortado
+					serializado = (t_pcb*)serializarPCB(pcb);
+					enviar(nucleo, 306, sizeof(t_paquete*), serializado); //codigo de ope 306, pcb abortado
 			}
 
 			if (programaFinalizado){
-				log_debug(log, "El programa finalizo");
+				log_debug(log, "El programa finalizo"); //ver esto, como sabe que finalizo?
 			}
 
 			if(quantum &&!programaFinalizado&&!programaBloqueado&&!programaAbortado){
-				//transformar pcb en *paquete y enviar a nucleo
-				//enviar(nucleo, 307, sizeof(t_paquete*), ); //codigo de ope 307, pcb salio por quantum
+				serializado = (t_pcb*)serializarPCB(pcb);
+				enviar(nucleo, 307, sizeof(t_paquete*), serializado); //codigo de ope 307, pcb salio por quantum
 			}
 		}
 
@@ -210,5 +211,12 @@ void levantar_configuraciones() {
 
 
 char* depurarSentencia(char* sentencia){
-	return sentencia; //Aca hay que sacarle el /n del final a la sentencia
+
+		int i = strlen(sentencia);
+		while (string_ends_with(sentencia, "\n")) {
+			i--;
+			sentencia = string_substring_until(sentencia, i);
+		}
+		return sentencia;
+
 }
