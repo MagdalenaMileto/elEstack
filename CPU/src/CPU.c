@@ -60,7 +60,7 @@ int main(int argc,char **argv){
 		int quantum = info_kernel->QUANTUM;
 		int tamanioPag = info_kernel->TAMPAG;
 
-		t_paquete* paquete_recibido = recibirPCB(nucleo);
+		t_paquete* paquete_recibido = recibir(nucleo);
 		t_pcb* pcb = desserializarPCB(paquete_recibido->data);
 		liberar_paquete(paquete_recibido);
 
@@ -92,8 +92,8 @@ int main(int argc,char **argv){
 
 			if (programaAbortado){
 				log_info(log, "El programa aborto");
-					serializado = (t_pcb*)serializarPCB(pcb);
-					enviar(nucleo, 306, sizeof(t_paquete*), serializado); //codigo de ope 306, pcb abortado
+				serializado = (t_pcb*)serializarPCB(pcb);
+				enviar(nucleo, 406, sizeof(t_paquete*), serializado); //codigo de ope 406, pcb abortado
 			}
 
 			if (programaFinalizado){
@@ -102,10 +102,10 @@ int main(int argc,char **argv){
 
 			if(quantum &&!programaFinalizado&&!programaBloqueado&&!programaAbortado){
 				serializado = (t_pcb*)serializarPCB(pcb);
-				enviar(nucleo, 307, sizeof(t_paquete*), serializado); //codigo de ope 307, pcb salio por quantum
+				enviar(nucleo, 407, sizeof(t_paquete*), serializado); //codigo de ope 407, pcb salio por quantum
 			}
 		}
-
+//falta destruir pcb en todos los lugares que sea necesario
 		close(nucleo);
 		close(umc);
 
@@ -155,12 +155,6 @@ int conectarConNucleo(){
 return nucleo;
 }
 
-
-t_paquete* recibirPCB(int nucleo){   //al recibir hace un malloc, tendriamos que liberarlo o no?
-	t_paquete* pcb_recibido= recibir(nucleo);
-	pcb_recibido=malloc(sizeof(t_pcb));
-return pcb_recibido;
-}
 
 
 t_direccion*  crearEstructuraParaUMC (t_pcb* pcb, t_datos_kernel* info_kernel){
