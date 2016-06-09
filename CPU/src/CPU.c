@@ -161,8 +161,8 @@ t_direccion*  crearEstructuraParaUMC (t_pcb* pcb, t_datos_kernel* info_kernel){
 
 	t_direccion* info;
 	info->pagina=pcb->indiceDeCodigo [(pcb->pc)*2]/ info_kernel->TAMPAG;
-	info->offset=pcb->indiceDeCodigo [((pcb->pc)*2)+1];
-	info->size=pcb->indiceDeCodigo [pcb->pc][1];
+	info->offset=pcb->indiceDeCodigo [((pcb->pc)*2)];
+	info->size=pcb->indiceDeCodigo [((pcb->pc)*2)+1];
 	return info;
 }
 
