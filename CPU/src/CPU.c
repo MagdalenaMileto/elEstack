@@ -37,7 +37,7 @@ AnSISOP_kernel primitivas_kernel = {
 
 int main(int argc,char **argv){
 
-	int sigusr1_desactivado =1;
+	int sigusr1_desactivado =1; //el encanrgado de cambiar esto es el nucleo, tengo que tener forma de recibir la senal..
 	log= log_create(ARCHIVOLOG, "CPU", 0, LOG_LEVEL_INFO);
 	log_info(log,"Iniciando CPU\n");
 	t_pcb * serializado;
@@ -68,17 +68,15 @@ int main(int argc,char **argv){
 		int programaFinalizado = 0;
 		int programaAbortado = 0;
 
-		while(quantum && !programaBloqueado && !programaFinalizado &&
-				!programaAbortado){
+		while(quantum && !programaBloqueado && !programaFinalizado && !programaAbortado){
 
 			t_direccion* datos_para_umc = crearEstructuraParaUMC (pcb, tamanioPag);
-
 			enviar(umc, 404, datos_para_umc->size, datos_para_umc);
 			t_paquete* instruccion=recibir(umc);
 			char* sentencia= instruccion->data;
-			analizadorLinea(depurarSentencia(strdup(sentencia)), &primitivas,
-					&primitivas_kernel);
+			analizadorLinea(depurarSentencia(strdup(sentencia)), &primitivas, &primitivas_kernel);
 			liberar_paquete(instruccion);
+			// y la alcutalizacion de los valores en la umc lo hacen la primitiva al analizarla linea
 
 			pcb->pc++;
 			quantum--;
@@ -86,33 +84,40 @@ int main(int argc,char **argv){
 
 			if (programaBloqueado){
 				log_info(log, "El programa salió por bloqueo");
+				enviar(nucleo, 340, sizeof(t_paquete*), serializado);
+				destruirPCB(pcb);
 					}
 
 			if (programaAbortado){
 				log_info(log, "El programa aborto");
 				serializado = (t_pcb*)serializarPCB(pcb);
-				enviar(nucleo, 406, sizeof(t_paquete*), serializado); //codigo de ope 406, pcb abortado
+				enviar(nucleo, 333, sizeof(t_paquete*), serializado); //codigo de op 333, pcb abortado
+				destruirPCB(pcb);
 			}
 
 			if (programaFinalizado){
-				log_debug(log, "El programa finalizo"); //ver esto, como sabe que finalizo?
+				log_debug(log, "El programa finalizo");
+				serializado = (t_pcb*)serializarPCB(pcb);
+				enviar(nucleo, 320, sizeof(int), programaFinalizado); //codigo de op 408, pcb finalizo
+				destruirPCB(pcb);
 			}
 
 			if(quantum &&!programaFinalizado&&!programaBloqueado&&!programaAbortado){
 				serializado = (t_pcb*)serializarPCB(pcb);
-				enviar(nucleo, 407, sizeof(t_paquete*), serializado); //codigo de ope 407, pcb salio por quantum
+				enviar(nucleo, 304, sizeof(t_paquete*), serializado); //codigo de op 407, pcb salio por quantum
+				destruirPCB(pcb);
 			}
 		}
 
 		liberar_paquete(datos_kernel);
-//falta destruir pcb en todos los lugares que sea necesario
+
 		close(nucleo);
 		close(umc);
 
 		return 0;
 	}
 
-
+return 0;
 
 }
 
@@ -156,7 +161,6 @@ return nucleo;
 }
 
 
-
 t_direccion*  crearEstructuraParaUMC (t_pcb* pcb, int tamPag){
 
 	t_direccion* info;
@@ -165,7 +169,6 @@ t_direccion*  crearEstructuraParaUMC (t_pcb* pcb, int tamPag){
 	info->size=pcb->indiceDeCodigo [((pcb->pc)*2)+1];
 	return info;
 }
-
 
 
 void levantar_configuraciones() {
