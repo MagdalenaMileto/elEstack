@@ -49,6 +49,20 @@ char * swap_leer(int pid, int numero_pagina) {
 
 }
 
-void swap_escribir(int pid, int numero_pagina) {
-//TODO
+void swap_escribir(t_entrada_tabla_de_paginas * entrada){
+
+	int tamanio = tamanio_marco + sizeof(int) * 2;
+
+	void * data = malloc(tamanio);
+
+	int marco = entrada->marco;
+
+	memcpy(data, &entrada->pid, sizeof(int));
+	memcpy(data + sizeof(int), &entrada->pagina, sizeof(int));
+	memcpy(data + sizeof(int) * 2, memoria + marco * tamanio_marco,tamanio_marco);
+
+	enviar(socket_swap, SWAP_ESCRIBIR,tamanio,data);
+
+	free(data);
+
 }
