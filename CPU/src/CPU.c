@@ -78,6 +78,7 @@ int main(int argc,char **argv){
 			char* sentencia= instruccion->data;
 			analizadorLinea(depurarSentencia(strdup(sentencia)), &primitivas,
 					&primitivas_kernel);
+			liberar_paquete(instruccion);
 
 			pcb->pc++;
 			quantum--;
@@ -192,22 +193,3 @@ char* depurarSentencia(char* sentencia){
 
 }
 
-t_paquete* serializarSolicitarBytes(t_direccion* datos_kernel){
-	int retorno= malloc(t_direccion);
-	int retornotemp=retorno;
-	memcpy(retornotemp, datos_kernel, size(t_direccion));
-
-	retornotemp += sizeof(t_direccion);
-
-	memcpy(retornotemp, datos_kernel->size, sizeof(int));
-	retornotemp += sizeof(int);
-
-	memcpy(retornotemp, datos_kernel->offset, sizeof(int));
-	retornotemp += sizeof(int);
-
-	memcpy(retornotemp, datos_kernel->pagina, sizeof(int));
-		retornotemp += sizeof(int);
-
-
-	return
-}
