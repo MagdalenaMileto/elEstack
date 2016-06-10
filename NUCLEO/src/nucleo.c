@@ -6,8 +6,8 @@
  */
 
 #include "nucleo.h"
-#define CONFIG_NUCLEO "config" //Cambiar esto para eclipse
-//#define CONFIG_NUCLEO "src/config"
+#define CONFIG_NUCLEO_OLD "config" //Cambiar esto para eclipse
+#define CONFIG_NUCLEO "src/config"
 
 /* VARIABLES GLOBALES */
 int * CONSTANTE;
@@ -35,7 +35,7 @@ sem_t sem_new;
 //Colas sem
 t_queue** colas_semaforos;
 
-pthread_mutex_t mutex_cola_new, mutex_cola_ready, mutex_variables;
+pthread_mutex_t mutex_cola_new, mutex_cola_ready, mutex_variables,total;
 
 int pidcounter = 0;
 
@@ -70,6 +70,7 @@ int main() {
 
 
 	//INTIFY
+
 	char buffer[1000];
 
 	// Al inicializar inotify este nos devuelve un descriptor de archivo
@@ -77,17 +78,8 @@ int main() {
 	if (file_descriptor < 0) {
 		perror("inotify_init");
 	}
-	// el "" es el dir?
-	printf("A\n");
-	int watch_descriptor = inotify_add_watch(file_descriptor, "/operativos/tp-2016-1c-El-algoritmo-del-ritmo/NUCLEO/src/", IN_MODIFY | IN_CREATE | IN_DELETE);
 
-	printf("A\n");
-	int length = read(file_descriptor, buffer, 1000);
-	if (length < 0) {
-		perror("read");
-	}
-printf("A\n");
-	int offset = 0;
+	int watch_descriptor = inotify_add_watch(file_descriptor, "src/", IN_MODIFY);
 
 
 	//Levantar archivo de configuracion
@@ -114,6 +106,9 @@ printf("A\n");
 
 	pthread_mutex_init(&mutex_cola_new, NULL);
 
+
+	pthread_mutex_init(&total, NULL);
+
 	pthread_t thPCP, thPLP, thCONEXIONES_CPU, thCONEXIONES_CONSOLA;
 
 	pthread_create(&thCONEXIONES_CONSOLA, NULL, hilo_HANDLER_CONEXIONES_CONSOLA, NULL);
@@ -128,6 +123,18 @@ printf("A\n");
 
 
 
+
+
+	while(1){
+
+		int length = read(file_descriptor, buffer, 1000);
+		if (length < 0) {
+			perror("read");
+		}
+
+		int offset = 0;
+
+
 	while (offset < length) {
 
 		// El buffer es de tipo array de char, o array de bytes. Esto es porque como los
@@ -139,30 +146,23 @@ printf("A\n");
 		if (event->len) {
 			// Dentro de "mask" tenemos el evento que ocurrio y sobre donde ocurrio
 			// sea un archivo o un directorio
-			if (event->mask & IN_CREATE) {
-				if (event->mask & IN_ISDIR) {
-					printf("The directory %s was created.\n", event->name);
-				} else {
-					printf("The file %s was created.\n", event->name);
-				}
-			} else if (event->mask & IN_DELETE) {
-				if (event->mask & IN_ISDIR) {
-					printf("The directory %s was deleted.\n", event->name);
-				} else {
-					printf("The file %s was deleted.\n", event->name);
-				}
-			} else if (event->mask & IN_MODIFY) {
-				if (event->mask & IN_ISDIR) {
-					printf("The directory %s was modified.\n", event->name);
-				} else {
-					printf("The file %s was modified.\n", event->name);
+		if (event->mask & IN_MODIFY) {
+				if (!(event->mask & IN_ISDIR)) {
+
+					//CAMBIAR ESTO PARA ENTREGA FINAL
+					//Deberia hacer un free de todo lo otro
+
+					if (strcmp(event->name, CONFIG_NUCLEO_OLD) == 0){
+						printf("NUCLEO: cambio el archivo config\n");
+						get_config_nucleo(config_nucleo);//Crea y setea el config del kernel
+					}
 				}
 			}
 		}
 		offset += sizeof (struct inotify_event) + event->len;
 	}
-	printf("PASE\n");
 
+	}
 	pthread_join(thCONEXIONES_CONSOLA, NULL);
 	pthread_join(thCONEXIONES_CPU, NULL);
 
@@ -338,13 +338,19 @@ void mandarCodigoAUmc(char* codigo, int size, t_proceso *proceso) {
 	metadata_destruir(metadata_program);
 
 
-	int*paqueteUMC; paqueteUMC=malloc(size+3*sizeof(int));
-	paqueteUMC[0]=proceso->pcb->pid;
-	paqueteUMC[1]=proceso->pcb->paginasDeCodigo+(int)ceil((double)config_nucleo->STACK_SIZE / (double)config_nucleo->TAMPAG);
-	paqueteUMC[3]=size;
+	char*paqueteUMC; paqueteUMC=malloc(size+3*sizeof(int));
+
+
+	int temp =proceso->pcb->paginasDeCodigo+(int)ceil((double)config_nucleo->STACK_SIZE / (double)config_nucleo->TAMPAG);
+
+	memcpy(paqueteUMC,&(proceso->pcb->pid), sizeof(int));
+	memcpy(paqueteUMC+sizeof(int), &temp, sizeof(int));
+	memcpy(paqueteUMC+2*sizeof(int), &size, sizeof(int));
 	memcpy(paqueteUMC+3*sizeof(int), codigo, size);
 
 	enviar(umc, 4,(size+3*sizeof(int)),paqueteUMC );
+
+	free(paqueteUMC);
 
 }
 
@@ -837,7 +843,9 @@ void *hilo_mock(void *arg) {
 
 	while (1) {
 		paquete_nuevo = recibir(clienteUmc);
+		printf("\x1b[31mUMCMOCK: recibi algo%d\n\x1b[0m", clienteUmc);
 		if (paquete_nuevo->codigo_operacion == 204) {
+
 		}
 
 	}
@@ -869,8 +877,10 @@ void *hilo_mock_cpu(void *arg) {
 
 	t_pcb *pcb;
 	int i = 0;
-
+	paquete_nuevo = recibir(cpu);
+	enviar(cpu, 301, sizeof(codigo), codigo);
 	while (1) {
+		sleep(1);
 		paquete_nuevo = recibir(cpu);
 
 		if (paquete_nuevo->codigo_operacion == 303) {
@@ -1030,7 +1040,13 @@ void *hilo_mock_cpu(void *arg) {
 void get_config_nucleo (CONF_NUCLEO *config_nucleo)
 {
 
+	//vER porque dispara doble. hacer frees en caso de inotifu
 
+	//Si le pongo el sleep funca, pregunar/
+
+	//Mutex son generales, uso uno solo?
+
+	pthread_mutex_lock(&total);sleep(1);
 
 	t_config *fnucleo = config_create(CONFIG_NUCLEO);
 
@@ -1100,8 +1116,19 @@ void get_config_nucleo (CONF_NUCLEO *config_nucleo)
 		colas_semaforos[i] = malloc(sizeof(t_queue*));
 		colas_semaforos[i] = queue_create();
 	}
+
+	pthread_mutex_unlock(&total);
 	return;
 }
+
+
+
+
+
+
+
+
+
 
 
 int *convertirConfigInt(char **ana1, char **ana2) {
