@@ -79,7 +79,7 @@ int main() {
 		perror("inotify_init");
 	}
 
-	int watch_descriptor = inotify_add_watch(file_descriptor, "src/", IN_MODIFY);
+	int watch_descriptor = inotify_add_watch(file_descriptor, "src/", IN_CLOSE_WRITE);
 
 
 	//Levantar archivo de configuracion
@@ -146,7 +146,7 @@ int main() {
 		if (event->len) {
 			// Dentro de "mask" tenemos el evento que ocurrio y sobre donde ocurrio
 			// sea un archivo o un directorio
-		if (event->mask & IN_MODIFY) {
+		if (event->mask & IN_CLOSE_WRITE) {
 				if (!(event->mask & IN_ISDIR)) {
 
 					//CAMBIAR ESTO PARA ENTREGA FINAL
@@ -1046,7 +1046,7 @@ void get_config_nucleo (CONF_NUCLEO *config_nucleo)
 
 	//Mutex son generales, uso uno solo?
 
-	pthread_mutex_lock(&total);sleep(1);
+	pthread_mutex_lock(&total);
 
 	t_config *fnucleo = config_create(CONFIG_NUCLEO);
 
