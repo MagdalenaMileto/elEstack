@@ -51,6 +51,9 @@ typedef struct {
   int SIZE_PAGINA;
 }CONF_CPU;
 
+int umc, nucleo;
+t_pcb* pcb;
+
 
 int conectarConUmc();
 int conectarConNucleo();

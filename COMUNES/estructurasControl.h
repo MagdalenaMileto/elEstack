@@ -23,6 +23,13 @@ typedef struct __attribute__((packed))t_direccion{
 	int size;
 }t_direccion;
 
+typedef struct __attribute__((packed))t_dirrecion_variable{
+	int pagina;
+	int offset;
+	int size=1;
+	char buffer;
+}t_direccion_variable;
+
 
 typedef struct __attribute__((packed))t_variable
 {
