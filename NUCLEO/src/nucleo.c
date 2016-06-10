@@ -5,17 +5,9 @@
  *      Author: nico
  */
 
-
-
 #include "nucleo.h"
-
-
-#define ERROR -1
-
-
-
-//#define CONFIG_NUCLEO "config" //Cambiar esto para eclipse
-#define CONFIG_NUCLEO "src/config"
+#define CONFIG_NUCLEO "config" //Cambiar esto para eclipse
+//#define CONFIG_NUCLEO "src/config"
 
 /* VARIABLES GLOBALES */
 int * CONSTANTE;
@@ -35,7 +27,6 @@ t_queue** colas_ios;
 
 timer_t** timers;
 
-
 //semaforos
 sem_t sem_ready;
 sem_t sem_cpu;
@@ -44,7 +35,7 @@ sem_t sem_new;
 //Colas sem
 t_queue** colas_semaforos;
 
-pthread_mutex_t mutex_cola_new,mutex_cola_ready,mutex_variables;
+pthread_mutex_t mutex_cola_new, mutex_cola_ready, mutex_variables;
 
 int pidcounter = 0;
 
@@ -52,7 +43,7 @@ int pidcounter = 0;
 // Listas que maneja el PCP
 t_queue* cola_CPU_libres;
 
-
+//Modificar eso, sacarlo
 struct arg_struct {
 	int socket;
 
@@ -73,28 +64,40 @@ char codigo[200] = "#!/usr/bin/ansisop\nbegin\nvariables i,b\ni=1\n:inicio_for\n
 
 /* FIN DE VARIABLES GLOBALES */
 
-
-
-
-
 int main() {
-
 	signal(SIGINT, intHandler);
-
 	printf("NUCLEO: INICIÓ\n");
+
+
+	//INTIFY
+	char buffer[1000];
+
+	// Al inicializar inotify este nos devuelve un descriptor de archivo
+	int file_descriptor = inotify_init();
+	if (file_descriptor < 0) {
+		perror("inotify_init");
+	}
+	// el "" es el dir?
+	printf("A\n");
+	int watch_descriptor = inotify_add_watch(file_descriptor, "/operativos/tp-2016-1c-El-algoritmo-del-ritmo/NUCLEO/src/", IN_MODIFY | IN_CREATE | IN_DELETE);
+
+	printf("A\n");
+	int length = read(file_descriptor, buffer, 1000);
+	if (length < 0) {
+		perror("read");
+	}
+printf("A\n");
+	int offset = 0;
+
 
 	//Levantar archivo de configuracion
 	config_nucleo = malloc(sizeof(CONF_NUCLEO));
 
 	get_config_nucleo(config_nucleo);//Crea y setea el config del kernel
-
-
-//MOCKS
-sem_init(&sem_cpu, 0, 0);
+	//MOCKS
+	sem_init(&sem_cpu, 0, 0);
 	sem_init(&sem_new, 0, 0);
 	sem_init(&sem_ready, 0, 0);
-
-
 	pthread_t mock;
 	pthread_create(&mock, NULL, hilo_mock, NULL);
 
@@ -109,36 +112,62 @@ sem_init(&sem_cpu, 0, 0);
 	cola_exit = queue_create();
 	cola_CPU_libres = queue_create();
 
-	
-
-
 	pthread_mutex_init(&mutex_cola_new, NULL);
-
-
 
 	pthread_t thPCP, thPLP, thCONEXIONES_CPU, thCONEXIONES_CONSOLA;
 
 	pthread_create(&thCONEXIONES_CONSOLA, NULL, hilo_HANDLER_CONEXIONES_CONSOLA, NULL);
 	pthread_create(&thCONEXIONES_CPU, NULL, hilo_HANDLER_CONEXIONES_CPU, NULL);
 
-
 	pthread_create(&thPCP, NULL, hilo_PCP, NULL);
 	pthread_create(&thPLP, NULL, hilo_PLP, NULL);
-
 
 	conectarUmc();
 
 
+
+
+
+	while (offset < length) {
+
+		// El buffer es de tipo array de char, o array de bytes. Esto es porque como los
+		// nombres pueden tener nombres mas cortos que 24 caracteres el tamaño va a ser menor
+		// a sizeof( struct inotify_event ) + 24.
+		struct inotify_event *event = (struct inotify_event *) &buffer[offset];
+
+		// El campo "len" nos indica la longitud del tamaño del nombre
+		if (event->len) {
+			// Dentro de "mask" tenemos el evento que ocurrio y sobre donde ocurrio
+			// sea un archivo o un directorio
+			if (event->mask & IN_CREATE) {
+				if (event->mask & IN_ISDIR) {
+					printf("The directory %s was created.\n", event->name);
+				} else {
+					printf("The file %s was created.\n", event->name);
+				}
+			} else if (event->mask & IN_DELETE) {
+				if (event->mask & IN_ISDIR) {
+					printf("The directory %s was deleted.\n", event->name);
+				} else {
+					printf("The file %s was deleted.\n", event->name);
+				}
+			} else if (event->mask & IN_MODIFY) {
+				if (event->mask & IN_ISDIR) {
+					printf("The directory %s was modified.\n", event->name);
+				} else {
+					printf("The file %s was modified.\n", event->name);
+				}
+			}
+		}
+		offset += sizeof (struct inotify_event) + event->len;
+	}
+	printf("PASE\n");
 
 	pthread_join(thCONEXIONES_CONSOLA, NULL);
 	pthread_join(thCONEXIONES_CPU, NULL);
 
 	pthread_join(thPCP, NULL);
 	pthread_join(thPLP, NULL);
-
-
-
-
 
 	//Terminamos
 }
@@ -183,19 +212,16 @@ void *hilo_PLP(void *arg) {
 
 	while (1) {
 
-			sem_wait(&sem_new); 
-			
-			proceso = queue_pop(cola_new);
-			printf("NUCLEO: Saco proceso  %d new, mando a ready\n", proceso->pcb->pid);
-			queue_push(cola_ready, proceso);
-			sem_post(&sem_ready);
-		
+		sem_wait(&sem_new);
+
+		proceso = queue_pop(cola_new);
+		printf("NUCLEO: Saco proceso  %d new, mando a ready\n", proceso->pcb->pid);
+		queue_push(cola_ready, proceso);
+		sem_post(&sem_ready);
+
 	}
 
 }
-
-
-
 
 void mandarAEjecutar(t_proceso *proceso, int sock) {
 	t_pcb *pcbSerializado;
@@ -208,41 +234,27 @@ void mandarAEjecutar(t_proceso *proceso, int sock) {
 
 }
 
-
-int handlerErrorCPU(int error, int sock) {
-	/*
-	t_proceso *proceso;
-	if (error == -1) {
-		if ((proceso = dameProceso(cola_exec, sock)) || (proceso = dameProceso(cola_ready, sock)) || (proceso = dameProceso(cola_block, sock)) || (proceso = dameProceso(cola_new, sock)) || (proceso = dameProceso(cola_exit, sock))) {
-			enviar_id(proceso->socket_CONSOLA, 108);
-			return -1;
-		}
-	}
-	return 0;*/
-}
-
-
 void *hilo_PCP(void *arg) {
 
 	t_proceso *proceso; int sock;
 	while (1) {
 
-			sem_wait(&sem_ready);  sem_wait(&sem_cpu); 
+		sem_wait(&sem_ready);  sem_wait(&sem_cpu);
 
 
 
-			sock = (int)queue_pop(cola_CPU_libres);
+		sock = (int)queue_pop(cola_CPU_libres);
 
-			proceso = queue_pop(cola_ready);
+		proceso = queue_pop(cola_ready);
 
-			printf("NUCLEO: Saco proceso %d ready, mando a exec\n", proceso->pcb->pid);
-
-
-			mandarAEjecutar(proceso, sock);
+		printf("NUCLEO: Saco proceso %d ready, mando a exec\n", proceso->pcb->pid);
 
 
+		mandarAEjecutar(proceso, sock);
 
-		
+
+
+
 
 
 
@@ -285,15 +297,15 @@ void mandarCodigoAUmc(char* codigo, int size, t_proceso *proceso) {
 	metadata_program = metadata_desde_literal(codigo);
 
 
-//Cuento cuantas paginas me va a llevar el codigo en la umc
-	proceso->pcb->paginasDeCodigo = ceil((double)size / (double)config_nucleo->SIZE_PAGINA);
+	//Cuento cuantas paginas me va a llevar el codigo en la umc
+	proceso->pcb->paginasDeCodigo = ceil((double)size / (double)config_nucleo->TAMPAG);
 
-//Tamaño del indice de etiquetas
+	//Tamaño del indice de etiquetas
 	proceso->pcb->sizeIndiceDeCodigo =  (metadata_program->instrucciones_size);
 
 	proceso->pcb->indiceDeCodigo = malloc(proceso->pcb->sizeIndiceDeCodigo * 2 * sizeof(int));
 
-//Creamos el indice de codigo
+	//Creamos el indice de codigo
 	for (i = 0; i < metadata_program->instrucciones_size; i++) {
 		//printf("Instruccion %.*s",metadata_program->instrucciones_serializado[i].offset,codigo+metadata_program->instrucciones_serializado[i].start);
 		proceso->pcb->indiceDeCodigo[i * 2] = metadata_program->instrucciones_serializado[i].start;
@@ -302,20 +314,19 @@ void mandarCodigoAUmc(char* codigo, int size, t_proceso *proceso) {
 
 
 
-//Hacerlo con memcopy
+	//Hacerlo con memcopy
 	proceso->pcb->sizeIndiceDeEtiquetas = metadata_program->etiquetas_size;
 	proceso->pcb->indiceDeEtiquetas = malloc(proceso->pcb->sizeIndiceDeEtiquetas * sizeof(char));
 	memcpy(proceso->pcb->indiceDeEtiquetas, metadata_program->etiquetas, proceso->pcb->sizeIndiceDeEtiquetas * sizeof(char));
 
 
 
-//Ver esto
+	//Ver esto
 	proceso->pcb->contextoActual = malloc(1 * sizeof(proceso->pcb->contextoActual));
 	t_contexto *contextocero;
 	contextocero = malloc(sizeof(t_contexto));
 
 	proceso->pcb->contextoActual[0] = contextocero;
-
 	proceso->pcb->contextoActual[0]->sizeVars = 0;
 	proceso->pcb->contextoActual[0]->sizeArgs = 0;
 	proceso->pcb->contextoActual[0]->pos = 0;
@@ -326,6 +337,14 @@ void mandarCodigoAUmc(char* codigo, int size, t_proceso *proceso) {
 	proceso->pcb->pc = 0;
 	metadata_destruir(metadata_program);
 
+
+	int*paqueteUMC; paqueteUMC=malloc(size+3*sizeof(int));
+	paqueteUMC[0]=proceso->pcb->pid;
+	paqueteUMC[1]=proceso->pcb->paginasDeCodigo+(int)ceil((double)config_nucleo->STACK_SIZE / (double)config_nucleo->TAMPAG);
+	paqueteUMC[3]=size;
+	memcpy(paqueteUMC+3*sizeof(int), codigo, size);
+
+	enviar(umc, 4,(size+3*sizeof(int)),paqueteUMC );
 
 }
 
@@ -401,7 +420,7 @@ void liberaSemaforo(char *semaforo, int semaforoSize) {
 			if (proceso = queue_pop(colas_semaforos[i])) {
 				config_nucleo->VALOR_SEM[i]--;
 				queue_push(cola_ready, proceso);
-				sem_post(&sem_ready); 
+				sem_post(&sem_ready);
 			}
 			return;
 		}
@@ -412,7 +431,6 @@ void liberaSemaforo(char *semaforo, int semaforoSize) {
 	exit(0);
 
 }
-
 
 void  bloqueoSemaforoManager(t_proceso *proceso, char *semaforo, int semSize) {
 	int i;
@@ -446,32 +464,18 @@ void bloqueoIoManager(t_proceso *proceso, char *ioString, int sizeString, int un
 
 		if (strcmp((char*)config_nucleo->IO_IDS[i], ioString) == 0) {
 
-
-
 			//Tenemos match
 			//pusheamos, si no tenemos ninguno disparamos.
 			proceso->unidadesBloqueado = unidadesBloqueado;
-
-
-
 			if (queue_size(colas_ios[i]) == 0) {
 				queue_push(colas_ios[i], proceso);
-
 				makeTimer(timers[i], config_nucleo->VALOR_IO[i] * unidadesBloqueado, 0); //2ms
-
-
-
-
-
-
 				return;
 			} else {
 
 			}
 			queue_push(colas_ios[i], proceso);
 			return;
-
-
 		}
 
 	}
@@ -481,10 +485,6 @@ void bloqueoIoManager(t_proceso *proceso, char *ioString, int sizeString, int un
 	exit(0);
 
 }
-
-
-
-
 
 
 
@@ -537,7 +537,7 @@ void analizarIO(int sig, siginfo_t *si, void *uc) {
 	proceso = queue_pop(colas_ios[io]);
 	printf("\x1b[32mNUCLEO: Saco proceso %d de Cola IO %d mando READY\n\x1b[0m", proceso->pcb->pid, io);
 	queue_push(cola_ready, proceso);
-	sem_post(&sem_ready); 
+	sem_post(&sem_ready);
 
 	if (queue_size(colas_ios[io]) != 0) {
 
@@ -573,6 +573,8 @@ void *hilo_CONEXION_CONSOLA(void *arg) {
 			// return;
 		}
 		*/
+
+
 	printf("NUCLEO:Handshake valido consola, creando proceso %d\n", args->socket);
 
 	proceso = crearPrograma(args->socket);
@@ -645,10 +647,30 @@ void *hilo_HANDLER_CONEXIONES_CONSOLA(void *arg) {
 void *hilo_CONEXION_CPU(void *arg) {
 
 	struct arg_struct *args = (struct arg_struct *)arg;
-	t_proceso* proceso;
+	t_proceso* proceso;t_paquete * elPaquete;
+
+	//Handshake
+	t_datos_kernel datos_kernel;
+
+	datos_kernel.QUANTUM = config_nucleo->QUANTUM;
+	datos_kernel.QUANTUM_SLEEP = config_nucleo->QUANTUM_SLEEP;
+	datos_kernel.TAMPAG = config_nucleo->TAMPAG;
+
+
+	//O que no me envie nada? timeouts?
+	enviar(args->socket, 301, sizeof(t_datos_kernel), &datos_kernel);
+
+	elPaquete = recibir(args->socket);
+
+	if(!elPaquete->codigo_operacion==302){
+		printf("Error en handshake CPU\n");
+		exit(0);
+	}
+
+
 	queue_push(cola_CPU_libres, (void*)args->socket);
 	sem_post(&sem_cpu);
-	t_paquete * elPaquete;
+	
 	int b = 0;
 	while (1) {
 
@@ -669,9 +691,9 @@ void *hilo_CONEXION_CPU(void *arg) {
 
 			proceso->pcb = temp;
 			queue_push(cola_ready, proceso);
-			sem_post(&sem_ready); 
+			sem_post(&sem_ready);
 			queue_push(cola_CPU_libres, (void *)args->socket);
-			sem_post(&sem_cpu); 
+			sem_post(&sem_cpu);
 
 			break;
 
@@ -680,7 +702,7 @@ void *hilo_CONEXION_CPU(void *arg) {
 			printf("NUCLEO: Recibi proceso %d por fin de ejecucion, encolando en cola exit\n", proceso->pcb->pid);
 			queue_push(cola_exit, proceso);
 			queue_push(cola_CPU_libres, (void *)args->socket);
-			sem_post(&sem_cpu); 
+			sem_post(&sem_cpu);
 			break;
 
 		case 340:
@@ -702,7 +724,7 @@ void *hilo_CONEXION_CPU(void *arg) {
 
 			//Hacer los free aca
 			queue_push(cola_CPU_libres, (void *)args->socket);
-			sem_post(&sem_cpu); 
+			sem_post(&sem_cpu);
 			break;
 
 		case 341: //Pide semaforo
@@ -743,6 +765,7 @@ void *hilo_CONEXION_CPU(void *arg) {
 			queue_push(cola_exec, proceso);
 			enviar(proceso->socket_CONSOLA, 161, elPaquete->tamanio, elPaquete->data);
 		}
+		//AGREGAR RECIBO PCB POR FIN DE PROGAMA
 
 
 
@@ -1038,7 +1061,7 @@ void get_config_nucleo (CONF_NUCLEO *config_nucleo)
 
 
 
-	config_nucleo->SIZE_PAGINA = config_get_int_value(fnucleo, "SIZE_PAGINA");
+	config_nucleo->TAMPAG = config_get_int_value(fnucleo, "SIZE_PAGINA");
 	config_nucleo->IP_UMC = config_get_string_value(fnucleo, "IP_UMC");
 	config_nucleo->PUERTO_UMC = config_get_string_value(fnucleo, "PUERTO_UMC");
 	//config_destroy(fnucleo);//Ya no lo necesito
