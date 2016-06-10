@@ -6,8 +6,8 @@
  */
 
 #include "nucleo.h"
-#define CONFIG_NUCLEO_OLD "config" //Cambiar esto para eclipse
-#define CONFIG_NUCLEO "src/config"
+#define CONFIG_NUCLEO "config" //Cambiar esto para eclipse
+#define CONFIG_NUCLEO_OLD "src/config"
 
 /* VARIABLES GLOBALES */
 int * CONSTANTE;
@@ -68,34 +68,20 @@ int main() {
 	signal(SIGINT, intHandler);
 	printf("NUCLEO: INICIÓ\n");
 
-
-	//INTIFY
-
-	char buffer[1000];
-
-	// Al inicializar inotify este nos devuelve un descriptor de archivo
-	int file_descriptor = inotify_init();
-	if (file_descriptor < 0) {
-		perror("inotify_init");
-	}
-
-	int watch_descriptor = inotify_add_watch(file_descriptor, "src/", IN_CLOSE_WRITE);
-
-
 	//Levantar archivo de configuracion
 	config_nucleo = malloc(sizeof(CONF_NUCLEO));
-
 	get_config_nucleo(config_nucleo);//Crea y setea el config del kernel
-	//MOCKS
+
+	//MOCK SACAR UNA VEZ INTEGRADO
+	pthread_t mock;
+	pthread_create(&mock, NULL, hilo_mock, NULL);
+	sleep(3); 
+
+	//Inicializaciones 
+
 	sem_init(&sem_cpu, 0, 0);
 	sem_init(&sem_new, 0, 0);
 	sem_init(&sem_ready, 0, 0);
-	pthread_t mock;
-	pthread_create(&mock, NULL, hilo_mock, NULL);
-
-	sleep(3);
-
-	//Inicializaciones -> lo podriamos meter en una funcion externa
 
 	cola_new = queue_create();
 	cola_exec = queue_create();
@@ -105,64 +91,47 @@ int main() {
 	cola_CPU_libres = queue_create();
 
 	pthread_mutex_init(&mutex_cola_new, NULL);
-
-
 	pthread_mutex_init(&total, NULL);
 
 	pthread_t thPCP, thPLP, thCONEXIONES_CPU, thCONEXIONES_CONSOLA;
-
 	pthread_create(&thCONEXIONES_CONSOLA, NULL, hilo_HANDLER_CONEXIONES_CONSOLA, NULL);
 	pthread_create(&thCONEXIONES_CPU, NULL, hilo_HANDLER_CONEXIONES_CPU, NULL);
-
 	pthread_create(&thPCP, NULL, hilo_PCP, NULL);
 	pthread_create(&thPLP, NULL, hilo_PLP, NULL);
 
 	conectarUmc();
 
-
-
-
-
-
-
+	//INOTIFY STUFF
+	int file_descriptor = inotify_init();
+	if (file_descriptor < 0) perror("inotify_init");
+	int watch_descriptor = inotify_add_watch(file_descriptor, "src/", IN_CLOSE_WRITE);
+	char buffer[1000];
 	while(1){
-
 		int length = read(file_descriptor, buffer, 1000);
 		if (length < 0) {
 			perror("read");
 		}
-
 		int offset = 0;
-
-
-	while (offset < length) {
-
-		// El buffer es de tipo array de char, o array de bytes. Esto es porque como los
-		// nombres pueden tener nombres mas cortos que 24 caracteres el tamaño va a ser menor
-		// a sizeof( struct inotify_event ) + 24.
-		struct inotify_event *event = (struct inotify_event *) &buffer[offset];
-
-		// El campo "len" nos indica la longitud del tamaño del nombre
-		if (event->len) {
-			// Dentro de "mask" tenemos el evento que ocurrio y sobre donde ocurrio
-			// sea un archivo o un directorio
-		if (event->mask & IN_CLOSE_WRITE) {
-				if (!(event->mask & IN_ISDIR)) {
+		while (offset < length) {
+			struct inotify_event *event = (struct inotify_event *) &buffer[offset];
+			if (event->len) {
+				if (event->mask & IN_CLOSE_WRITE) {
+					if (!(event->mask & IN_ISDIR)) {
 
 					//CAMBIAR ESTO PARA ENTREGA FINAL
 					//Deberia hacer un free de todo lo otro
 
-					if (strcmp(event->name, CONFIG_NUCLEO_OLD) == 0){
-						printf("NUCLEO: cambio el archivo config\n");
-						get_config_nucleo(config_nucleo);//Crea y setea el config del kernel
+						if (strcmp(event->name, CONFIG_NUCLEO_OLD) == 0){
+							printf("NUCLEO: cambio el archivo config\n");
+							get_config_nucleo(config_nucleo);//Crea y setea el config del kernel
+						}
 					}
 				}
 			}
-		}
 		offset += sizeof (struct inotify_event) + event->len;
+		}
 	}
-
-	}
+	//No haria falta porque bloquea por el while
 	pthread_join(thCONEXIONES_CONSOLA, NULL);
 	pthread_join(thCONEXIONES_CPU, NULL);
 
@@ -175,100 +144,60 @@ int main() {
 
 
 void conectarUmc(void) {
-
-	//No me pude conectar?
 	umc = conectar_a(config_nucleo->IP_UMC, config_nucleo->PUERTO_UMC);
-
-
-	//Handshake
-
-
-
+	//Tengo que hacer handshake?
 }
 
+
 t_proceso* dameProceso(t_queue *cola, int sock ) {
-	int a = 0, t;
-	t_proceso *w;
-
+	int a = 0, t;t_proceso *w;
 	while (w = (t_proceso*)list_get(cola->elements, a)) {
-
 		if (w->socket_CPU == sock) return (t_proceso*)list_remove(cola->elements, a);
 		a++;
 	}
 	printf("NO HAY PROCESO\n"); exit(0);
-
 	return NULL;
 }
 
 
 
-
-
 void *hilo_PLP(void *arg) {
 	t_proceso *proceso;
-
-//Hay un proceso en new mando a ready
-//hacerlo con semafoto para que bloquee
-
 	while (1) {
-
 		sem_wait(&sem_new);
-
+		//TODO: poner mutex 
 		proceso = queue_pop(cola_new);
 		printf("NUCLEO: Saco proceso  %d new, mando a ready\n", proceso->pcb->pid);
 		queue_push(cola_ready, proceso);
 		sem_post(&sem_ready);
-
 	}
-
 }
 
 void mandarAEjecutar(t_proceso *proceso, int sock) {
 	t_pcb *pcbSerializado;
 	pcbSerializado = (t_pcb*)serializarPCB(proceso->pcb);
 	proceso->socket_CPU = sock;
+	//TODO:mutex
 	queue_push(cola_exec, proceso);
 	enviar(sock, 303, pcbSerializado->sizeTotal, (char*)pcbSerializado);
 	free(pcbSerializado);
-
-
 }
 
 void *hilo_PCP(void *arg) {
-
 	t_proceso *proceso; int sock;
+
 	while (1) {
-
-		sem_wait(&sem_ready);  sem_wait(&sem_cpu);
-
-
-
+		sem_wait(&sem_ready); sem_wait(&sem_cpu);
+		//TODO:mocks
 		sock = (int)queue_pop(cola_CPU_libres);
-
 		proceso = queue_pop(cola_ready);
 
 		printf("NUCLEO: Saco proceso %d ready, mando a exec\n", proceso->pcb->pid);
-
-
 		mandarAEjecutar(proceso, sock);
-
-
-
-
-
-
-
-		//Do something yoooo
-
-		usleep(1000);
 	}
-
 }
 
-
 t_proceso* crearPrograma(int sock) {
-
-
 	t_proceso* procesoNuevo;
 	t_pcb *pcb;
 	pcb = malloc(sizeof(t_pcb));
@@ -278,31 +207,18 @@ t_proceso* crearPrograma(int sock) {
 	procesoNuevo->socket_CONSOLA = sock;
 	pidcounter++;
 	return procesoNuevo;
-
 }
 
-
 void mandarCodigoAUmc(char* codigo, int size, t_proceso *proceso) {
-
-
-//borrar hay cosas de mas aca
-
 	int cuantasPaginasCodigo, estado, i;
 	t_header header;
-
 	int *indiceCodigo;
 	int tamanoIndiceCodigo;
-
 	t_medatada_program* metadata_program;
 	metadata_program = metadata_desde_literal(codigo);
 
-
-	//Cuento cuantas paginas me va a llevar el codigo en la umc
 	proceso->pcb->paginasDeCodigo = ceil((double)size / (double)config_nucleo->TAMPAG);
-
-	//Tamaño del indice de etiquetas
 	proceso->pcb->sizeIndiceDeCodigo =  (metadata_program->instrucciones_size);
-
 	proceso->pcb->indiceDeCodigo = malloc(proceso->pcb->sizeIndiceDeCodigo * 2 * sizeof(int));
 
 	//Creamos el indice de codigo
@@ -311,17 +227,10 @@ void mandarCodigoAUmc(char* codigo, int size, t_proceso *proceso) {
 		proceso->pcb->indiceDeCodigo[i * 2] = metadata_program->instrucciones_serializado[i].start;
 		proceso->pcb->indiceDeCodigo[i * 2 + 1] = metadata_program->instrucciones_serializado[i].offset;
 	}
-
-
-
-	//Hacerlo con memcopy
 	proceso->pcb->sizeIndiceDeEtiquetas = metadata_program->etiquetas_size;
 	proceso->pcb->indiceDeEtiquetas = malloc(proceso->pcb->sizeIndiceDeEtiquetas * sizeof(char));
 	memcpy(proceso->pcb->indiceDeEtiquetas, metadata_program->etiquetas, proceso->pcb->sizeIndiceDeEtiquetas * sizeof(char));
 
-
-
-	//Ver esto
 	proceso->pcb->contextoActual = malloc(1 * sizeof(proceso->pcb->contextoActual));
 	t_contexto *contextocero;
 	contextocero = malloc(sizeof(t_contexto));
@@ -330,18 +239,16 @@ void mandarCodigoAUmc(char* codigo, int size, t_proceso *proceso) {
 	proceso->pcb->contextoActual[0]->sizeVars = 0;
 	proceso->pcb->contextoActual[0]->sizeArgs = 0;
 	proceso->pcb->contextoActual[0]->pos = 0;
-
-	//contextocero->sizeVars=0;
-
 	proceso->pcb->sizeContextoActual = 1;
 	proceso->pcb->pc = 0;
+	proceso->pcb->paginasDeMemoria=(int)ceil((double)config_nucleo->STACK_SIZE / (double)config_nucleo->TAMPAG);
+	//TODO: REVISAR QUE HACA FREE DE METADATA Y TODO QUEDDE ASIGNADO
 	metadata_destruir(metadata_program);
 
-
 	char*paqueteUMC; paqueteUMC=malloc(size+3*sizeof(int));
+	int temp =proceso->pcb->paginasDeCodigo+proceso->pcb->paginasDeMemoria;
 
 
-	int temp =proceso->pcb->paginasDeCodigo+(int)ceil((double)config_nucleo->STACK_SIZE / (double)config_nucleo->TAMPAG);
 
 	memcpy(paqueteUMC,&(proceso->pcb->pid), sizeof(int));
 	memcpy(paqueteUMC+sizeof(int), &temp, sizeof(int));
@@ -351,7 +258,6 @@ void mandarCodigoAUmc(char* codigo, int size, t_proceso *proceso) {
 	enviar(umc, 4,(size+3*sizeof(int)),paqueteUMC );
 
 	free(paqueteUMC);
-
 }
 
 int *pideSemaforo(char *semaforo, int semaforoSize) {
@@ -843,7 +749,7 @@ void *hilo_mock(void *arg) {
 
 	while (1) {
 		paquete_nuevo = recibir(clienteUmc);
-		printf("\x1b[31mUMCMOCK: recibi algo%d\n\x1b[0m", clienteUmc);
+		printf("\x1b[31mUMCMOCK: recibi algo%d\n\x1b[0m\n", clienteUmc);
 		if (paquete_nuevo->codigo_operacion == 204) {
 
 		}
