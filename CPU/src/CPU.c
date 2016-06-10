@@ -48,12 +48,14 @@ int main(int argc,char **argv){
 
 	int nucleo = conectarConNucleo();
 	t_paquete* datos_kernel=recibir(nucleo);  //una vez que nucleo se conecta con cpu debe mandar t_datos_kernel..
-	t_datos_kernel* info_kernel = desserializarDatosKernel(datos_kernel->data);
 
 	while(sigusr1_desactivado){
 
-		int quantum = info_kernel->QUANTUM;
-		int tamanioPag = info_kernel->TAMPAG;
+		int quantum = ((t_datos_kernel*)(datos_kernel->data))->QUANTUM;
+		int tamanioPag = ((t_datos_kernel*)(datos_kernel->data))->TAMPAG; /// liberar_paquete..
+		int quantum_sleep = ((t_datos_kernel*)(datos_kernel->data))->QUANTUM_SLEEP;
+
+
 
 		t_paquete* paquete_recibido = recibir(nucleo);
 		t_pcb* pcb = desserializarPCB(paquete_recibido->data);
@@ -69,7 +71,7 @@ int main(int argc,char **argv){
 		while(quantum && !programaBloqueado && !programaFinalizado &&
 				!programaAbortado){
 
-			t_direccion* datos_para_umc = crearEstructuraParaUMC (pcb, info_kernel);
+			t_direccion* datos_para_umc = crearEstructuraParaUMC (pcb, tamanioPag);
 
 			enviar(umc, 404, datos_para_umc->size, datos_para_umc);
 			t_paquete* instruccion=recibir(umc);
@@ -79,7 +81,7 @@ int main(int argc,char **argv){
 
 			pcb->pc++;
 			quantum--;
-			usleep(info_kernel->QUANTUM_SLEEP);
+			usleep(quantum_sleep);
 
 			if (programaBloqueado){
 				log_info(log, "El programa salió por bloqueo");
@@ -100,6 +102,8 @@ int main(int argc,char **argv){
 				enviar(nucleo, 407, sizeof(t_paquete*), serializado); //codigo de ope 407, pcb salio por quantum
 			}
 		}
+
+		liberar_paquete(datos_kernel);
 //falta destruir pcb en todos los lugares que sea necesario
 		close(nucleo);
 		close(umc);
@@ -152,34 +156,12 @@ return nucleo;
 
 
 
-t_direccion*  crearEstructuraParaUMC (t_pcb* pcb, t_datos_kernel* info_kernel){
+t_direccion*  crearEstructuraParaUMC (t_pcb* pcb, int tamPag){
 
 	t_direccion* info;
-	info->pagina=pcb->indiceDeCodigo [(pcb->pc)*2]/ info_kernel->TAMPAG;
+	info->pagina=pcb->indiceDeCodigo [(pcb->pc)*2]/ tamPag;
 	info->offset=pcb->indiceDeCodigo [((pcb->pc)*2)];
 	info->size=pcb->indiceDeCodigo [((pcb->pc)*2)+1];
-	return info;
-}
-
-t_datos_kernel* desserializarDatosKernel(char* paquete_kernel){
-
-	t_datos_kernel* info = malloc(sizeof(t_datos_kernel));
-	memcpy(info, paquete_kernel, sizeof(t_datos_kernel));
-	paquete_kernel += sizeof(t_datos_kernel);
-
-	info->QUANTUM = malloc(sizeof(int));
-	memcpy(info->QUANTUM, paquete_kernel, sizeof(int));
-	paquete_kernel += sizeof(int);
-
-	info->QUANTUM_SLEEP = malloc(sizeof(int));
-	memcpy(info->QUANTUM_SLEEP, paquete_kernel, sizeof(int));
-	paquete_kernel += sizeof(int);
-
-
-	info->TAMPAG = malloc(sizeof(int));
-	memcpy(info->TAMPAG, paquete_kernel, sizeof(int));
-	paquete_kernel += sizeof(int);
-
 	return info;
 }
 
@@ -208,4 +190,24 @@ char* depurarSentencia(char* sentencia){
 		}
 		return sentencia;
 
+}
+
+t_paquete* serializarSolicitarBytes(t_direccion* datos_kernel){
+	int retorno= malloc(t_direccion);
+	int retornotemp=retorno;
+	memcpy(retornotemp, datos_kernel, size(t_direccion));
+
+	retornotemp += sizeof(t_direccion);
+
+	memcpy(retornotemp, datos_kernel->size, sizeof(int));
+	retornotemp += sizeof(int);
+
+	memcpy(retornotemp, datos_kernel->offset, sizeof(int));
+	retornotemp += sizeof(int);
+
+	memcpy(retornotemp, datos_kernel->pagina, sizeof(int));
+		retornotemp += sizeof(int);
+
+
+	return
 }
