@@ -111,7 +111,7 @@ void algoritmo_remplazo(t_entrada_tabla_de_paginas * entrada_sin_marco, int pid)
 
 	if (victima->modificado) {
 
-		swap_escribir(victima->pid, victima->pagina);
+		swap_escribir(victima);
 		victima->modificado = false;
 	}
 

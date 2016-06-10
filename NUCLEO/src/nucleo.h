@@ -20,7 +20,8 @@
 
 #include <semaphore.h>
 
-//#include <event2/event.h>
+//#include <event.h>
+ #include <linux/inotify.h>
 
 #include <event.h>
 #include <sys/time.h>
@@ -65,7 +66,7 @@ typedef struct {
 //Mias
   char* IP_UMC;
   char* PUERTO_UMC;
-  int SIZE_PAGINA;
+  int TAMPAG;
 
 
   int* VALOR_SHARED_VARS;
@@ -79,7 +80,12 @@ typedef struct {
 } CONF_NUCLEO;
 
 
-
+typedef struct {
+    int QUANTUM;
+   int QUANTUM_SLEEP;
+  int TAMPAG;
+ } t_datos_kernel;
+ 
 
 
 
