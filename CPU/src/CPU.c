@@ -34,17 +34,13 @@ AnSISOP_kernel primitivas_kernel = {
 		.AnSISOP_signal					=signal,
 };
 
-typedef struct {
-	 int QUANTUM;
-	 int QUANTUM_SLEEP;
-	 int TAMPAG;
-} t_datos_kernel;
 
 int main(int argc,char **argv){
 
-	int sigusr1_desactivado =1;
+	int sigusr1_desactivado =1; //el encanrgado de cambiar esto es el nucleo, tengo que tener forma de recibir la senal..
 	log= log_create(ARCHIVOLOG, "CPU", 0, LOG_LEVEL_INFO);
 	log_info(log,"Iniciando CPU\n");
+	t_pcb * serializado;
 
 	levantar_configuraciones();
 
@@ -52,14 +48,16 @@ int main(int argc,char **argv){
 
 	int nucleo = conectarConNucleo();
 	t_paquete* datos_kernel=recibir(nucleo);  //una vez que nucleo se conecta con cpu debe mandar t_datos_kernel..
-	t_datos_kernel* info_kernel = desserializarDatosKernel(datos_kernel->data);
 
 	while(sigusr1_desactivado){
 
-		int quantum = info_kernel->QUANTUM;
-		int tamanioPag = info_kernel->TAMPAG;
+		int quantum = ((t_datos_kernel*)(datos_kernel->data))->QUANTUM;
+		int tamanioPag = ((t_datos_kernel*)(datos_kernel->data))->TAMPAG; /// liberar_paquete..
+		int quantum_sleep = ((t_datos_kernel*)(datos_kernel->data))->QUANTUM_SLEEP;
 
-		t_paquete* paquete_recibido = recibirPCB(nucleo);
+
+
+		t_paquete* paquete_recibido = recibir(nucleo);
 		t_pcb* pcb = desserializarPCB(paquete_recibido->data);
 		liberar_paquete(paquete_recibido);
 
@@ -70,40 +68,48 @@ int main(int argc,char **argv){
 		int programaFinalizado = 0;
 		int programaAbortado = 0;
 
-		while(quantum && !programaBloqueado && !programaFinalizado &&
-				!programaAbortado){
+		while(quantum && !programaBloqueado && !programaFinalizado && !programaAbortado){
 
-			t_direccion* datos_para_umc = crearEstructuraParaUMC (pcb, info_kernel);
-
+			t_direccion* datos_para_umc = crearEstructuraParaUMC (pcb, tamanioPag);
 			enviar(umc, 404, datos_para_umc->size, datos_para_umc);
 			t_paquete* instruccion=recibir(umc);
 			char* sentencia= instruccion->data;
-			analizadorLinea(depurarSentencia(strdup(sentencia)), &primitivas,
-					&primitivas_kernel);
+			analizadorLinea(depurarSentencia(strdup(sentencia)), &primitivas, &primitivas_kernel);
+			liberar_paquete(instruccion);
+			// y la alcutalizacion de los valores en la umc lo hacen la primitiva al analizarla linea
 
 			pcb->pc++;
 			quantum--;
-			usleep(info_kernel->QUANTUM_SLEEP);
+			usleep(quantum_sleep);
 
 			if (programaBloqueado){
 				log_info(log, "El programa salió por bloqueo");
+				enviar(nucleo, 340, sizeof(t_paquete*), serializado);
+				destruirPCB(pcb);
 					}
 
 			if (programaAbortado){
 				log_info(log, "El programa aborto");
-					//transformar pcb en *paquete y enviar a nucleo
-					//enviar(nucleo, 306, sizeof(t_paquete*), ); //codigo de ope 306, pcb abortado
+				serializado = (t_pcb*)serializarPCB(pcb);
+				enviar(nucleo, 333, sizeof(t_paquete*), serializado); //codigo de op 333, pcb abortado
+				destruirPCB(pcb);
 			}
 
 			if (programaFinalizado){
 				log_debug(log, "El programa finalizo");
+				serializado = (t_pcb*)serializarPCB(pcb);
+				enviar(nucleo, 320, sizeof(int), programaFinalizado); //codigo de op 408, pcb finalizo
+				destruirPCB(pcb);
 			}
 
 			if(quantum &&!programaFinalizado&&!programaBloqueado&&!programaAbortado){
-				//transformar pcb en *paquete y enviar a nucleo
-				//enviar(nucleo, 307, sizeof(t_paquete*), ); //codigo de ope 307, pcb salio por quantum
+				serializado = (t_pcb*)serializarPCB(pcb);
+				enviar(nucleo, 304, sizeof(t_paquete*), serializado); //codigo de op 407, pcb salio por quantum
+				destruirPCB(pcb);
 			}
 		}
+
+		liberar_paquete(datos_kernel);
 
 		close(nucleo);
 		close(umc);
@@ -111,7 +117,7 @@ int main(int argc,char **argv){
 		return 0;
 	}
 
-
+return 0;
 
 }
 
@@ -155,44 +161,14 @@ return nucleo;
 }
 
 
-t_paquete* recibirPCB(int nucleo){   //al recibir hace un malloc, tendriamos que liberarlo o no?
-	t_paquete* pcb_recibido= recibir(nucleo);
-	pcb_recibido=malloc(sizeof(t_pcb));
-return pcb_recibido;
-}
-
-
-t_direccion*  crearEstructuraParaUMC (t_pcb* pcb, t_datos_kernel* info_kernel){
+t_direccion*  crearEstructuraParaUMC (t_pcb* pcb, int tamPag){
 
 	t_direccion* info;
-	info->pagina=pcb->indiceDeCodigo [(pcb->pc)*2]/ info_kernel->TAMPAG;
-	info->offset=pcb->indiceDeCodigo [((pcb->pc)*2)+1];
-	info->size=pcb->indiceDeCodigo [pcb->pc][1];
+	info->pagina=pcb->indiceDeCodigo [(pcb->pc)*2]/ tamPag;
+	info->offset=pcb->indiceDeCodigo [((pcb->pc)*2)];
+	info->size=pcb->indiceDeCodigo [((pcb->pc)*2)+1];
 	return info;
 }
-
-t_datos_kernel* desserializarDatosKernel(char* paquete_kernel){
-
-	t_datos_kernel* info = malloc(sizeof(t_datos_kernel));
-	memcpy(info, paquete_kernel, sizeof(t_datos_kernel));
-	paquete_kernel += sizeof(t_datos_kernel);
-
-	info->QUANTUM = malloc(sizeof(int));
-	memcpy(info->QUANTUM, paquete_kernel, sizeof(int));
-	paquete_kernel += sizeof(int);
-
-	info->QUANTUM_SLEEP = malloc(sizeof(int));
-	memcpy(info->QUANTUM_SLEEP, paquete_kernel, sizeof(int));
-	paquete_kernel += sizeof(int);
-
-
-	info->TAMPAG = malloc(sizeof(int));
-	memcpy(info->TAMPAG, paquete_kernel, sizeof(int));
-	paquete_kernel += sizeof(int);
-
-	return info;
-}
-
 
 
 void levantar_configuraciones() {
@@ -210,5 +186,13 @@ void levantar_configuraciones() {
 
 
 char* depurarSentencia(char* sentencia){
-	return sentencia; //Aca hay que sacarle el /n del final a la sentencia
+
+		int i = strlen(sentencia);
+		while (string_ends_with(sentencia, "\n")) {
+			i--;
+			sentencia = string_substring_until(sentencia, i);
+		}
+		return sentencia;
+
 }
+

@@ -35,6 +35,12 @@
 #include <commons/collections/list.h>
 #include <theDebuggers/socketLibrary.h>
 
+typedef struct {
+	 int QUANTUM;
+	 int QUANTUM_SLEEP;
+	 int TAMPAG;
+} t_datos_kernel;
+
 
 typedef struct {
   int PUERTO_NUCLEO;
@@ -46,13 +52,12 @@ typedef struct {
 }CONF_CPU;
 
 
-void get_config_cpu (CONF_CPU *config_cpu);
 int conectarConUmc();
 int conectarConNucleo();
-t_paquete* recibirPCB(int nucleo);
-t_datos_kernel* desserializarDatosKernel(char* paquete_kernel);
+t_direccion*  crearEstructuraParaUMC (t_pcb* pcb, int tamPag);
+void levantar_configuraciones();
 char* depurarSentencia(char* sentencia);
-t_direccion*  crearEstructuraParaUMC (t_pcb* pcb, t_datos_kernel* info_kernel);
+
 
 
 #endif /* FUNCIONESCPU_H_ */
