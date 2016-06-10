@@ -31,6 +31,10 @@ int main(int argc,char **argv) {
 	char * codigo;
 	int pid, pagina, tamanio_codigo;
 
+
+	pthread_t mock;
+	pthread_create(&mock, NULL, hilo_mock, NULL);
+
 	if(abrirConfiguracion() == -1){return -1;};
 
 	crearArchivo();
@@ -41,12 +45,14 @@ int main(int argc,char **argv) {
 
 
 	while(1){
+
 		new_lst = aceptar_conexion(sock_lst);
 		t_paquete *mensaje;
 
 		while(1){
 			mensaje = recibir(new_lst);
 			int flagRespuesta;
+			printf("Codigo operacion %d\n",mensaje->codigo_operacion);
 
 			switch (mensaje->codigo_operacion) {
 			case 0: {//Nuevo proceso
@@ -70,14 +76,27 @@ int main(int argc,char **argv) {
 				}
 				if(espacio == -1)
 				{
-					flagRespuesta = FALLORESERVARMEMORIA;//No se puede asignar
+					flagRespuesta = -1;//No se puede asignar
 				}
 				else{
 					flagRespuesta = reservarProceso(pid, pagina, espacio);
 				}
 
+				if (flagRespuesta == 1){
+					int i, error;
+					for(i=0;i<pagina;i++){
+						//como me vas a mandar las paginas??
+						error = escribirPaginaProceso(pid, i, codigo[i]);
+						if (error == -1){
+							flagRespuesta = FALLORESERVARMEMORIA;
+							break;
+						}
+					}
+
+				}
+
 				//No deberia ser otro valor en vez de 4?
-				enviar(new_lst, flagRespuesta, 4, &pid);
+				enviar(new_lst, flagRespuesta, sizeof(int), &pid);
 				free(codigo);
 
 				break;
@@ -95,7 +114,7 @@ int main(int argc,char **argv) {
 					enviar(new_lst, flagRespuesta, 4, (void *) &pid);
 					break;
 				}
-				case 2: { //caso de Escritura en disco
+				case 2: { //caso de Escritura en disco //SIEMPRE ME LLEGA CON TAMANIO PAGINA
 					//Deserializar Mensaje
 					memcpy(&pid, mensaje->data, sizeof(int));
 					memcpy(&pagina, mensaje->data + sizeof(int), sizeof(int));
@@ -106,6 +125,12 @@ int main(int argc,char **argv) {
 					printf("Se escribira para el proceso %d \n", pid);
 					sleep(RETARDO_ACCESO);
 					flagRespuesta = escribirPaginaProceso(pid, pagina, codigo);
+					if (flagRespuesta == 1){
+						flagRespuesta = EXITOESCRITURA;
+					}
+					else{
+						flagRespuesta = FALLOESCRITURA;
+					}
 					enviar(new_lst, flagRespuesta, 4, (void*)&pid);
 
 					break;
@@ -207,6 +232,7 @@ int crearArchivo(){
 	char *vectorArchivo[tamanio_archivo];
 	int i;
 	char* caracter = "\0";
+
 	for(i=0;i<tamanio_archivo;i++)
 	{
 		vectorArchivo[i] = caracter;
@@ -334,10 +360,10 @@ int reservarProceso(int pidProceso, int cantPags , int pagAPartir){
 	error = asignarEspacio(cantPags, pidProceso, pagAPartir);
 	if(error == -1){
 		printf("Hubo error al asignar el proceso %d \n", pidProceso);
-		return FALLORESERVARMEMORIA;
+		return -1;
 	}
 	printf("Se reservo el espacio para el proceso con PID: %d de %d paginas \n", pidProceso, cantPags);
-	return EXITORESERVARMEMORIA;
+	return 1;
 }
 
 int asignarEspacio(int cantPagsAAsignar, int proceso, int inicio){
@@ -383,7 +409,8 @@ int compactacion(){ //Flag: 1 salio bien, 2 hubo error
 		for(i=0;i<TAMANIO_PAGINA;i++)
 		{
 			char car = discoParaleloNoVirtual[(inicioOcupada+i)];;
-			discoParaleloNoVirtual[(inicioLibre+i)] = car;}
+			discoParaleloNoVirtual[(inicioLibre+i)] = car;
+		}
 			paginasSWAP[primerPaginaOcupada].ocupada = 0;
 			paginasSWAP[primerPaginaLibre].idProcesoQueLoOcupa = paginasSWAP[primerPaginaOcupada].idProcesoQueLoOcupa;
 			paginasSWAP[primerPaginaOcupada].idProcesoQueLoOcupa = -1;
@@ -506,7 +533,7 @@ int escribirPaginaProceso(int idProceso, int nroPag, char*data){
 	if(nroPag > cantidadPagsQueUsa)
 	{
 		printf("No puede escribir en %d, no esta en su rango \n", nroPag);
-		return FALLOESCRITURA;
+		return -1;
 	}
 	printf("Se escribira la pagina %d del proceso: %d, cuya asociada es %d \n", nroPag,idProceso,paginaAEscribir);
 	resultado = escribirPagina(paginaAEscribir, data);
@@ -528,11 +555,11 @@ int escribirPagina(int nroPag, char*dataPagina){
 		char car = dataPagina[i];
 		discoParaleloNoVirtual[(inicioPag+i)] = car;
 	}
-	if(updatearArchivoDisco(numero)==1)
+	if(updatearArchivoDisco()==1)
 	{
 		printf("Pagina %d, copiada con exito! Contenido de la misma: %s \n", nroPag, dataPagina);
 	}
-	return EXITOESCRITURA;
+	return 1;
 }
 
 int leerPaginaProceso(int idProceso, int nroPag, char* paginaALeer){
@@ -544,12 +571,12 @@ int leerPaginaProceso(int idProceso, int nroPag, char* paginaALeer){
 	if(nroPag>cantPagsEnUso)
 	{
 		printf("No puede leer la pagina %d, no tiene permisos \n",nroPag);
-		return FALLOLECTURA;
+		return -1;
 	}
 	long int inicio,fin;
 	flagResult = leerPagina(posPag,&inicio,&fin); //con esto determino los valores de inicio de lectura y de fin
 	if (flagResult == -1){
-		return FALLOLECTURA;
+		return -1;
 	}
 	int i;
 	char*dataLeida = malloc(TAMANIO_PAGINA);
@@ -558,7 +585,7 @@ int leerPaginaProceso(int idProceso, int nroPag, char* paginaALeer){
 		dataLeida[i]= discoMapped[inicio +i];
 	}
 	strcpy(paginaALeer,dataLeida);
-	return EXITOLECTURA;
+	return 1;
 }
 
 int inicializarEstructuraPaginas(){
@@ -569,5 +596,29 @@ int inicializarEstructuraPaginas(){
 		paginasSWAP[i].ocupada = 0;
 	}
 	return 1;
+}
+
+void *hilo_mock(void *arg){
+	char codigo[10]="golDSDSD";
+	sleep(4);
+	int socket;
+	socket = conectar_a("localhost", "1202");
+	printf("conecte%d\n",socket);
+	int *puntero = malloc(sizeof(codigo)+3*sizeof(int));
+	puntero[0]=1; //pid
+	puntero[1]=2;
+	puntero[2]=sizeof(codigo);
+	memcpy(puntero+3*sizeof(int),codigo, sizeof(codigo));
+	sleep(1);
+	printf("envie\n");
+	enviar(socket, 0, sizeof(codigo)+3*sizeof(int), puntero);
+
+	while(1){
+		// recive
+
+
+
+
+	};
 }
 

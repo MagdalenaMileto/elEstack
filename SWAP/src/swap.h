@@ -59,6 +59,7 @@ int escribirPagina(int nroPag, char*dataPagina);
 int leerPaginaProceso(int idProceso, int nroPag, char* paginaALeer);
 int inicializarEstructuraPaginas();
 void llenarprocPags();
+void *hilo_mock(void *arg);
 
 
 #endif /* SWAP_H_ */
