@@ -7,11 +7,26 @@
 
 #include "primitivas.h"
 #include <stdlib.h>
+#include "../../COMUNES/estructurasControl.h"
+#include "../../COMUNES/estructurasControl.c"
+#include "funcionesCPU.h"
+
+
 
 t_puntero definirVariable(t_nombre_variable identificador_variable)
 {
-	printf("Soy la funcion definirVariable\n");
-	return 0;
+	t_direccion direccion_variable;
+
+	if(pcb->pc==0){
+		pcb->contextoActual[0]->pos=0;
+		pcb->contextoActual[0]->vars->etiqueta=identificador_variable;
+		pcb->contextoActual[0]->vars->direccion = armarDireccionPrimeraPagina();
+
+	}
+	//aca van la asignacion de estructura direccion variable
+	enviar(umc, 404, sizeof(t_direccion), direccion_variable);
+
+
 }
 
 t_puntero obtenerPosicionVariable (t_nombre_variable identificador_variable)
@@ -89,4 +104,13 @@ int signal(t_nombre_semaforo identificador_semaforo)
 {
 	printf("Soy la funcion signal\n");
 	return 0;
+}
+
+t_direccion armarDireccionPrimeraPagina(){
+	t_direccion direccion;
+	direccion.offset=0;
+	direccion.size=1;
+	direccion.pagina=(pcb->indiceDeCodigo [(pcb->pc)*pcb->paginasDeCodigo])+size(pcb->sizeIndiceDeCodigo)/ tamanioPag;
+
+	return direccion;
 }

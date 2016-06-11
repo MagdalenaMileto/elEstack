@@ -40,25 +40,25 @@ int main(int argc,char **argv){
 	int sigusr1_desactivado =1; //el encanrgado de cambiar esto es el nucleo, tengo que tener forma de recibir la senal..
 	log= log_create(ARCHIVOLOG, "CPU", 0, LOG_LEVEL_INFO);
 	log_info(log,"Iniciando CPU\n");
-	t_pcb * serializado;
+	char* serializado;
 
 	levantar_configuraciones();
 
-	int umc = conectarConUmc();
+	umc = conectarConUmc();
 
-	int nucleo = conectarConNucleo();
+	nucleo = conectarConNucleo();
 	t_paquete* datos_kernel=recibir(nucleo);  //una vez que nucleo se conecta con cpu debe mandar t_datos_kernel..
 
 	while(sigusr1_desactivado){
 
-		int quantum = ((t_datos_kernel*)(datos_kernel->data))->QUANTUM;
-		int tamanioPag = ((t_datos_kernel*)(datos_kernel->data))->TAMPAG; /// liberar_paquete..
-		int quantum_sleep = ((t_datos_kernel*)(datos_kernel->data))->QUANTUM_SLEEP;
+		quantum = ((t_datos_kernel*)(datos_kernel->data))->QUANTUM;
+		tamanioPag = ((t_datos_kernel*)(datos_kernel->data))->TAMPAG;
+		quantum_sleep = ((t_datos_kernel*)(datos_kernel->data))->QUANTUM_SLEEP;
 
 
 
 		t_paquete* paquete_recibido = recibir(nucleo);
-		t_pcb* pcb = desserializarPCB(paquete_recibido->data);
+		pcb = desserializarPCB(paquete_recibido->data);
 		liberar_paquete(paquete_recibido);
 
 		int pid = pcb->pid;
@@ -76,7 +76,6 @@ int main(int argc,char **argv){
 			char* sentencia= instruccion->data;
 			analizadorLinea(depurarSentencia(strdup(sentencia)), &primitivas, &primitivas_kernel);
 			liberar_paquete(instruccion);
-			// y la alcutalizacion de los valores en la umc lo hacen la primitiva al analizarla linea
 
 			pcb->pc++;
 			quantum--;
@@ -84,27 +83,27 @@ int main(int argc,char **argv){
 
 			if (programaBloqueado){
 				log_info(log, "El programa salió por bloqueo");
-				enviar(nucleo, 340, sizeof(t_paquete*), serializado);
+				serializado = serializarPCB(pcb);
+				enviar(nucleo, 340, sizeof(serializado), serializado);
 				destruirPCB(pcb);
 					}
 
 			if (programaAbortado){
 				log_info(log, "El programa aborto");
-				serializado = (t_pcb*)serializarPCB(pcb);
-				enviar(nucleo, 333, sizeof(t_paquete*), serializado); //codigo de op 333, pcb abortado
+				serializado = serializarPCB(pcb);
+				enviar(nucleo, 333, sizeof(serializado), serializado); //codigo de op 333, pcb abortado
 				destruirPCB(pcb);
 			}
 
 			if (programaFinalizado){
 				log_debug(log, "El programa finalizo");
-				serializado = (t_pcb*)serializarPCB(pcb);
-				enviar(nucleo, 320, sizeof(int), programaFinalizado); //codigo de op 408, pcb finalizo
+				enviar(nucleo, 320, sizeof(int), programaFinalizado); //codigo de op 320, pcb finalizo
 				destruirPCB(pcb);
 			}
 
 			if(quantum &&!programaFinalizado&&!programaBloqueado&&!programaAbortado){
-				serializado = (t_pcb*)serializarPCB(pcb);
-				enviar(nucleo, 304, sizeof(t_paquete*), serializado); //codigo de op 407, pcb salio por quantum
+				serializado = serializarPCB(pcb);
+				enviar(nucleo, 304, sizeof(serializado), serializado); //codigo de op 304, pcb salio por quantum
 				destruirPCB(pcb);
 			}
 		}
@@ -195,4 +194,5 @@ char* depurarSentencia(char* sentencia){
 		return sentencia;
 
 }
+
 

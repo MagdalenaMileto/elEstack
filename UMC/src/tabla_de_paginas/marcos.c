@@ -201,3 +201,12 @@ bool de_una_entrada(t_list * lista) {
 
 }
 
+void escribir_marco(int marco, int offset, int tamanio, void * contenido) {
+
+	int desplazamiento = marco * tamanio_marco;
+
+	memcpy(memoria + desplazamiento + offset, contenido, tamanio);
+
+}
+
+

@@ -34,12 +34,11 @@ t_list * circular_list_starting_with(t_list * lista, void * element_address) {
 
 	int posicion_elemento = index_of(lista, element_address);
 
-	list_add_all(resultado, list_take(lista, posicion_elemento));
-
 	list_add_all(resultado, list_drop(lista, posicion_elemento + 1));
 
-	return resultado;
+	list_add_all(resultado, list_take(lista, posicion_elemento));
 
+	return resultado;
 }
 
 int index_of(t_list * lista, void * element_address) {
@@ -65,6 +64,7 @@ int index_of(t_list * lista, void * element_address) {
 }
 
 t_list * list_drop(t_list * lista, int cantidad) {
+
 	if (cantidad < 0) {
 
 		return lista;

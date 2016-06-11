@@ -8,9 +8,11 @@
 #ifndef SRC_PEDIDOS_ESCRIBIR_H_
 #define SRC_PEDIDOS_ESCRIBIR_H_
 
+#include "../../src/tlb/tlb.h"
 #include "../../src/tabla_de_paginas/tabla_de_paginas.h"
+#include "../../src/tabla_de_paginas/marcos.h"
 
 void escribir_una_pagina(int numero_pagina, int offset, int tamanio,
-		char * buffer);
+		void * buffer);
 
 #endif /* SRC_PEDIDOS_ESCRIBIR_H_ */
