@@ -443,6 +443,7 @@ void *hilo_CONEXION_CONSOLA(void *socket) {
 			break;
 		}
 	}
+	//TODO: free el int socket
 }
 
 void *hilo_HANDLER_CONEXIONES_CONSOLA(void *arg) {
@@ -450,24 +451,14 @@ void *hilo_HANDLER_CONEXIONES_CONSOLA(void *arg) {
 	int servidorSocket, socketCliente;
 	int *socketClienteTemp;
 	//struct arg_struct *args; 
-
-
 	socketconsola = socket_escucha("localhost", config_nucleo->PUERTO_PROG);
 	listen(socketconsola, 1024);
-
-
-
-
-	listen(socketconsola, 5);   //Aca maximas conexiones, ver de cambiar?
-
 	while (1) {
 		socketCliente = aceptar_conexion(socketconsola);
 		socketClienteTemp = malloc(sizeof(int));
 		*socketClienteTemp = socketCliente;
-
 		pthread_t thCONEXION_CONSOLA;
 		pthread_create(&thCONEXION_CONSOLA, NULL, hilo_CONEXION_CONSOLA, (void *)socketClienteTemp);
-
 		printf("NUCLEO: Acepte consola %d\n", socketCliente);
 	}
 
@@ -484,9 +475,6 @@ void *hilo_HANDLER_CONEXIONES_CONSOLA(void *arg) {
 */
 
 
-
-
-
 //TODO: quantum pueede cambiar ojo, hacer
 //TODO: mandar tamano stack.
 
@@ -501,24 +489,18 @@ void *hilo_CONEXION_CPU(void *socket) {
 	datos_kernel.QUANTUM_SLEEP = config_nucleo->QUANTUM_SLEEP;
 	datos_kernel.TAMPAG = config_nucleo->TAMPAG;
 
-
 	//O que no me envie nada? timeouts?
 	enviar(*(int*)socket, 301, sizeof(t_datos_kernel), &datos_kernel);
-
 	elPaquete = recibir(*(int*)socket);
+	liberar_paquete(elPaquete);
 
-	if(!elPaquete->codigo_operacion==302){
-		printf("Error en handshake CPU\n");
-		exit(0);
-	}
+	if(!elPaquete->codigo_operacion==302){printf("Error en handshake CPU\n");exit(0);}
 
-
+	//TODO: mutex
 	queue_push(cola_CPU_libres, (void*)*(int*)socket);
 	sem_post(&sem_cpu);
-
-	int b = 0;
+	
 	while (1) {
-
 
 		elPaquete = recibir(*(int*)socket);
 		//printf("CRASH2 %d %d\n", elPaquete->codigo_operacion, *(int*)socket);
@@ -530,11 +512,9 @@ void *hilo_CONEXION_CPU(void *socket) {
 			temp = desserializarPCB(elPaquete->data);
 			printf("NUCLEO: Recibi proceso %d por fin de quantum, encolando en cola ready\n", proceso->pcb->pid);
 
-			int i; for (i = 0; i < temp->sizeContextoActual; i++)
-
-				destruirPCB(proceso->pcb);
-
+			destruirPCB(proceso->pcb);
 			proceso->pcb = temp;
+			//TODO: mutex
 			queue_push(cola_ready, proceso);
 			sem_post(&sem_ready);
 			queue_push(cola_CPU_libres, (void*)*(int*)socket);
@@ -559,15 +539,16 @@ void *hilo_CONEXION_CPU(void *socket) {
 			proceso->pcb = bloqueo->pcb;
 
 			if (bloqueo->ioSize) {
-				//Hay bloqueo por IO
 				bloqueoIoManager(proceso, bloqueo->io, bloqueo->ioSize, bloqueo->IO_time);
 			}
 			if (bloqueo->semaforoSize) {
-				//Hay bloqueo por semaforo
 				bloqueoSemaforoManager(proceso, bloqueo->semaforo, bloqueo->semaforoSize);
 			}
 
-			//Hacer los free aca
+			free(bloqueo->io);
+			free(bloqueo->semaforo);
+			free(bloqueo);
+
 			queue_push(cola_CPU_libres, (void*)*(int*)socket);
 			sem_post(&sem_cpu);
 			break;
@@ -585,18 +566,15 @@ void *hilo_CONEXION_CPU(void *socket) {
 			liberaSemaforo(elPaquete->data, elPaquete->tamanio);
 			break;
 
-
 		case 350: //Escribe variable
 			proceso = dameProceso(cola_exec, *(int*)socket);
 			queue_push(cola_exec, proceso);
 			escribeVariable(elPaquete->data, elPaquete->tamanio);
 			break;
 
-
 		case 351: //Pide variable
 			proceso = dameProceso(cola_exec, *(int*)socket);
 			queue_push(cola_exec, proceso);
-
 			enviar(*(int*)socket, 352, sizeof(int), pideVariable(elPaquete->data, elPaquete->tamanio));
 			break;
 
@@ -613,8 +591,8 @@ void *hilo_CONEXION_CPU(void *socket) {
 		//AGREGAR RECIBO PCB POR FIN DE PROGAMA
 
 
-
-
+	//TODO ver que mo rompa;		
+	liberar_paquete(elPaquete);
 	}
 
 }
@@ -624,7 +602,6 @@ void *hilo_HANDLER_CONEXIONES_CPU(void *arg) {
 	int *socketClienteTemp;
 	socketcpu = socket_escucha("localhost", config_nucleo->PUERTO_CPU);
 	listen(socketcpu, 1024);
-	listen(socketcpu, 5);   //Aca maximas conexiones, ver de cambiar?
 
 	while (1) {
 		socketCliente = aceptar_conexion(socketcpu);
@@ -881,53 +858,23 @@ void *hilo_mock_cpu(void *arg) {
 
 void get_config_nucleo (CONF_NUCLEO *config_nucleo)
 {
-
-	//vER porque dispara doble. hacer frees en caso de inotifu
-
-	//Si le pongo el sleep funca, pregunar/
-
-	//Mutex son generales, uso uno solo?
-
+	//TODO:Mutex son generales, uso uno solo?
 	pthread_mutex_lock(&total);
-
 	t_config *fnucleo = config_create(CONFIG_NUCLEO);
-
 	config_nucleo->PUERTO_PROG = config_get_string_value(fnucleo, "PUERTO_PROG");
-
 	config_nucleo->PUERTO_CPU = config_get_string_value(fnucleo, "PUERTO_CPU");
-
 	config_nucleo->QUANTUM = config_get_int_value(fnucleo, "QUANTUM");
 	config_nucleo->QUANTUM_SLEEP = config_get_int_value(fnucleo, "QUANTUM_SLEEP");
-
 	config_nucleo->IO_IDS = config_get_array_value(fnucleo, "IO_IDS");
-
 	config_nucleo->IO_SLEEP = config_get_array_value(fnucleo, "IO_SLEEP");
-
 	config_nucleo->SEM_IDS = config_get_array_value(fnucleo, "SEM_IDS");
-
 	config_nucleo->SEM_INIT = config_get_array_value(fnucleo, "SEM_INIT");
-
-
-
 	config_nucleo->SHARED_VARS = config_get_array_value(fnucleo, "SHARED_VARS");
-
 	config_nucleo->STACK_SIZE = config_get_int_value(fnucleo, "STACK_SIZE");
-
-
-
-//HASTA ACA LO QUE PIDE EL ENUNCIADO
-
-
-
+	//HASTA ACA LO QUE PIDE EL ENUNCIADO
 	config_nucleo->TAMPAG = config_get_int_value(fnucleo, "SIZE_PAGINA");
 	config_nucleo->IP_UMC = config_get_string_value(fnucleo, "IP_UMC");
 	config_nucleo->PUERTO_UMC = config_get_string_value(fnucleo, "PUERTO_UMC");
-	//config_destroy(fnucleo);//Ya no lo necesito
-
-
-
-
-
 	config_nucleo->VALOR_SHARED_VARS = convertirConfig0(config_nucleo->SHARED_VARS);
 	//Iniciar en 0
 	//Hacer
@@ -960,55 +907,30 @@ void get_config_nucleo (CONF_NUCLEO *config_nucleo)
 	}
 
 	pthread_mutex_unlock(&total);
+
+	//config_destroy(fnucleo);//Ya no lo necesito
 	return;
 }
-
-
-
-
-
-
-
-
-
-
-
 int *convertirConfigInt(char **ana1, char **ana2) {
-
 	int i;
 	int *resul;
-
 	resul = malloc(((strlen((char*)ana1)) / sizeof(char*)) * sizeof(int));
 	for (i = 0; i < (strlen((char*)ana1)) / sizeof(char*); i++) {
 		resul[i] = atoi(ana1[i]);
-
 	}
 	return resul;
-
 }
-
-
-
 int *convertirConfig0(char **ana1) {
-
 	int i;
 	int *resul;
-
 	resul = malloc(((strlen((char*)ana1)) / sizeof(char*)) * sizeof(int));
 	for (i = 0; i < (strlen((char*)ana1)) / sizeof(char*); i++) {
 		resul[i] = 0;
-
 	}
 	return resul;
-
 }
 
-
-
 /* eliminar
-
-
-
 long long current_timestamp(void) {
 	struct timeval te;
 	gettimeofday(&te, NULL);
@@ -1017,7 +939,6 @@ long long current_timestamp(void) {
 }
 
 long long *punteroConCero(char **ana1) {
-
 	int i;
 	long long *resul;
 
@@ -1028,15 +949,7 @@ long long *punteroConCero(char **ana1) {
 
 	}
 	return resul;
-
-
-
 }
-
-
-
-
-
 void printbuf(const char* buffer, int len) {
 	int i;
 	printf("\x1b[31m INICIO PRINT\n");
