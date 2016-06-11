@@ -51,9 +51,9 @@ int main(int argc,char **argv){
 
 	while(sigusr1_desactivado){
 
-		int quantum = ((t_datos_kernel*)(datos_kernel->data))->QUANTUM;
-		int tamanioPag = ((t_datos_kernel*)(datos_kernel->data))->TAMPAG; /// liberar_paquete..
-		int quantum_sleep = ((t_datos_kernel*)(datos_kernel->data))->QUANTUM_SLEEP;
+		quantum = ((t_datos_kernel*)(datos_kernel->data))->QUANTUM;
+		tamanioPag = ((t_datos_kernel*)(datos_kernel->data))->TAMPAG;
+		quantum_sleep = ((t_datos_kernel*)(datos_kernel->data))->QUANTUM_SLEEP;
 
 
 
@@ -62,7 +62,6 @@ int main(int argc,char **argv){
 		liberar_paquete(paquete_recibido);
 
 		int pid = pcb->pid;
-		if(pcb->pc == 0)crearStack();
 		enviar(umc, 405, sizeof(int), pid); // codigo 405: cambio de proceso activo NUCLEO - UMC
 
 		int programaBloqueado = 0;
@@ -77,7 +76,6 @@ int main(int argc,char **argv){
 			char* sentencia= instruccion->data;
 			analizadorLinea(depurarSentencia(strdup(sentencia)), &primitivas, &primitivas_kernel);
 			liberar_paquete(instruccion);
-			// y la alcutalizacion de los valores en la umc lo hacen la primitiva al analizarla linea
 
 			pcb->pc++;
 			quantum--;
@@ -99,13 +97,13 @@ int main(int argc,char **argv){
 
 			if (programaFinalizado){
 				log_debug(log, "El programa finalizo");
-				enviar(nucleo, 320, sizeof(int), programaFinalizado); //codigo de op 408, pcb finalizo
+				enviar(nucleo, 320, sizeof(int), programaFinalizado); //codigo de op 320, pcb finalizo
 				destruirPCB(pcb);
 			}
 
 			if(quantum &&!programaFinalizado&&!programaBloqueado&&!programaAbortado){
 				serializado = serializarPCB(pcb);
-				enviar(nucleo, 304, sizeof(serializado), serializado); //codigo de op 407, pcb salio por quantum
+				enviar(nucleo, 304, sizeof(serializado), serializado); //codigo de op 304, pcb salio por quantum
 				destruirPCB(pcb);
 			}
 		}
@@ -196,4 +194,5 @@ char* depurarSentencia(char* sentencia){
 		return sentencia;
 
 }
+
 

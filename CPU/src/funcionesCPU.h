@@ -53,6 +53,9 @@ typedef struct {
 
 int umc, nucleo;
 t_pcb* pcb;
+int quantum;
+int tamanioPag;
+int quantum_sleep;
 
 
 int conectarConUmc();
@@ -61,6 +64,21 @@ t_direccion*  crearEstructuraParaUMC (t_pcb* pcb, int tamPag);
 void levantar_configuraciones();
 char* depurarSentencia(char* sentencia);
 
-
+/* Emi para tener un machete de los codigos de operacion y no confundirnos:
+ *
+ * 303->recibo pcb serializado
+ * 352->recibo variable
+ * 342->recibo valor del semaforo
+ *
+ * 304->envio pcb serializado por fin de quantum
+ * 320->envio finalizacion del programa
+ * 340->envio pcb bloqueado
+ * 341->envio pido un semaforo
+ * 342->envio liberar semaforo
+ * 350->envio escribe una variable
+ * 351->envio pide la variable
+ * 360->envio impromir un valor numerico
+ * 361->envio imprimir texto
+ */
 
 #endif /* FUNCIONESCPU_H_ */
