@@ -10,10 +10,12 @@ void * leer_una_pagina(int numero_pagina, int offset, int tamanio) {
 
 		marco_nuevo(pagina_encontrada);
 
-		int desplazamiento = pagina_encontrada->marco * tamanio_marco;
-		memcpy(memoria + desplazamiento, contenido_faltante, tamanio_marco);
+		escribir_marco(pagina_encontrada->marco, 0, tamanio_marco,
+				contenido_faltante);
 
 	}
+
+	pagina_encontrada->uso = true;
 
 	void * contenido = malloc(tamanio);
 
