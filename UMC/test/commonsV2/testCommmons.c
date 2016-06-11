@@ -216,8 +216,8 @@ context(commons) {
 				should_int(list_size(lista)) be equal to(3);
 
 				should_int(valor_en_la_posicion(resultado,0)) be equal to(3);
-				should_int(valor_en_la_posicion(resultado,1)) be equal to(6);
-				should_int(valor_en_la_posicion(resultado,2)) be equal to(9);
+				should_int(valor_en_la_posicion(resultado,1)) be equal to(9);
+				should_int(valor_en_la_posicion(resultado,2)) be equal to(6);
 
 				should_int(valor_en_la_posicion(lista,0)) be equal to(6);
 				should_int(valor_en_la_posicion(lista,1)) be equal to(3);

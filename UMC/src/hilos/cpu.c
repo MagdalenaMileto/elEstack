@@ -15,10 +15,14 @@ void atender_cpu(void * parametro_hilo) {
 
 	int numero_pagina, offset, tamanio, pid_actual;
 
+	char * buffer;
+
 	while (!cerrar) {
 		paquete_nuevo = recibir(socket_cpu);
 
 		pthread_mutex_lock(&semaforo_mutex_cpu);
+
+		proceso_actual = pid_actual;
 
 		switch (paquete_nuevo->codigo_operacion) {
 
@@ -29,8 +33,6 @@ void atender_cpu(void * parametro_hilo) {
 			memcpy(&tamanio, paquete_nuevo->data + sizeof(int) * 2,
 					sizeof(int));
 
-			proceso_actual = pid_actual;
-
 			void * contenido = leer_una_pagina(numero_pagina, offset, tamanio);
 
 			enviar(socket_cpu, 6, tamanio, contenido);
@@ -39,7 +41,13 @@ void atender_cpu(void * parametro_hilo) {
 
 		case ESCRIBIR:
 
-			proceso_actual = pid_actual;
+			memcpy(&numero_pagina, paquete_nuevo->data, sizeof(int));
+			memcpy(&offset, paquete_nuevo->data + sizeof(int), sizeof(int));
+			memcpy(&tamanio, paquete_nuevo->data + sizeof(int) * 2,
+					sizeof(int));
+			memcpy(&buffer, paquete_nuevo->data + sizeof(int) * 3, tamanio);
+
+			escribir_una_pagina(numero_pagina, offset, tamanio, buffer);
 
 			break;
 

@@ -19,10 +19,11 @@
 void marco_nuevo(t_entrada_tabla_de_paginas * entrada_sin_marco);
 bool tiene_cantidad_maxima_marcos_asignados(int proceso_actual);
 void inicializar_marcos();
-void algoritmo_remplazo(t_entrada_tabla_de_paginas * entrada_sin_marco,int pid);
+void algoritmo_remplazo(t_entrada_tabla_de_paginas * entrada_sin_marco, int pid);
 t_list * lista_circular_clock(t_list * lista, int pid);
 void avanzar_victima(t_list * lista_clock,
 		t_entrada_tabla_de_paginas * entrada_con_marco_nuevo);
 bool de_una_entrada(t_list * lista);
+void escribir_marco(int marco, int offset, int tamanio, void * contenido);
 
 #endif /* TABLA_DE_PAGINAS_MARCOS_H_ */
