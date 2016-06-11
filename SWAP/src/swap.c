@@ -64,7 +64,7 @@ int main(int argc,char **argv) {
 			printf("Codigo operacion %d\n",mensaje->codigo_operacion);
 
 			switch (mensaje->codigo_operacion) {
-			case 0: {//Nuevo proceso
+			case 1: {//Nuevo proceso
 				//Deserializar Mensaje
 				memcpy(&pid, mensaje->data, sizeof(int));
 				memcpy(&pagina, mensaje->data + sizeof(int), sizeof(int));
@@ -96,6 +96,7 @@ int main(int argc,char **argv) {
 						dataPaginaAEscribir = malloc(TAMANIO_PAGINA);
 						memcpy(dataPaginaAEscribir, paquetin + (i*TAMANIO_PAGINA), TAMANIO_PAGINA);
 						error = escribirPaginaProceso(pid, i, dataPaginaAEscribir);
+						free(dataPaginaAEscribir);
 						if (error == -1){
 							flagRespuesta = FALLORESERVARMEMORIA;
 							break;
@@ -108,20 +109,15 @@ int main(int argc,char **argv) {
 
 				break;
 			}
-				case 1: { //caso de Sacar proceso
+				case 2: { //caso de Sacar proceso
 					//Deserializar Mensaje
 					memcpy(&pid, mensaje->data, sizeof(int));
-
 					printf("Se liberara el proceso %d \n", pid);
 					sleep(RETARDO_ACCESO);
-
 					flagRespuesta = liberarProceso(pid);
-
-					//Creo que no es necesario enviar.
-					enviar(new_lst, flagRespuesta, 4, (void *) &pid);
 					break;
 				}
-				case 2: { //caso de Escritura en disco //SIEMPRE ME LLEGA CON TAMANIO PAGINA
+				case 4: { //caso de Escritura en disco //SIEMPRE ME LLEGA CON TAMANIO PAGINA
 					//Deserializar Mensaje
 					memcpy(&pid, mensaje->data, sizeof(int));
 					memcpy(&pagina, mensaje->data + sizeof(int), sizeof(int));
@@ -138,7 +134,7 @@ int main(int argc,char **argv) {
 					else{
 						flagRespuesta = FALLOESCRITURA;
 					}
-					enviar(new_lst, flagRespuesta, 4, (void*)&pid);
+					free(paquetin);
 
 					break;
 				}
@@ -157,6 +153,8 @@ int main(int argc,char **argv) {
 //						return -1;
 //					}
 					enviar(new_lst, flagRespuesta, TAMANIO_PAGINA, paginaALeer);
+
+					free(paginaALeer);
 					break;
 				}
 				default: printf("Pedido incorrecto");
