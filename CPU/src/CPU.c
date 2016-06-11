@@ -70,7 +70,7 @@ int main(int argc,char **argv){
 
 		while(quantum && !programaBloqueado && !programaFinalizado && !programaAbortado){
 
-			t_direccion datos_para_umc = crearEstructuraParaUMC (pcb, tamanioPag);
+			t_direccion* datos_para_umc = crearEstructuraParaUMC (pcb, tamanioPag);
 			enviar(umc, 404, datos_para_umc->size, datos_para_umc);
 			t_paquete* instruccion=recibir(umc);
 			char* sentencia= instruccion->data;
