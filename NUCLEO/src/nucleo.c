@@ -188,7 +188,7 @@ void *hilo_PCP(void *arg) {
 
 	while (1) {
 		sem_wait(&sem_ready); sem_wait(&sem_cpu);
-		//TODO:mocks
+		//TODO:mutex
 		sock = (int)queue_pop(cola_CPU_libres);
 		proceso = queue_pop(cola_ready);
 
@@ -248,8 +248,6 @@ void mandarCodigoAUmc(char* codigo, int size, t_proceso *proceso) {
 	char*paqueteUMC; paqueteUMC=malloc(size+3*sizeof(int));
 	int temp =proceso->pcb->paginasDeCodigo+proceso->pcb->paginasDeMemoria;
 
-
-
 	memcpy(paqueteUMC,&(proceso->pcb->pid), sizeof(int));
 	memcpy(paqueteUMC+sizeof(int), &temp, sizeof(int));
 	memcpy(paqueteUMC+2*sizeof(int), &size, sizeof(int));
@@ -263,42 +261,29 @@ void mandarCodigoAUmc(char* codigo, int size, t_proceso *proceso) {
 int *pideSemaforo(char *semaforo, int semaforoSize) {
 	int i;
 	printf("NUCLEO: pide sem %s\n", semaforo);
-
 	for (i = 0; i < strlen((char*)config_nucleo->SEM_IDS) / sizeof(char*); i++) {
+		//TODO:aca esta funcando con el \n OJO
+		//TODO: mutex confignucleo
 		if (strcmp((char*)config_nucleo->SEM_IDS[i], semaforo) == 0) {
-
-			//Encontre el sem
-
 			if (config_nucleo->VALOR_SEM[i] == 0) {return &config_nucleo->VALOR_SEM[i];}
 			config_nucleo->VALOR_SEM[i]--;
 			return (&config_nucleo->VALOR_SEM[i]);
 		}
 	}
-
-	printf("No encontre SEM id, exit\n");
-	//Handlear que pasa si no lee semaforo
-	exit(0);
-
+	printf("No encontre SEM id, exit\n");exit(0);
 }
 
 int *pideVariable(char *variable, int tamanio) {
 	int i;
 	printf("NUCLEO: pide variable %s\n", variable);
-
 	for (i = 0; i < strlen((char*)config_nucleo->SHARED_VARS) / sizeof(char*); i++) {
+		//TODO:aca esta funcando con el \n OJO
+		//TODO: mutex confignucleo
 		if (strcmp((char*)config_nucleo->SHARED_VARS[i], variable) == 0) {
-
-			//Encontre el sem
-
 			return &config_nucleo->VALOR_SHARED_VARS[i];
 		}
 	}
-
-	printf("No encontre variable id, exit\n");
-	//Handlear que pasa si no lee semaforo
-	exit(0);
-
-
+	printf("No encontre variable id, exit\n");exit(0);
 }
 
 
@@ -306,18 +291,15 @@ void escribeVariable(char *variable, int tamanio) {
 	int *valor = (int*)variable;
 	variable += sizeof(int);
 	int i;
-
 	for (i = 0; i < strlen((char*)config_nucleo->SHARED_VARS) / sizeof(char*); i++) {
-
+		//TODO:aca esta funcando con el \n OJO
+		//TODO: mutex confignucleo
 		if (strcmp((char*)config_nucleo->SHARED_VARS[i], variable) == 0) {
 			memcpy(&config_nucleo->VALOR_SHARED_VARS[i], valor, sizeof(int));
 			return;
 		}
 	}
-
-	printf("No encontre VAR id, exit\n");
-	//Handlear que pasa si no lee semaforo
-	exit(0);
+	printf("No encontre VAR id, exit\n");exit(0);
 
 }
 
@@ -327,7 +309,8 @@ void liberaSemaforo(char *semaforo, int semaforoSize) {
 	printf("NUCLEO: libera sem %s\n", semaforo);
 	for (i = 0; i < strlen((char*)config_nucleo->SEM_IDS) / sizeof(char*); i++) {
 		if (strcmp((char*)config_nucleo->SEM_IDS[i], semaforo) == 0) {
-			//Encontre el sem
+		//TODO:aca esta funcando con el \n OJO
+			//TODO: mutex confignucleo
 			config_nucleo->VALOR_SEM[i]++;
 			if (proceso = queue_pop(colas_semaforos[i])) {
 				config_nucleo->VALOR_SEM[i]--;
@@ -337,48 +320,33 @@ void liberaSemaforo(char *semaforo, int semaforoSize) {
 			return;
 		}
 	}
-
-	printf("No encontre SEM id, exit\n");
-	//Handlear que pasa si no lee semaforo
-	exit(0);
-
+	printf("No encontre SEM id, exit\n");exit(0);
 }
+
 
 void  bloqueoSemaforoManager(t_proceso *proceso, char *semaforo, int semSize) {
 	int i;
 	printf("NUCLEO: mando proceso %d a BLOCK por SEM\n", proceso->pcb->pid);
-
 	for (i = 0; i < strlen((char*)config_nucleo->SEM_IDS) / sizeof(char*); i++) {
 		if (strcmp((char*)config_nucleo->SEM_IDS[i], semaforo) == 0) {
-			//Encontre el sem
+			//TODO:aca esta funcando con el \n OJO
+			//Mocks config colas
 			queue_push(colas_semaforos[i], proceso);
 			return;
 
 		}
 	}
-
-	printf("No encontre SEM id, exit\n");
-	//Handlear que pasa si no lee semaforo
-	exit(0);
-
+	printf("No encontre SEM id, exit\n");exit(0);
 }
 
 void bloqueoIoManager(t_proceso *proceso, char *ioString, int sizeString, int unidadesBloqueado) {
-
-	//config_nucleo->IO_IDS
-
-	//Esto es si tengo el \0 verificar como me lo manda cpu
 	int i; int b = 0;
-
 	printf("NUCLEO: mando proceso %d a BLOCK por IO\n", proceso->pcb->pid);
-
 	for (i = 0; i < strlen((char*)config_nucleo->IO_IDS) / sizeof(char*); i++) {
-
 		if (strcmp((char*)config_nucleo->IO_IDS[i], ioString) == 0) {
-
-			//Tenemos match
-			//pusheamos, si no tenemos ninguno disparamos.
+			//TODO: ojo con el \n
 			proceso->unidadesBloqueado = unidadesBloqueado;
+			//TODO: mutex
 			if (queue_size(colas_ios[i]) == 0) {
 				queue_push(colas_ios[i], proceso);
 				makeTimer(timers[i], config_nucleo->VALOR_IO[i] * unidadesBloqueado, 0); //2ms
@@ -391,78 +359,58 @@ void bloqueoIoManager(t_proceso *proceso, char *ioString, int sizeString, int un
 		}
 
 	}
-	printf("No encontre IO id, exit\n");
-
-	//Handlear que pasa si no lee semaforo
-	exit(0);
+	printf("No encontre IO id, exit\n");exit(0);
 
 }
 
 
-
+//TODO: refactor, sacar  intervalMS
 static int makeTimer( timer_t *timerID, int expireMS, int intervalMS )
 {
 	struct sigevent te;
 	struct itimerspec its;
 	struct sigaction sa;
 	int sigNo = SIGRTMIN;
-
-	/* Set up signal handler. */
 	sa.sa_flags = SA_SIGINFO;
 	sa.sa_sigaction = analizarIO;
 	sigemptyset(&sa.sa_mask);
 	if (sigaction(sigNo, &sa, NULL) == -1) {
 		perror("sigaction");
 	}
-
-	/* Set and enable alarm */
 	te.sigev_notify = SIGEV_SIGNAL;
 	te.sigev_signo = sigNo;
 	te.sigev_value.sival_ptr = timerID;
 	timer_create(CLOCK_REALTIME, &te, timerID);
-
 	its.it_interval.tv_sec = floor(intervalMS / 1000);
 	its.it_interval.tv_nsec = intervalMS % 1000 * 1000000;
 	its.it_value.tv_sec =  floor(expireMS / 1000);
 	its.it_value.tv_nsec = expireMS % 1000 * 1000000;
 	timer_settime(*timerID, 0, &its, NULL);
-
 	return 1;
 }
 
 
 
 void analizarIO(int sig, siginfo_t *si, void *uc) {
-
 	int *tidp;
-
 	int i, io;
-
 	for (i = 0; i < strlen((char*)config_nucleo->IO_SLEEP) / sizeof(char*); i++) {
-
+		//TODO: mutex
 		if (timers[i] == si->si_value.sival_ptr) {io = i;}
-
 	}
 
 	t_proceso *proceso;
-
+	//TODO: mutex
 	proceso = queue_pop(colas_ios[io]);
 	printf("\x1b[32mNUCLEO: Saco proceso %d de Cola IO %d mando READY\n\x1b[0m", proceso->pcb->pid, io);
 	queue_push(cola_ready, proceso);
 	sem_post(&sem_ready);
-
 	if (queue_size(colas_ios[io]) != 0) {
-
 		proceso = (t_proceso*)list_get(colas_ios[io]->elements, queue_size(colas_ios[io]) - 1);
-
 		makeTimer(timers[io], config_nucleo->VALOR_IO[io] * proceso->unidadesBloqueado, 0); //2ms
-
-
 	}
 
-
 }
-
 
 /********************************************************************************
 *********************************************************************************
@@ -473,56 +421,35 @@ void analizarIO(int sig, siginfo_t *si, void *uc) {
 *********************************************************************************
 */
 
-void *hilo_CONEXION_CONSOLA(void *arg) {
+void *hilo_CONEXION_CONSOLA(void *socket) {
 
-	struct arg_struct *args = (struct arg_struct *)arg;
 	int estado;
 	t_proceso* proceso;
 
-	/*
-		if (handshake(args->socket, 101, 102) != 1) {
-			printf("NUCLEO:Handshake invalido consola %d\n", args->socket);
-			// return;
-		}
-		*/
-
-
-	printf("NUCLEO:Handshake valido consola, creando proceso %d\n", args->socket);
-
-	proceso = crearPrograma(args->socket);
+	//TODO: handshake
+	proceso = crearPrograma(*(int*)socket);
+	printf("NUCLEO:Handshake valido consola, creando proceso %d\n", proceso->pcb->pid);
 
 	while (1) {
-		t_paquete* paquete; // Esto tiene que ser un puntero cambiar.....
-
-
-
-		paquete = recibir(args->socket);
-
-
+		t_paquete* paquete; 
+		paquete = recibir(*(int*)socket);
 		switch (paquete->codigo_operacion) {
-		case 103:
-
-			mandarCodigoAUmc(paquete->data, paquete->tamanio, proceso);
-			pthread_mutex_lock(&mutex_cola_new);
-			queue_push(cola_new, proceso);
-			sem_post(&sem_new);
-			pthread_mutex_unlock(&mutex_cola_new);
+			case 103:
+				mandarCodigoAUmc(paquete->data, paquete->tamanio, proceso);
+				pthread_mutex_lock(&mutex_cola_new);
+				queue_push(cola_new, proceso);
+				sem_post(&sem_new);
+				pthread_mutex_unlock(&mutex_cola_new);
 			break;
-
 		}
-
-
-
 	}
-
 }
-
-
 
 void *hilo_HANDLER_CONEXIONES_CONSOLA(void *arg) {
 
 	int servidorSocket, socketCliente;
-	struct arg_struct *args; //Probar de sacar afuera esto?
+	int *socketClienteTemp;
+	//struct arg_struct *args; 
 
 
 	socketconsola = socket_escucha("localhost", config_nucleo->PUERTO_PROG);
@@ -530,16 +457,16 @@ void *hilo_HANDLER_CONEXIONES_CONSOLA(void *arg) {
 
 
 
+
 	listen(socketconsola, 5);   //Aca maximas conexiones, ver de cambiar?
 
 	while (1) {
 		socketCliente = aceptar_conexion(socketconsola);
-
-		args = malloc(sizeof(struct arg_struct));//cuando se termine el proceso hacer un free de esto
-		args->socket = socketCliente;
+		socketClienteTemp = malloc(sizeof(int));
+		*socketClienteTemp = socketCliente;
 
 		pthread_t thCONEXION_CONSOLA;
-		pthread_create(&thCONEXION_CONSOLA, NULL, hilo_CONEXION_CONSOLA, (void *)args);
+		pthread_create(&thCONEXION_CONSOLA, NULL, hilo_CONEXION_CONSOLA, (void *)socketClienteTemp);
 
 		printf("NUCLEO: Acepte consola %d\n", socketCliente);
 	}
@@ -556,9 +483,15 @@ void *hilo_HANDLER_CONEXIONES_CONSOLA(void *arg) {
 *********************************************************************************
 */
 
-void *hilo_CONEXION_CPU(void *arg) {
 
-	struct arg_struct *args = (struct arg_struct *)arg;
+
+
+
+//TODO: quantum pueede cambiar ojo, hacer
+//TODO: mandar tamano stack.
+
+
+void *hilo_CONEXION_CPU(void *socket) {
 	t_proceso* proceso;t_paquete * elPaquete;
 
 	//Handshake
@@ -570,9 +503,9 @@ void *hilo_CONEXION_CPU(void *arg) {
 
 
 	//O que no me envie nada? timeouts?
-	enviar(args->socket, 301, sizeof(t_datos_kernel), &datos_kernel);
+	enviar(*(int*)socket, 301, sizeof(t_datos_kernel), &datos_kernel);
 
-	elPaquete = recibir(args->socket);
+	elPaquete = recibir(*(int*)socket);
 
 	if(!elPaquete->codigo_operacion==302){
 		printf("Error en handshake CPU\n");
@@ -580,19 +513,19 @@ void *hilo_CONEXION_CPU(void *arg) {
 	}
 
 
-	queue_push(cola_CPU_libres, (void*)args->socket);
+	queue_push(cola_CPU_libres, (void*)*(int*)socket);
 	sem_post(&sem_cpu);
-	
+
 	int b = 0;
 	while (1) {
 
 
-		elPaquete = recibir(args->socket);
-		//printf("CRASH2 %d %d\n", elPaquete->codigo_operacion, args->socket);
+		elPaquete = recibir(*(int*)socket);
+		//printf("CRASH2 %d %d\n", elPaquete->codigo_operacion, *(int*)socket);
 
 		switch (elPaquete->codigo_operacion) {
 		case 304:
-			proceso = dameProceso(cola_exec, args->socket);
+			proceso = dameProceso(cola_exec,*(int*)socket);
 			t_pcb *temp;
 			temp = desserializarPCB(elPaquete->data);
 			printf("NUCLEO: Recibi proceso %d por fin de quantum, encolando en cola ready\n", proceso->pcb->pid);
@@ -604,21 +537,21 @@ void *hilo_CONEXION_CPU(void *arg) {
 			proceso->pcb = temp;
 			queue_push(cola_ready, proceso);
 			sem_post(&sem_ready);
-			queue_push(cola_CPU_libres, (void *)args->socket);
+			queue_push(cola_CPU_libres, (void*)*(int*)socket);
 			sem_post(&sem_cpu);
 
 			break;
 
 		case 320:
-			proceso = dameProceso(cola_exec, args->socket);
+			proceso = dameProceso(cola_exec, *(int*)socket);
 			printf("NUCLEO: Recibi proceso %d por fin de ejecucion, encolando en cola exit\n", proceso->pcb->pid);
 			queue_push(cola_exit, proceso);
-			queue_push(cola_CPU_libres, (void *)args->socket);
+			queue_push(cola_CPU_libres, (void*)*(int*)socket);
 			sem_post(&sem_cpu);
 			break;
 
 		case 340:
-			proceso = dameProceso(cola_exec, args->socket);
+			proceso = dameProceso(cola_exec, *(int*)socket);
 			t_blocked *bloqueo;
 
 			bloqueo = desserializarBLOQUEO(elPaquete->data);
@@ -635,45 +568,45 @@ void *hilo_CONEXION_CPU(void *arg) {
 			}
 
 			//Hacer los free aca
-			queue_push(cola_CPU_libres, (void *)args->socket);
+			queue_push(cola_CPU_libres, (void*)*(int*)socket);
 			sem_post(&sem_cpu);
 			break;
 
 		case 341: //Pide semaforo
-			proceso = dameProceso(cola_exec, args->socket);
+			proceso = dameProceso(cola_exec, *(int*)socket);
 			queue_push(cola_exec, proceso);
-			enviar(args->socket, 342, sizeof(int), pideSemaforo(elPaquete->data, elPaquete->tamanio));
+			enviar(*(int*)socket, 342, sizeof(int), pideSemaforo(elPaquete->data, elPaquete->tamanio));
 
 			break;
 
 		case 343: //Libera semaforo
-			proceso = dameProceso(cola_exec, args->socket);
+			proceso = dameProceso(cola_exec, *(int*)socket);
 			queue_push(cola_exec, proceso);
 			liberaSemaforo(elPaquete->data, elPaquete->tamanio);
 			break;
 
 
 		case 350: //Escribe variable
-			proceso = dameProceso(cola_exec, args->socket);
+			proceso = dameProceso(cola_exec, *(int*)socket);
 			queue_push(cola_exec, proceso);
 			escribeVariable(elPaquete->data, elPaquete->tamanio);
 			break;
 
 
 		case 351: //Pide variable
-			proceso = dameProceso(cola_exec, args->socket);
+			proceso = dameProceso(cola_exec, *(int*)socket);
 			queue_push(cola_exec, proceso);
 
-			enviar(args->socket, 352, sizeof(int), pideVariable(elPaquete->data, elPaquete->tamanio));
+			enviar(*(int*)socket, 352, sizeof(int), pideVariable(elPaquete->data, elPaquete->tamanio));
 			break;
 
 		case 360: //imprimir
-			proceso = dameProceso(cola_exec, args->socket);
+			proceso = dameProceso(cola_exec, *(int*)socket);
 			queue_push(cola_exec, proceso);
 			enviar(proceso->socket_CONSOLA, 160, elPaquete->tamanio, elPaquete->data);
 
 		case 361: //imprimir texto
-			proceso = dameProceso(cola_exec, args->socket);
+			proceso = dameProceso(cola_exec, *(int*)socket);
 			queue_push(cola_exec, proceso);
 			enviar(proceso->socket_CONSOLA, 161, elPaquete->tamanio, elPaquete->data);
 		}
@@ -688,20 +621,20 @@ void *hilo_CONEXION_CPU(void *arg) {
 
 void *hilo_HANDLER_CONEXIONES_CPU(void *arg) {
 	int servidorSocket, socketCliente;
-	struct arg_struct *args; //Probar de sacar afuera esto?
+	int *socketClienteTemp;
 	socketcpu = socket_escucha("localhost", config_nucleo->PUERTO_CPU);
 	listen(socketcpu, 1024);
 	listen(socketcpu, 5);   //Aca maximas conexiones, ver de cambiar?
 
 	while (1) {
 		socketCliente = aceptar_conexion(socketcpu);
-		args = malloc(sizeof(struct arg_struct));//cuando se termine el proceso hacer un free de esto
-		args->socket = socketCliente;
+		socketClienteTemp = malloc(sizeof(int));
+		*socketClienteTemp = socketCliente;
 
 		pthread_t thCONEXION_CPU;
-		pthread_create(&thCONEXION_CPU, NULL, hilo_CONEXION_CPU, (void *)args);
+		pthread_create(&thCONEXION_CPU, NULL, hilo_CONEXION_CPU, (void *)socketClienteTemp);
 
-		printf("NUCLEO: Acepte nueva CPU %d\n", socketCliente);
+		printf("NUCLEO: Acepte nueva CPU %d\n", *socketClienteTemp);
 	}
 
 }
@@ -783,11 +716,14 @@ void *hilo_mock_cpu(void *arg) {
 
 	t_pcb *pcb;
 	int i = 0;
+
 	paquete_nuevo = recibir(cpu);
 	enviar(cpu, 301, sizeof(codigo), codigo);
+
 	while (1) {
 		sleep(1);
 		paquete_nuevo = recibir(cpu);
+		
 
 		if (paquete_nuevo->codigo_operacion == 303) {
 			/*MODIFICAR Y PEDIR RECIBIR VARIABLE
