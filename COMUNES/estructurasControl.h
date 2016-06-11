@@ -23,6 +23,13 @@ typedef struct __attribute__((packed))t_direccion{
 	int size;
 }t_direccion;
 
+typedef struct __attribute__((packed))t_dirrecion_variable{
+	int pagina;
+	int offset;
+	int size=1;
+	char buffer;
+}t_direccion_variable;
+
 
 typedef struct __attribute__((packed))t_variable
 {
@@ -50,6 +57,7 @@ typedef struct __attribute__((packed))t_pcb{
 	int pid;
 	unsigned int pc;
 	unsigned int paginasDeCodigo;
+	unsigned int paginasDeMemoria;
 	int *indiceDeCodigo; 
 	char *indiceDeEtiquetas;	
 	t_contexto **contextoActual; //Aca podria almanecar la lista de contextos en el nucleo y solo pasarle el contexto que necesito dentro del pcb?

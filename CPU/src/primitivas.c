@@ -7,11 +7,25 @@
 
 #include "primitivas.h"
 #include <stdlib.h>
+#include "../../COMUNES/estructurasControl.h"
+#include "../../COMUNES/estructurasControl.c"
+#include "funcionesCPU.h"
+
+typedef struct __attribute__((packed))t_dirrecion_variable{
+	int pagina;
+	int offset;
+	int size=1;
+	char buffer;
+}t_direccion_variable;
+
+
 
 t_puntero definirVariable(t_nombre_variable identificador_variable)
 {
-	printf("Soy la funcion definirVariable\n");
-	return 0;
+	t_direccion_variable direccion_variable;
+	//aca van la asignacion de estructura direccion variable
+	enviar(umc, 404, sizeof(t_direccion_variable), direccion_variable);
+
 }
 
 t_puntero obtenerPosicionVariable (t_nombre_variable identificador_variable)

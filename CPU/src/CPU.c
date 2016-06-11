@@ -40,13 +40,13 @@ int main(int argc,char **argv){
 	int sigusr1_desactivado =1; //el encanrgado de cambiar esto es el nucleo, tengo que tener forma de recibir la senal..
 	log= log_create(ARCHIVOLOG, "CPU", 0, LOG_LEVEL_INFO);
 	log_info(log,"Iniciando CPU\n");
-	t_pcb * serializado;
+	char* serializado;
 
 	levantar_configuraciones();
 
-	int umc = conectarConUmc();
+	umc = conectarConUmc();
 
-	int nucleo = conectarConNucleo();
+	nucleo = conectarConNucleo();
 	t_paquete* datos_kernel=recibir(nucleo);  //una vez que nucleo se conecta con cpu debe mandar t_datos_kernel..
 
 	while(sigusr1_desactivado){
@@ -58,10 +58,11 @@ int main(int argc,char **argv){
 
 
 		t_paquete* paquete_recibido = recibir(nucleo);
-		t_pcb* pcb = desserializarPCB(paquete_recibido->data);
+		pcb = desserializarPCB(paquete_recibido->data);
 		liberar_paquete(paquete_recibido);
 
 		int pid = pcb->pid;
+		if(pcb->pc == 0)crearStack();
 		enviar(umc, 405, sizeof(int), pid); // codigo 405: cambio de proceso activo NUCLEO - UMC
 
 		int programaBloqueado = 0;
@@ -70,7 +71,7 @@ int main(int argc,char **argv){
 
 		while(quantum && !programaBloqueado && !programaFinalizado && !programaAbortado){
 
-			t_direccion* datos_para_umc = crearEstructuraParaUMC (pcb, tamanioPag);
+			t_direccion datos_para_umc = crearEstructuraParaUMC (pcb, tamanioPag);
 			enviar(umc, 404, datos_para_umc->size, datos_para_umc);
 			t_paquete* instruccion=recibir(umc);
 			char* sentencia= instruccion->data;
@@ -84,27 +85,27 @@ int main(int argc,char **argv){
 
 			if (programaBloqueado){
 				log_info(log, "El programa salió por bloqueo");
-				enviar(nucleo, 340, sizeof(t_paquete*), serializado);
+				serializado = serializarPCB(pcb);
+				enviar(nucleo, 340, sizeof(serializado), serializado);
 				destruirPCB(pcb);
 					}
 
 			if (programaAbortado){
 				log_info(log, "El programa aborto");
-				serializado = (t_pcb*)serializarPCB(pcb);
-				enviar(nucleo, 333, sizeof(t_paquete*), serializado); //codigo de op 333, pcb abortado
+				serializado = serializarPCB(pcb);
+				enviar(nucleo, 333, sizeof(serializado), serializado); //codigo de op 333, pcb abortado
 				destruirPCB(pcb);
 			}
 
 			if (programaFinalizado){
 				log_debug(log, "El programa finalizo");
-				serializado = (t_pcb*)serializarPCB(pcb);
 				enviar(nucleo, 320, sizeof(int), programaFinalizado); //codigo de op 408, pcb finalizo
 				destruirPCB(pcb);
 			}
 
 			if(quantum &&!programaFinalizado&&!programaBloqueado&&!programaAbortado){
-				serializado = (t_pcb*)serializarPCB(pcb);
-				enviar(nucleo, 304, sizeof(t_paquete*), serializado); //codigo de op 407, pcb salio por quantum
+				serializado = serializarPCB(pcb);
+				enviar(nucleo, 304, sizeof(serializado), serializado); //codigo de op 407, pcb salio por quantum
 				destruirPCB(pcb);
 			}
 		}
