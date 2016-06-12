@@ -14,26 +14,6 @@ CONF_CPU config_cpu;
 t_log* log;  //en COMUNES tendrian que estar las estructuras del log?
 
 
-AnSISOP_funciones primitivas = {
-		.AnSISOP_definirVariable		= definirVariable,
-		.AnSISOP_obtenerPosicionVariable= obtenerPosicionVariable,
-		.AnSISOP_dereferenciar			= dereferenciar,
-		.AnSISOP_asignar				= asignar,
-		.AnSISOP_obtenerValorCompartida = obtenerValorCompartida,
-		.AnSISOP_asignarValorCompartida = asignarValorCompartida,
-		.AnSISOP_irAlLabel				= irAlLabel,
-		.AnSISOP_llamarConRetorno		= llamarFuncion,
-		.AnSISOP_retornar				= retornar,
-		.AnSISOP_imprimir				= imprimir,
-		.AnSISOP_imprimirTexto			= imprimirTexto,
-		.AnSISOP_entradaSalida			= entradaSalida,
-
-};
-AnSISOP_kernel primitivas_kernel = {
-		.AnSISOP_wait					=wait,
-		.AnSISOP_signal					=signal,
-};
-
 
 int main(int argc,char **argv){
 
@@ -70,8 +50,8 @@ int main(int argc,char **argv){
 
 		while(quantum && !programaBloqueado && !programaFinalizado && !programaAbortado){
 
-			t_direccion* datos_para_umc = crearEstructuraParaUMC (pcb, tamanioPag);
-			enviar(umc, 404, datos_para_umc->size, datos_para_umc);
+			t_direccion datos_para_umc = crearEstructuraParaUMC (pcb, tamanioPag);
+			enviar(umc, 404, datos_para_umc.size, &datos_para_umc);
 			t_paquete* instruccion=recibir(umc);
 			char* sentencia= instruccion->data;
 			analizadorLinea(depurarSentencia(strdup(sentencia)), &primitivas, &primitivas_kernel);
@@ -160,12 +140,12 @@ return nucleo;
 }
 
 
-t_direccion*  crearEstructuraParaUMC (t_pcb* pcb, int tamPag){
+t_direccion  crearEstructuraParaUMC (t_pcb* pcb, int tamPag){
 
-	t_direccion* info;
-	info->pagina=pcb->indiceDeCodigo [(pcb->pc)*2]/ tamPag;
-	info->offset=pcb->indiceDeCodigo [((pcb->pc)*2)];
-	info->size=pcb->indiceDeCodigo [((pcb->pc)*2)+1];
+	t_direccion info;
+	info.pagina=pcb->indiceDeCodigo [(pcb->pc)*2]/ tamPag;
+	info.offset=pcb->indiceDeCodigo [((pcb->pc)*2)];
+	info.size=pcb->indiceDeCodigo [((pcb->pc)*2)+1];
 	return info;
 }
 

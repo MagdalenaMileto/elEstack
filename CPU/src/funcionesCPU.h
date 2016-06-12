@@ -25,7 +25,6 @@
 #include <parser/metadata_program.h>
 #include "../../COMUNES/nsockets.h"
 #include "../../COMUNES/estructurasControl.h"
-#include "../../COMUNES/estructurasControl.c"
 #include "../../COMUNES/handshake.h"
 #include "../../COMUNES/nsockets.c"
 #include "primitivas.h"
@@ -51,6 +50,30 @@ typedef struct {
   int SIZE_PAGINA;
 }CONF_CPU;
 
+
+
+AnSISOP_funciones primitivas = {
+		.AnSISOP_definirVariable		= definirVariable,
+		.AnSISOP_obtenerPosicionVariable= obtenerPosicionVariable,
+		.AnSISOP_dereferenciar			= dereferenciar,
+		.AnSISOP_asignar				= asignar,
+		.AnSISOP_obtenerValorCompartida = obtenerValorCompartida,
+		.AnSISOP_asignarValorCompartida = asignarValorCompartida,
+		.AnSISOP_irAlLabel				= irAlLabel,
+		.AnSISOP_llamarConRetorno		= llamarFuncion,
+		.AnSISOP_retornar				= retornar,
+		.AnSISOP_imprimir				= imprimir,
+		.AnSISOP_imprimirTexto			= imprimirTexto,
+		.AnSISOP_entradaSalida			= entradaSalida,
+
+};
+AnSISOP_kernel primitivas_kernel = {
+		.AnSISOP_wait					=wait,
+		.AnSISOP_signal					=signal,
+};
+
+
+
 int umc, nucleo;
 t_pcb* pcb;
 int quantum;
@@ -60,7 +83,7 @@ int quantum_sleep;
 
 int conectarConUmc();
 int conectarConNucleo();
-t_direccion*  crearEstructuraParaUMC (t_pcb* pcb, int tamPag);
+t_direccion  crearEstructuraParaUMC (t_pcb* pcb, int tamPag);
 void levantar_configuraciones();
 char* depurarSentencia(char* sentencia);
 
