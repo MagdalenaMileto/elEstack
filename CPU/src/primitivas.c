@@ -16,15 +16,35 @@
 t_puntero definirVariable(t_nombre_variable identificador_variable)
 {
 	t_direccion direccion_variable;
+	int posicionStack = pcb->sizeContextoActual-1;
 
-	if(pcb->pc==0){
+	if(pcb->sizeContextoActual==0){
 		pcb->contextoActual[0]->pos=0;
-		pcb->contextoActual[0]->vars->etiqueta=identificador_variable;
-		pcb->contextoActual[0]->vars->direccion = armarDireccionPrimeraPagina();
+		pcb->contextoActual[0]->vars[0]->etiqueta=identificador_variable;
+		pcb->contextoActual[0]->vars[0]->direccion = armarDireccionPrimeraPagina();
+		direccion_variable = pcb->contextoActual[0]->vars[0]->direccion;
 
-	}
-	//aca van la asignacion de estructura direccion variable
+	}else{
+
+			if(pcb->contextoActual[posicionStack]->sizeVars == 0){
+			//	pcb->contextoActual[posicionStack]->pos = posicionStack; esto ya va a estar definido cuando se llama a function
+				pcb->contextoActual[posicionStack]->vars[0]->etiqueta=identificador_variable;
+				pcb->contextoActual[posicionStack]->vars[0]->direccion= armarDirecccionDeFuncion();
+				direccion_variable = pcb->contextoActual[posicionStack]->vars[0]->direccion;
+
+				}else{
+
+					int posicionVars = pcb->contextoActual->sizeVars;
+					pcb->contextoActual[posicionStack]->pos = posicionStack;
+					pcb->contextoActual[posicionStack]->vars[posicionVars]->etiqueta=identificador_variable;
+					pcb->contextoActual[posicionStack]->vars[posicionVars]->direccion = armarProximaDireccion();
+					direccion_variable = pcb->contextoActual[posicionStack]->vars[posicionVars]->direccion;
+		 	  }
+		 }
+
+
 	enviar(umc, 404, sizeof(t_direccion), direccion_variable);
+	//retornar t_puntero?
 
 
 }
@@ -109,8 +129,43 @@ int signal(t_nombre_semaforo identificador_semaforo)
 t_direccion armarDireccionPrimeraPagina(){
 	t_direccion direccion;
 	direccion.offset=0;
-	direccion.size=1;
-	direccion.pagina=(pcb->indiceDeCodigo [(pcb->pc)*pcb->paginasDeCodigo])+size(pcb->sizeIndiceDeCodigo)/ tamanioPag;
+	direccion.size=4;
+	direccion.pagina=primeraPagina();
 
 	return direccion;
+}
+
+t_direccion armarProximaDireccion(){
+	int ultimaPosicionStack = pcb->sizeContextoActual-1;
+	int posicionUltimaVariable = pcb->contextoActual[ultimaPosicionStack]->sizeVars-1;
+
+	return proximaDireccion(ultimaPosicionStack,posicionUltimaVariable);
+}
+
+int primeraPagina(){
+	return ((pcb->indiceDeCodigo[pcb->sizeIndiceDeCodigo-2])+pcb->indiceDeCodigo[pcb->sizeIndiceDeCodigo-1]/ tamanioPag)+1;
+}
+
+t_direccion armarDireccionDeFuncion(){
+	t_direccion direccion;
+	int posicionStackAnterior = pcb->sizeContextoActual-2;
+	int posicionUltimaVariable = pcb->contextoActual[posicionStackAnterior]->sizeVars-1;
+	return proximaDireccion(posicionStackAnterior, posicionUltimaVariable);
+
+}
+
+t_direccion proximaDireccion(int posStack, int posUltVar){
+	t_direccion direccion;
+	int offset = pcb->contextoActual[posStack]->vars[posUltVar]->direccion.offset + 4;
+		if(offset>tamanioPag){
+			direccion.pagina = pcb->contextoActual[posStack]->vars[posUltVar]->direccion.pagina + 1;
+			direccion.offset = 0;
+			direccion.size=4;
+			return direccion;
+		}else{
+			direccion.pagina = pcb->contextoActual[posStack]->vars[posUltVar]->direccion.pagina;
+			direccion.offset = offset;
+			direccion.size=4;
+		}
+		return direccion;
 }
