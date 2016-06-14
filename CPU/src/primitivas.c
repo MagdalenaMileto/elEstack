@@ -44,7 +44,7 @@ t_puntero definirVariable(t_nombre_variable identificador_variable)
 
 
 	enviar(umc, 404, sizeof(t_direccion), direccion_variable);
-	//retornar t_puntero?
+	return direccion_variable; //retornar t_puntero?
 
 
 }
