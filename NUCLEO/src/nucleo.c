@@ -231,14 +231,16 @@ void mandarCodigoAUmc(char* codigo, int size, t_proceso *proceso) {
 	proceso->pcb->indiceDeEtiquetas = malloc(proceso->pcb->sizeIndiceDeEtiquetas * sizeof(char));
 	memcpy(proceso->pcb->indiceDeEtiquetas, metadata_program->etiquetas, proceso->pcb->sizeIndiceDeEtiquetas * sizeof(char));
 
-	proceso->pcb->contextoActual = malloc(1 * sizeof(proceso->pcb->contextoActual));
+	proceso->pcb->contextoActual = list_create();
 	t_contexto *contextocero;
 	contextocero = malloc(sizeof(t_contexto));
 
-	proceso->pcb->contextoActual[0] = contextocero;
-	proceso->pcb->contextoActual[0]->sizeVars = 0;
-	proceso->pcb->contextoActual[0]->sizeArgs = 0;
-	proceso->pcb->contextoActual[0]->pos = 0;
+	contextocero->sizeVars = 0;
+	contextocero->sizeArgs = 0;
+	contextocero->pos = 0;
+	list_add(proceso->pcb->contextoActual, (void*)contextocero);
+
+	
 	proceso->pcb->sizeContextoActual = 1;
 	proceso->pcb->pc = 0;
 	proceso->pcb->paginasDeMemoria=(int)ceil((double)config_nucleo->STACK_SIZE / (double)config_nucleo->TAMPAG);
@@ -535,7 +537,8 @@ void *hilo_CONEXION_CPU(void *socket) {
 			queue_push(cola_exit, proceso);
 			queue_push(cola_CPU_libres, (void*)*(int*)socket);
 			sem_post(&sem_cpu);
-			enviar(umc, 6, sizeof(int), &proceso->pcb->pid);
+			enviar(umc, 6, sizeof(int), &
+				proceso->pcb->pid);
 			break;
 
 		case 340:

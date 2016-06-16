@@ -1,6 +1,7 @@
 #include "estructurasControl.h"
 
 void destruirPCB(t_pcb *pcb) {
+	/*
 	int i, y;
 	for (i = 0; i < pcb->sizeContextoActual; i++) {
 		for (y = 0; y < pcb->contextoActual[i]->sizeArgs; y++) {
@@ -15,6 +16,7 @@ void destruirPCB(t_pcb *pcb) {
 	free(pcb->indiceDeCodigo);
 	free(pcb->indiceDeEtiquetas);
 	free(pcb);
+	*/
 }
 
 t_pcb *desserializarPCB(char *serializado) {
@@ -37,29 +39,44 @@ t_pcb *desserializarPCB(char *serializado) {
 	serializado += pcb->sizeIndiceDeEtiquetas * sizeof(char);
 
 
-	pcb->contextoActual = malloc(pcb->sizeContextoActual * sizeof(t_contexto*));
-	memcpy(pcb->contextoActual, serializado, pcb->sizeContextoActual * sizeof(t_contexto*));
-	serializado += pcb->sizeContextoActual * sizeof(t_contexto*);
+	pcb->contextoActual = list_create();
+	
+
+
+	//serializado += pcb->sizeContextoActual * sizeof(t_contexto*);
+
 
 	for (i = 0; i < pcb->sizeContextoActual; i++) {
-		pcb->contextoActual[i] = malloc(sizeof(t_contexto));
+	
 
-		memcpy(pcb->contextoActual[i], serializado, sizeof(t_contexto));
+		t_contexto *temp = malloc(sizeof(t_contexto));
+
+		
+		memcpy(temp, serializado, sizeof(t_contexto));
 
 
 		serializado += sizeof(t_contexto);
+		temp->vars= list_create();
+		temp->args= list_create();
 
-		for (y = 0; y < pcb->contextoActual[i]->sizeArgs; y++) {
-			pcb->contextoActual[i]->args[y] = malloc(sizeof(t_direccion));
-			memcpy(pcb->contextoActual[i]->args[y], serializado, sizeof(t_direccion));
+		for (y = 0; y < temp->sizeArgs; y++) {
+			t_direccion *dir = malloc(sizeof(t_direccion));
+			memcpy(dir, serializado, sizeof(t_direccion));
 			serializado += sizeof(t_direccion);
+			list_add(temp->args, (void*)dir);
 		}
 
-		for (y = 0; y < pcb->contextoActual[i]->sizeVars; y++) {
-			pcb->contextoActual[i]->vars[y] = malloc(sizeof(t_variable));
-			memcpy(pcb->contextoActual[i]->vars[y], serializado, sizeof(t_variable));
+		for (y = 0; y < temp->sizeVars; y++) {
+			t_variable *var = malloc(sizeof(t_variable));
+			t_direccion *dir = malloc(sizeof(t_direccion));
+			memcpy(var, serializado, sizeof(t_variable));
 			serializado += sizeof(t_variable);
+			memcpy(dir, serializado, sizeof(t_direccion));
+			serializado += sizeof(t_direccion);
+
+			list_add(temp->vars, (void*)dir);
 		}
+		list_add(pcb->contextoActual, (void*)temp);
 	}
 
 	return pcb;
@@ -68,6 +85,8 @@ t_pcb *desserializarPCB(char *serializado) {
 }
 
 void agregarContexto(t_pcb *pcb, t_contexto *contexto) {
+	/*
+
 	pcb->sizeContextoActual++;
 	t_contexto **viejo;
 	viejo = pcb->contextoActual;
@@ -80,11 +99,12 @@ void agregarContexto(t_pcb *pcb, t_contexto *contexto) {
 
 	free(viejo);
 
-
+*/
 }
 
 
 t_blocked *desserializarBLOQUEO(char *serializado) {
+	
 	t_blocked *retorno;	t_pcb *pcb;
 	int i=0;
 
@@ -164,16 +184,19 @@ char *serializarPCB(t_pcb *pcb) {
 	size += pcb->sizeIndiceDeEtiquetas * sizeof(char);;
 	size += pcb->sizeIndiceDeCodigo * 2 * sizeof(int);;
 	int i, y;
-	size += pcb->sizeContextoActual * sizeof(t_contexto*);
+	//size += pcb->sizeContextoActual * sizeof(t_contexto*);
 	for (i = 0; i < pcb->sizeContextoActual; i++) {
 		size += sizeof(t_contexto);
 		int y;
-		for (y = 0; y < pcb->contextoActual[i]->sizeArgs; y++) {
+		t_contexto * contexto;
+		contexto = list_get(pcb->contextoActual, i);
+		for (y = 0; y < contexto->sizeArgs; y++) {
 			size += sizeof(t_direccion);
 		}
-		for (y = 0; y < pcb->contextoActual[i]->sizeVars; y++) {
+		for (y = 0; y < contexto->sizeVars; y++) {
 
 			size += sizeof(t_variable);
+			size += sizeof(t_direccion);
 		}
 	}
 
@@ -192,22 +215,32 @@ char *serializarPCB(t_pcb *pcb) {
 
 	retornotemp += pcb->sizeIndiceDeEtiquetas * sizeof(char);
 
-	memcpy(retornotemp, pcb->contextoActual, pcb->sizeContextoActual * sizeof(t_contexto*));
-	retornotemp += pcb->sizeContextoActual * sizeof(t_contexto*);
+	//memcpy(retornotemp, pcb->contextoActual, pcb->sizeContextoActual * sizeof(t_contexto*));
+	//retornotemp += pcb->sizeContextoActual * sizeof(t_contexto*);
 
 	for (i = 0; i < pcb->sizeContextoActual; i++) {
-		memcpy(retornotemp, pcb->contextoActual[i], sizeof(t_contexto));
+		t_contexto *contexto;
+		contexto = list_get(pcb->contextoActual, i);
+		memcpy(retornotemp, contexto, sizeof(t_contexto));
 
 		retornotemp += sizeof(t_contexto);
 
-		for (y = 0; y < pcb->contextoActual[i]->sizeArgs; y++) {
-			memcpy(retornotemp, pcb->contextoActual[i]->args[y], sizeof(t_direccion));
+		for (y = 0; y < contexto->sizeArgs; y++) {
+			t_direccion *dir;
+			dir = list_get(contexto->args, y);
+			memcpy(retornotemp, dir, sizeof(t_direccion));
 			retornotemp += sizeof(t_direccion);
 		}
-		for (y = 0; y < pcb->contextoActual[i]->sizeVars; y++) {
-			memcpy(retornotemp, pcb->contextoActual[i]->vars[y], sizeof(t_variable));
+		for (y = 0; y < contexto->sizeVars; y++) {
+			t_variable *var;
+			t_direccion *dir;
+			var = list_get(contexto->vars, y);
+			memcpy(retornotemp, var, sizeof(t_variable));
 			retornotemp += sizeof(t_variable);
+			memcpy(retornotemp, dir, sizeof(t_direccion));
+			retornotemp += sizeof(t_direccion);
 		}
+
 	}
 	//printf("SIZE%d\n",size);
 	return retorno;
