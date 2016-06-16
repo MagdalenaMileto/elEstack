@@ -60,6 +60,7 @@ int leerPaginaProceso(int idProceso, int nroPag, void* paginaALeer);
 int inicializarEstructuraPaginas();
 void llenarprocPags();
 void *hilo_mock(void *arg);
+void check (int test, const char * message, ...);
 
 
 #endif /* SWAP_H_ */

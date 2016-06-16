@@ -25,7 +25,6 @@
 #include <parser/metadata_program.h>
 #include "../../COMUNES/nsockets.h"
 #include "../../COMUNES/estructurasControl.h"
-#include "../../COMUNES/estructurasControl.c"
 #include "../../COMUNES/handshake.h"
 #include "../../COMUNES/nsockets.c"
 #include "primitivas.h"
@@ -51,16 +50,58 @@ typedef struct {
   int SIZE_PAGINA;
 }CONF_CPU;
 
+
+
+AnSISOP_funciones primitivas = {
+		.AnSISOP_definirVariable		= definirVariable,
+		.AnSISOP_obtenerPosicionVariable= obtenerPosicionVariable,
+		.AnSISOP_dereferenciar			= dereferenciar,
+		.AnSISOP_asignar				= asignar,
+		.AnSISOP_obtenerValorCompartida = obtenerValorCompartida,
+		.AnSISOP_asignarValorCompartida = asignarValorCompartida,
+		.AnSISOP_irAlLabel				= irAlLabel,
+		.AnSISOP_llamarConRetorno		= llamarFuncion,
+		.AnSISOP_retornar				= retornar,
+		.AnSISOP_imprimir				= imprimir,
+		.AnSISOP_imprimirTexto			= imprimirTexto,
+		.AnSISOP_entradaSalida			= entradaSalida,
+
+};
+AnSISOP_kernel primitivas_kernel = {
+		.AnSISOP_wait					=wait,
+		.AnSISOP_signal					=signal,
+};
+
+
+
 int umc, nucleo;
 t_pcb* pcb;
+int quantum;
+int tamanioPag;
+int quantum_sleep;
 
 
 int conectarConUmc();
 int conectarConNucleo();
-t_direccion*  crearEstructuraParaUMC (t_pcb* pcb, int tamPag);
+t_direccion  crearEstructuraParaUMC (t_pcb* pcb, int tamPag);
 void levantar_configuraciones();
 char* depurarSentencia(char* sentencia);
 
-
+/* Emi para tener un machete de los codigos de operacion y no confundirnos:
+ *
+ * 303->recibo pcb serializado
+ * 352->recibo variable
+ * 342->recibo valor del semaforo
+ *
+ * 304->envio pcb serializado por fin de quantum
+ * 320->envio finalizacion del programa
+ * 340->envio pcb bloqueado
+ * 341->envio pido un semaforo
+ * 342->envio liberar semaforo
+ * 350->envio escribe una variable
+ * 351->envio pide la variable
+ * 360->envio impromir un valor numerico
+ * 361->envio imprimir texto
+ */
 
 #endif /* FUNCIONESCPU_H_ */

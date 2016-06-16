@@ -14,26 +14,6 @@ CONF_CPU config_cpu;
 t_log* log;  //en COMUNES tendrian que estar las estructuras del log?
 
 
-AnSISOP_funciones primitivas = {
-		.AnSISOP_definirVariable		= definirVariable,
-		.AnSISOP_obtenerPosicionVariable= obtenerPosicionVariable,
-		.AnSISOP_dereferenciar			= dereferenciar,
-		.AnSISOP_asignar				= asignar,
-		.AnSISOP_obtenerValorCompartida = obtenerValorCompartida,
-		.AnSISOP_asignarValorCompartida = asignarValorCompartida,
-		.AnSISOP_irAlLabel				= irAlLabel,
-		.AnSISOP_llamarConRetorno		= llamarFuncion,
-		.AnSISOP_retornar				= retornar,
-		.AnSISOP_imprimir				= imprimir,
-		.AnSISOP_imprimirTexto			= imprimirTexto,
-		.AnSISOP_entradaSalida			= entradaSalida,
-
-};
-AnSISOP_kernel primitivas_kernel = {
-		.AnSISOP_wait					=wait,
-		.AnSISOP_signal					=signal,
-};
-
 
 int main(int argc,char **argv){
 
@@ -51,9 +31,9 @@ int main(int argc,char **argv){
 
 	while(sigusr1_desactivado){
 
-		int quantum = ((t_datos_kernel*)(datos_kernel->data))->QUANTUM;
-		int tamanioPag = ((t_datos_kernel*)(datos_kernel->data))->TAMPAG; /// liberar_paquete..
-		int quantum_sleep = ((t_datos_kernel*)(datos_kernel->data))->QUANTUM_SLEEP;
+		quantum = ((t_datos_kernel*)(datos_kernel->data))->QUANTUM;
+		tamanioPag = ((t_datos_kernel*)(datos_kernel->data))->TAMPAG;
+		quantum_sleep = ((t_datos_kernel*)(datos_kernel->data))->QUANTUM_SLEEP;
 
 
 
@@ -62,7 +42,6 @@ int main(int argc,char **argv){
 		liberar_paquete(paquete_recibido);
 
 		int pid = pcb->pid;
-		if(pcb->pc == 0)crearStack();
 		enviar(umc, 405, sizeof(int), pid); // codigo 405: cambio de proceso activo NUCLEO - UMC
 
 		int programaBloqueado = 0;
@@ -72,12 +51,11 @@ int main(int argc,char **argv){
 		while(quantum && !programaBloqueado && !programaFinalizado && !programaAbortado){
 
 			t_direccion datos_para_umc = crearEstructuraParaUMC (pcb, tamanioPag);
-			enviar(umc, 404, datos_para_umc->size, datos_para_umc);
+			enviar(umc, 404, datos_para_umc.size, &datos_para_umc);
 			t_paquete* instruccion=recibir(umc);
 			char* sentencia= instruccion->data;
 			analizadorLinea(depurarSentencia(strdup(sentencia)), &primitivas, &primitivas_kernel);
 			liberar_paquete(instruccion);
-			// y la alcutalizacion de los valores en la umc lo hacen la primitiva al analizarla linea
 
 			pcb->pc++;
 			quantum--;
@@ -99,13 +77,13 @@ int main(int argc,char **argv){
 
 			if (programaFinalizado){
 				log_debug(log, "El programa finalizo");
-				enviar(nucleo, 320, sizeof(int), programaFinalizado); //codigo de op 408, pcb finalizo
+				enviar(nucleo, 320, sizeof(int), programaFinalizado); //codigo de op 320, pcb finalizo
 				destruirPCB(pcb);
 			}
 
 			if(quantum &&!programaFinalizado&&!programaBloqueado&&!programaAbortado){
 				serializado = serializarPCB(pcb);
-				enviar(nucleo, 304, sizeof(serializado), serializado); //codigo de op 407, pcb salio por quantum
+				enviar(nucleo, 304, sizeof(serializado), serializado); //codigo de op 304, pcb salio por quantum
 				destruirPCB(pcb);
 			}
 		}
@@ -162,12 +140,12 @@ return nucleo;
 }
 
 
-t_direccion*  crearEstructuraParaUMC (t_pcb* pcb, int tamPag){
+t_direccion  crearEstructuraParaUMC (t_pcb* pcb, int tamPag){
 
-	t_direccion* info;
-	info->pagina=pcb->indiceDeCodigo [(pcb->pc)*2]/ tamPag;
-	info->offset=pcb->indiceDeCodigo [((pcb->pc)*2)];
-	info->size=pcb->indiceDeCodigo [((pcb->pc)*2)+1];
+	t_direccion info;
+	info.pagina=pcb->indiceDeCodigo [(pcb->pc)*2]/ tamPag;
+	info.offset=pcb->indiceDeCodigo [((pcb->pc)*2)];
+	info.size=pcb->indiceDeCodigo [((pcb->pc)*2)+1];
 	return info;
 }
 
@@ -196,4 +174,5 @@ char* depurarSentencia(char* sentencia){
 		return sentencia;
 
 }
+
 
