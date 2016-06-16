@@ -21,7 +21,7 @@ void inicializar_semaforos() {
 
 void levantar_configuraciones() {
 
-	t_config * archivo_configuracion = config_create("./UMC.confg");
+	t_config * archivo_configuracion = config_create("UMC.confg");
 
 	puerto_umc = config_get_string_value(archivo_configuracion, "PUERTO");
 	ip_swap = config_get_string_value(archivo_configuracion, "IP_SWAP");
