@@ -40,8 +40,8 @@ int main(int argc,char **argv) {
 	int pid, pagina;
 	int tamanio_codigo;
 
-//	pthread_t mock;
-//	pthread_create(&mock, NULL, hilo_mock, NULL);
+	//pthread_t mock;
+	//pthread_create(&mock, NULL, hilo_mock, NULL);
 
 	if(abrirConfiguracion() == -1){return -1;};
 
@@ -56,11 +56,13 @@ int main(int argc,char **argv) {
 	while(1){
 
 		new_lst = aceptar_conexion(sock_lst);
+		printf("acepto\n");
 		t_paquete *mensaje;
 
 		while(1){
 			mensaje = recibir(new_lst);
 			int flagRespuesta;
+			//printf("*a\n");
 			printf("Codigo operacion %d\n",mensaje->codigo_operacion);
 
 			switch (mensaje->codigo_operacion) {
@@ -70,6 +72,8 @@ int main(int argc,char **argv) {
 				memcpy(&pagina, mensaje->data + sizeof(int), sizeof(int));
 				paquetin = malloc(pagina * TAMANIO_PAGINA);
 				memcpy(paquetin, mensaje->data + sizeof(int) * 2, TAMANIO_PAGINA * pagina);
+				//printf("%s, %d %d \n",(char*)paquetin, pid, pagina);
+
 				printf("Se creara un nuevo proceso de %d paginas y con PID: %d \n", pagina, pid);
 				sleep(RETARDO_ACCESO);
 
@@ -586,19 +590,43 @@ int inicializarEstructuraPaginas(){
 }
 
 void *hilo_mock(void *arg){
-	char codigo[10]="golDSDSD";
+	char* codigo;
+	codigo = malloc(TAMANIO_PAGINA);
+//	int i;
+//	for(i = 0; i<TAMANIO_PAGINA; i++){
+//		codigo[i] = "a";
+//	}
+	codigo = "asdksksklsasdksksklsasdksksklsasdksls";
+	printf("%s \n", codigo);
 	sleep(4);
 	int socket;
-	socket = conectar_a("localhost", "1202");
-	printf("conecte%d\n",socket);
-	int *puntero = malloc(sizeof(codigo)+3*sizeof(int));
-	puntero[0]=1; //pid
-	puntero[1]=2;
-	puntero[2]=sizeof(codigo);
-	memcpy(puntero+3*sizeof(int),codigo, sizeof(codigo));
+	socket = conectar_a("localhost", "1209");
+	printf("conecte %d\n",socket);
+
+	int pid = 1;
+	int cantidad_paginas = 1;
+	int tamanio_codigo = TAMANIO_PAGINA;
+	int tamanio_paquete = (sizeof(int) * 2) + TAMANIO_PAGINA;
+	void * data = malloc(tamanio_paquete);
+
+	memcpy(data, &pid, sizeof(int));
+	memcpy(data + sizeof(int), &cantidad_paginas, sizeof(int));
+	memcpy(data + (sizeof(int) * 2), codigo, tamanio_codigo);
+
+
+//	int *puntero = malloc(TAMANIO_PAGINA +2*sizeof(int));
+//	printf("**\n");
+//	puntero[0]=1; //pid
+//	puntero[1]=1;
+//	memcpy(puntero+2*sizeof(int),codigo, sizeof(codigo));
+//	printf("**\n");
 	sleep(1);
 	printf("envie\n");
-	enviar(socket, 0, sizeof(codigo)+3*sizeof(int), puntero);
+	//enviar(socket, 1,TAMANIO_PAGINA +2*sizeof(int), puntero);
+	enviar(socket, 1, tamanio_paquete, data);
+
+
+	printf("33\n");
 
 	while(1){
 		// recive

@@ -21,7 +21,7 @@ void inicializar_semaforos() {
 
 void levantar_configuraciones() {
 
-	t_config * archivo_configuracion = config_create("./UMC.confg");
+	t_config * archivo_configuracion = config_create("UMC.confg");
 
 	puerto_umc = config_get_string_value(archivo_configuracion, "PUERTO");
 	ip_swap = config_get_string_value(archivo_configuracion, "IP_SWAP");
@@ -38,13 +38,13 @@ void levantar_configuraciones() {
 void comunicarse_con_el_swap() {
 
 	socket_swap = conectar_a(ip_swap, puerto_swap);
-
+/*
 	bool resultado = realizar_handshake(socket_swap);
 
 	if (!resultado) {
 		error_show("No se autenticó la conexión con el swap");
 		exit(EXIT_FAILURE);
-	}
+	}*/
 
 }
 
@@ -55,15 +55,13 @@ void esperar_al_nucleo() {
 	listen(socket_conexiones_nuevas, 1024);
 
 	socket_nucleo = aceptar_conexion(socket_conexiones_nuevas);
-
-	bool resultado = esperar_handshake(socket_nucleo);
-
-	if (resultado) {
+//	bool resultado = esperar_handshake(socket_nucleo);
+	//if (resultado) {
 		pthread_create(&hilo_nucleo, NULL, (void *) atender_nucleo, NULL);
-	} else {
-		error_show("No se autenticó la conexión con el Nucleo");
-		exit(EXIT_FAILURE);
-	}
+	//} else {
+		//error_show("No se autenticó la conexión con el Nucleo");
+	//	exit(EXIT_FAILURE);
+//	}
 
 }
 
