@@ -83,7 +83,7 @@ int quantum_sleep;
 
 int conectarConUmc();
 int conectarConNucleo();
-t_direccion  crearEstructuraParaUMC (t_pcb* pcb, int tamPag);
+void crearEstructuraParaUMC (t_pcb* pcb, int tamPag, t_direccion* informacion);
 void levantar_configuraciones();
 char* depurarSentencia(char* sentencia);
 

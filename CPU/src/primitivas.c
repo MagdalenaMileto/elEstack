@@ -26,7 +26,7 @@ t_puntero definirVariable(t_nombre_variable identificador_variable)
 		armarDireccionPrimeraPagina(direccion_variable);
 		variable->etiqueta=identificador_variable;
 		variable->direccion=direccion_variable;
-		list_add(contexto.vars, variable);
+		list_add(contexto->vars, variable);
 		contexto->pos=0;
 		contexto->sizeVars++;
 
@@ -38,17 +38,16 @@ t_puntero definirVariable(t_nombre_variable identificador_variable)
 		armarDirecccionDeFuncion(direccion_variable);
 		variable->etiqueta=identificador_variable;
 		variable->direccion=direccion_variable;
-		list_add(contexto.vars, variable);
+		list_add(contexto->vars, variable);
 		contexto->sizeVars++;
 
 	}
 
 	else {
-		int posicionVars = ((t_contexto*)(list_get(pcb->contextoActual, posicionStack)))->sizeVars;
 		armarProximaDireccion(direccion_variable);
 		variable->etiqueta=identificador_variable;
 		variable->direccion=direccion_variable;
-		list_add(contexto.vars, variable);
+		list_add(contexto->vars, variable);
 		contexto->sizeVars++;
 	}
 

@@ -51,7 +51,7 @@ int main(int argc,char **argv){
 		while(quantum && !programaBloqueado && !programaFinalizado && !programaAbortado){
 
 			t_direccion* datos_para_umc = malloc(sizeof(t_direccion));
-			datos_para_umc = crearEstructuraParaUMC (pcb, tamanioPag);
+			crearEstructuraParaUMC(pcb, tamanioPag, datos_para_umc);
 			enviar(umc, 404, datos_para_umc->size, datos_para_umc);
 			free(datos_para_umc);
 			t_paquete* instruccion=malloc(sizeof(t_paquete));
@@ -142,14 +142,15 @@ int conectarConNucleo(){
 return nucleo;
 }
 
+void crearEstructuraParaUMC (t_pcb* pcb, int tamPag, t_direccion* informacion){
 
-t_direccion*  crearEstructuraParaUMC (t_pcb* pcb, int tamPag){
-
-	t_direccion info=malloc(sizeof(t_direccion));
+	t_direccion* info=malloc(sizeof(t_direccion));
 	info->pagina=pcb->indiceDeCodigo [(pcb->pc)*2]/ tamPag;
 	info->offset=pcb->indiceDeCodigo [((pcb->pc)*2)];
 	info->size=pcb->indiceDeCodigo [((pcb->pc)*2)+1];
-	return info;
+	memcpy(informacion, info, sizeof(t_direccion*));
+	free(info);
+	return;
 }
 
 
