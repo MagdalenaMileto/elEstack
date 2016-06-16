@@ -23,36 +23,38 @@ t_puntero definirVariable(t_nombre_variable identificador_variable)
 		pcb->contextoActual[0]->vars[0]->etiqueta=identificador_variable;
 		pcb->contextoActual[0]->vars[0]->direccion = armarDireccionPrimeraPagina();
 		direccion_variable = pcb->contextoActual[0]->vars[0]->direccion;
+	}
 
-	}else{
+	else if(pcb->contextoActual[posicionStack]->sizeVars == 0 && pcb->contextoActual[posicionStack]->sizeArgs != 0){
+		//pcb->contextoActual[posicionStack]->pos = posicionStack; esto ya va a estar definido cuando se llama a function
+		pcb->contextoActual[posicionStack]->vars[0]->etiqueta=identificador_variable;
+		pcb->contextoActual[posicionStack]->vars[0]->direccion= armarDirecccionDeFuncion();
+		direccion_variable = pcb->contextoActual[posicionStack]->vars[0]->direccion;
+	}
 
-			if(pcb->contextoActual[posicionStack]->sizeVars == 0){
-			//	pcb->contextoActual[posicionStack]->pos = posicionStack; esto ya va a estar definido cuando se llama a function
-				pcb->contextoActual[posicionStack]->vars[0]->etiqueta=identificador_variable;
-				pcb->contextoActual[posicionStack]->vars[0]->direccion= armarDirecccionDeFuncion();
-				direccion_variable = pcb->contextoActual[posicionStack]->vars[0]->direccion;
-
-				}else{
-
-					int posicionVars = pcb->contextoActual->sizeVars;
-					pcb->contextoActual[posicionStack]->pos = posicionStack;
-					pcb->contextoActual[posicionStack]->vars[posicionVars]->etiqueta=identificador_variable;
-					pcb->contextoActual[posicionStack]->vars[posicionVars]->direccion = armarProximaDireccion();
-					direccion_variable = pcb->contextoActual[posicionStack]->vars[posicionVars]->direccion;
-		 	  }
-		 }
-
+	else if(pcb->contextoActual[posicionStack]->sizeArgs != 0){
+		int posicionVars = pcb->contextoActual->sizeVars;
+		pcb->contextoActual[posicionStack]->pos = posicionStack;
+		pcb->contextoActual[posicionStack]->vars[posicionVars]->etiqueta=identificador_variable;
+		pcb->contextoActual[posicionStack]->vars[posicionVars]->direccion = armarProximaDireccion();
+		direccion_variable = pcb->contextoActual[posicionStack]->vars[posicionVars]->direccion;
+	}
 
 	enviar(umc, 404, sizeof(t_direccion), direccion_variable);
 	return direccion_variable; //retornar t_puntero?
 
-
 }
+
 
 t_puntero obtenerPosicionVariable (t_nombre_variable identificador_variable)
 {
-	printf("Soy la funcion obtenerPosicionVariable\n");
-	return 0;
+	t_direccion direccion_variable;
+	int posicionStack = pcb->sizeContextoActual-1;
+	direccion_variable=buscarUbicacionVariable(posicionStack, identificador_variable);
+
+	if(direccion_variable != NULL) return direccion_variable.offset;
+	else return -1;
+
 }
 
 t_valor_variable dereferenciar(t_puntero direccion_variable)
@@ -168,4 +170,22 @@ t_direccion proximaDireccion(int posStack, int posUltVar){
 			direccion.size=4;
 		}
 		return direccion;
+}
+
+
+t_direccion buscarUbicacionVaraible(int posicionStack, t_nombre_variable identificador_variable){
+
+	int aux=0;
+	int termineDeBuscar=0;
+
+	while(termineDeBuscar!=1){
+
+		if(identificador_variable == pcb->contextoActual[posicionStack]->vars[aux]->etiqueta){
+
+			return(pcb->contextoActual[posicionStack]->vars[aux]->direccion);
+			termineDeBuscar=1;
+		}
+			else ++aux;
+	}
+	return NULL;
 }

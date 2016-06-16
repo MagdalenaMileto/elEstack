@@ -8,6 +8,13 @@
 #ifndef PRIMITIVAS_H_
 #define PRIMITIVAS_H_
 
+
+t_direccion armarDireccionPrimeraPagina();
+t_direccion armarProximaDireccion();
+int primeraPagina();
+t_direccion armarDireccionDeFuncion();
+t_direccion proximaDireccion(int posStack, int posUltVar);
+t_direccion buscarUbicacionVaraible(int posicionStack, t_nombre_variable identificador_variable);
 t_puntero definirVariable(t_nombre_variable identificador_variable);
 t_puntero obtenerPosicionVariable (t_nombre_variable identificador_variable);
 t_valor_variable dereferenciar(t_puntero direccion_variable);
