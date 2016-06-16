@@ -15,14 +15,20 @@
 
 t_puntero definirVariable(t_nombre_variable identificador_variable)
 {
-	t_direccion direccion_variable;
+	t_direccion *direccion_variable= malloc(sizeof(t_direccion));
+	t_variable *variable= malloc(sizeof(t_variable));
+	t_contexto contexto;
 	int posicionStack = pcb->sizeContextoActual-1;
+	t_contexto primerContexto= list_get(pcb->contextoActual, 0);
 
-	if(pcb->sizeContextoActual==0){
-		pcb->contextoActual[0]->pos=0;
-		pcb->contextoActual[0]->vars[0]->etiqueta=identificador_variable;
-		pcb->contextoActual[0]->vars[0]->direccion = armarDireccionPrimeraPagina();
-		direccion_variable = pcb->contextoActual[0]->vars[0]->direccion;
+	if(pcb->sizeContextoActual==1 &&  primerContexto.sizeVars==0 ){
+
+		memcpy(&variable->direccion, &armarDireccionPrimeraPagina(), sizeof(t_direccion));
+		variable->etiqueta=identificador_variable;
+		primerContexto = list_get(pcb->contextoActual, 0);
+		list_add(contexto.vars, variable);
+		direccion_variable = &variable->direccion;
+		contexto.sizeVars++;
 	}
 
 	else if(pcb->contextoActual[posicionStack]->sizeVars == 0 && pcb->contextoActual[posicionStack]->sizeArgs != 0){
