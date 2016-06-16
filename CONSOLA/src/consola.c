@@ -154,7 +154,7 @@ int enviarInformacionAlNucleo(char * script, signed int nucleo, signed int conso
 
 	     	}
 
-	     	liberar_paquete(paquete);
+	     	liberar_paquete(paquete); //hacer los cases....
 
 	 	 }
 
