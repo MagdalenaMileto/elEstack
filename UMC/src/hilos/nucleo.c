@@ -12,7 +12,7 @@ void atender_nucleo() {
 
 	int pid, paginas_requeridas, tamanio_codigo;
 	char * codigo;
-
+	printf("NUCLEO\n");
 	while (1) {
 
 		paquete_nuevo = recibir(socket_nucleo);

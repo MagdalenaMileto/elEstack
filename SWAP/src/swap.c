@@ -62,7 +62,7 @@ int main(int argc,char **argv) {
 		while(1){
 			mensaje = recibir(new_lst);
 			int flagRespuesta;
-			printf("*a\n");
+			//printf("*a\n");
 			printf("Codigo operacion %d\n",mensaje->codigo_operacion);
 
 			switch (mensaje->codigo_operacion) {
@@ -72,7 +72,7 @@ int main(int argc,char **argv) {
 				memcpy(&pagina, mensaje->data + sizeof(int), sizeof(int));
 				paquetin = malloc(pagina * TAMANIO_PAGINA);
 				memcpy(paquetin, mensaje->data + sizeof(int) * 2, TAMANIO_PAGINA * pagina);
-				printf("%s, %d %d \n",(char*)paquetin, pid, pagina);
+				//printf("%s, %d %d \n",(char*)paquetin, pid, pagina);
 
 				printf("Se creara un nuevo proceso de %d paginas y con PID: %d \n", pagina, pid);
 				sleep(RETARDO_ACCESO);
