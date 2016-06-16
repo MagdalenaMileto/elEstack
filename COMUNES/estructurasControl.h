@@ -10,6 +10,7 @@
 
 #include <parser/parser.h>
 #include <stdint.h>
+#include <commons/collections/list.h>
 
 #ifndef ESTRUCTURASCONTROL_H_
 #define ESTRUCTURASCONTROL_H_
@@ -36,8 +37,8 @@ typedef struct __attribute__((packed))t_variable
 typedef struct __attribute__((packed))t_contexto
 {
 	int pos;
-	t_direccion **args;
-	t_variable **vars;
+	t_list *args;
+	t_list *vars;
 	int retPos;
 	t_direccion retVar;
 	int sizeArgs;
@@ -53,7 +54,7 @@ typedef struct __attribute__((packed))t_pcb{
 	unsigned int paginasDeMemoria;
 	int *indiceDeCodigo; 
 	char *indiceDeEtiquetas;	
-	t_contexto **contextoActual; //Aca podria almanecar la lista de contextos en el nucleo y solo pasarle el contexto que necesito dentro del pcb?
+	t_list *contextoActual;
 	int sizeContextoActual;
 	int sizeIndiceDeEtiquetas;
 	int sizeIndiceDeCodigo;
