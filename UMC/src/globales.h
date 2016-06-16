@@ -23,7 +23,7 @@ int proceso_actual;
 
 int numero_operacion_actual;
 
-pthread_mutex_t semaforo_mutex_cpu;
+pthread_mutex_t semaforo_mutex_cpu, semaforo_mutex_consola;
 
 void * memoria;
 
