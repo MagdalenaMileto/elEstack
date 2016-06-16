@@ -54,7 +54,11 @@ typedef struct __attribute__((packed))t_pcb{
 	unsigned int paginasDeMemoria;
 	int *indiceDeCodigo; 
 	char *indiceDeEtiquetas;	
+<<<<<<< HEAD
 	t_list *contextoActual; //Aca podria almanecar la lista de contextos en el nucleo y solo pasarle el contexto que necesito dentro del pcb?
+=======
+	t_list *contextoActual;
+>>>>>>> daac58929f6c20ea0ea2eb7acd8e2a33ff48f65f
 	int sizeContextoActual;
 	int sizeIndiceDeEtiquetas;
 	int sizeIndiceDeCodigo;
