@@ -34,10 +34,10 @@ void atender_nucleo() {
 
 				inicializar_programa(pid, paginas_requeridas);
 
-				enviar(socket_nucleo, EXITO, 4, &pid);
+				enviar(socket_nucleo, EXITO, sizeof(int), &pid);
 			} else {
 
-				enviar(socket_nucleo, FRACASO, 4, &pid);
+				enviar(socket_nucleo, FRACASO, sizeof(int), &pid);
 			}
 
 			free(codigo);

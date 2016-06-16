@@ -50,7 +50,6 @@ void esperar_comando(void * parametros) {
 
 			goto error;
 		}
-
 	} else if (string_equals_ignore_case(primer_palabra, "flush")) {
 
 		char * segunda_palabra = palabras[1];
