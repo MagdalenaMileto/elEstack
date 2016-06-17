@@ -11,77 +11,88 @@ void esperar_comando(void * parametros) {
 
 	char * comando_a_realizar = malloc(50);
 	size_t tamanio_maximo = 50;
+	while (1) {
+		getline(&comando_a_realizar, &tamanio_maximo, stdin);
+		{
 
-	getline(&comando_a_realizar, &tamanio_maximo, stdin);
+			int tamanio = string_length(comando_a_realizar);
 
-	comando_a_realizar = string_drop_from_end(comando_a_realizar, 1);
-
-	pthread_mutex_lock(&semaforo_mutex_cpu);
-	char ** palabras = string_split(comando_a_realizar, " ");
-	char * primer_palabra = palabras[0];
-
-	if (string_equals_ignore_case(primer_palabra, "retardo")) {
-
-		char * segunda_palabra = palabras[1];
-
-		if (isNumber(segunda_palabra)) {
-
-			int retardo_numerico = atoi(segunda_palabra);
-			cambiar_retardo(retardo_numerico);
-
-		} else {
-
-			goto error;
-		}
-
-	} else if (string_equals_ignore_case(primer_palabra, "dump")) {
-
-		//TODO: Dump all.
-
-		char * segunda_palabra = palabras[1];
-
-		if (isNumber(segunda_palabra)) {
-
-			int proceso_a_dumpear = atoi(segunda_palabra);
-
-			//TODO: dumpear este proceso
-
-		} else {
-
-			goto error;
-		}
-	} else if (string_equals_ignore_case(primer_palabra, "flush")) {
-
-		char * segunda_palabra = palabras[1];
-
-		if (string_equals_ignore_case(segunda_palabra, "tlb")) {
-
-			vaciar_tlb();
-
-		} else if (string_equals_ignore_case(segunda_palabra, "memory")) {
-
-			char * tercer_palabra = palabras[2];
-
-			if (isNumber(tercer_palabra)) {
-
-				int pid = atoi(tercer_palabra);
-				marcar_las_paginas_del_proceso_como_modificadas(pid);
-
+			if (tamanio != 0) {
+				comando_a_realizar[tamanio - 1] = '\0';
 			} else {
-				goto error;
+				comando_a_realizar = "\0";
 			}
 
-		} else {
-			goto error;
+			pthread_mutex_lock(&semaforo_mutex_cpu);
+
+			char * posible_retardo = string_substring_until(comando_a_realizar,
+					8);
+			char * posible_dump_parcial = string_substring_until(
+					comando_a_realizar, 5);
+			char * posible_flush_memoria = string_substring_until(
+					comando_a_realizar, 13);
+
+			if (string_equals_ignore_case(posible_retardo, "retardo ")) {
+
+				char * resto = string_substring_from(comando_a_realizar, 8);
+
+				if (isNumber(resto)) {
+
+					int pid = atoi(resto);
+					cambiar_retardo(pid);
+				} else {
+
+					free(resto);
+					goto error;
+				}
+
+			} else if (string_equals_ignore_case(comando_a_realizar, "dump")) {
+
+				dump_total();
+
+			} else if (string_equals_ignore_case(posible_dump_parcial,
+					"dump ")) {
+
+				char * resto = string_substring_from(comando_a_realizar, 5);
+
+				if (isNumber(resto)) {
+					int pid = atoi(resto);
+					dump_proceso(pid);
+				} else {
+					free(resto);
+					goto error;
+				}
+
+			} else if (string_equals_ignore_case(posible_flush_memoria,
+					"flush memory ")) {
+
+				char * resto = string_substring_from(comando_a_realizar, 13);
+
+				if (isNumber(resto)) {
+					int pid = atoi(resto);
+					flush_memory(pid);
+				} else {
+					free(resto);
+					goto error;
+				}
+
+			} else if (string_equals_ignore_case(comando_a_realizar,
+					"flush tlb")) {
+				flush_tlb();
+			} else {
+
+				free(posible_flush_memoria);
+				free(posible_dump_parcial);
+				free(posible_retardo);
+
+				error: printf("El comando \"%s\" no existe.\n",
+						comando_a_realizar);
+			}
+
 		}
-
-	} else {
-
-		//Comando inválido.
-		error: printf("El comando \"%s\" a realizar no existe.",
-				comando_a_realizar);
+		pthread_mutex_unlock(&semaforo_mutex_cpu);
 	}
-	pthread_mutex_unlock(&semaforo_mutex_cpu);
+
 }
 
 void cambiar_retardo(int retardo_numerico) {
@@ -89,12 +100,12 @@ void cambiar_retardo(int retardo_numerico) {
 	retardo = retardo_numerico;
 }
 
-void vaciar_tlb() {
+void flush_tlb() {
 
 	list_clean(tlb);
 }
 
-void marcar_las_paginas_del_proceso_como_modificadas(int proceso) {
+void flush_memory(int proceso) {
 
 	bool filtrar_por_proceso(void * entrada) {
 
@@ -121,10 +132,97 @@ void marcar_las_paginas_del_proceso_como_modificadas(int proceso) {
 
 }
 
-//Funciones Auxiliares:
-char * string_drop_from_end(char * string, int cuantos) {
+void dump_total() {
 
-	return string_reverse(string_reverse(string) + cuantos);
+	escribir_a_dump(string_from_format("\n===== INICIO DUMP =====\n"));
+
+	list_iterate(tabla_de_paginas, dump_proceso_iterate);
+
+	escribir_a_dump(string_from_format("\n===== FIN DUMP =====\n"));
+}
+
+void dump_proceso(int pid) {
+
+	bool filtrar_por_proceso_dump(void * entrada) {
+
+		t_entrada_tabla_de_paginas * entrada_tabla_paginas =
+				(t_entrada_tabla_de_paginas *) entrada;
+
+		return entrada_tabla_paginas->pid == pid;
+
+	}
+
+	t_list * tabla_filtrada = list_filter(tabla_de_paginas,
+			filtrar_por_proceso_dump);
+
+	escribir_a_dump(
+			string_from_format("\n===== INICIO DUMP PROCESO %d =====\n", pid));
+
+	list_iterate(tabla_filtrada, dump_proceso_iterate);
+
+	escribir_a_dump(string_from_format("===== FIN DUMP PROCESO %d =====", pid));
+
+}
+
+void dump_entrada(t_entrada_tabla_de_paginas * entrada) {
+
+	FILE * dump = fopen("../memory.dump", "a");
+
+	char * linea = string_from_format("La pagina %d del proceso %d",
+			entrada->pagina, entrada->pid);
+
+	if (entrada->presencia) {
+		string_append(&linea,
+				string_from_format("esta presente en el marco %d",
+						entrada->marco));
+	} else {
+		string_append(&linea,
+				string_from_format("no esta presente en memoria"));
+	}
+
+	string_append(&linea, ", ");
+
+	if (entrada->modificado) {
+		string_append(&linea, string_from_format("esta modificado "));
+	} else {
+		string_append(&linea, string_from_format("no esta modificado "));
+	}
+
+	string_append(&linea, "y ");
+
+	if (entrada->uso) {
+		string_append(&linea, string_from_format("tiene uso"));
+	} else {
+		string_append(&linea, string_from_format("no tiene uso"));
+	}
+
+	string_append(&linea, ".\n");
+
+	if (entrada->presencia) {
+
+		void * contenido = malloc(tamanio_marco);
+
+		int desplazamiento = entrada->marco * tamanio_marco;
+
+		memcpy(contenido, memoria + desplazamiento, tamanio_marco);
+
+		string_append(&linea,
+				string_from_format("Su contenido es: %s.\n", contenido));
+
+	}
+
+	int largo = string_length(linea) + 1;
+
+	fwrite(linea, 1, largo, dump);
+
+}
+
+void dump_proceso_iterate(void * elemento) {
+
+	t_entrada_tabla_de_paginas * entrada =
+			(t_entrada_tabla_de_paginas *) elemento;
+
+	dump_entrada(entrada);
 }
 
 bool isNumber(char * palabra) {
@@ -151,3 +249,14 @@ bool isNumber(char * palabra) {
 
 }
 
+void escribir_a_dump(char * string) {
+
+	int largo = string_length(string) + 1;
+
+	FILE * dump = fopen("../memory.dump", "a");
+
+	fwrite(string, 1, largo, dump);
+
+	fclose(dump);
+
+}

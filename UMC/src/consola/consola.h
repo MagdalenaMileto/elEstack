@@ -12,6 +12,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <ctype.h>
+#include <string.h>
 
 #include <commons/string.h>
 #include <../commons/collections/list.h>
@@ -21,12 +22,19 @@
 
 void esperar_comando(void * parametros);
 void cambiar_retardo(int retardo_numerico);
-void * generar_estado_actual();
-void vaciar_tlb();
-void marcar_las_paginas_del_proceso_como_modificadas(int proceso);
-char * string_drop_from_end(char * string, int cuantos);
+
+void flush_tlb();
+void flush_memory(int proceso);
+
+void dump_proceso(int proceso);
+void dump_total();
+void dump_entrada(t_entrada_tabla_de_paginas * entrada);
 
 
+
+
+void dump_proceso_iterate(void * elemento);
 bool isNumber(char * palabra);
+void escribir_a_dump(char * string);
 
 #endif /* CONSOLA_CONSOLA_H_ */
