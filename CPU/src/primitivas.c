@@ -59,15 +59,35 @@ t_puntero definirVariable(t_nombre_variable identificador_variable)
 
 t_puntero obtenerPosicionVariable (t_nombre_variable identificador_variable)
 {
+	int posicionStack=pcb->sizeContextoActual-1;
+	t_variable *variable=malloc(sizeof(t_variable));
+	int posMax= ((t_contexto*)(list_get(pcb->contextoActual, posicionStack)))->sizeVars-1;
+	while(posMax>=0){
+		variable=((t_variable*)(list_get(((t_contexto*)(list_get(pcb->contextoActual, posicionStack)))->vars), posMax));
+		if(variable->etiqueta==identificador_variable){
+			free(variable);
+			return ((t_variable*)(list_get(((t_contexto*)(list_get(pcb->contextoActual, posicionStack)))->vars), posMax))->direccion; //no queda claro en el enunciado que devuelve
 
+		}
+		posMax--;
+	}
 	return -1;
 
 }
 
 t_valor_variable dereferenciar(t_puntero direccion_variable)
 {
-	printf("Soy la funcion dereferenciar\n");
-	return 0;
+	t_direccion *direccion= malloc(sizeof(t_direccion));
+	direccion = &direccion_variable;
+	enviar(umc, 351, sizeof(t_direccion), direccion);
+	free(direccion);
+	t_paquete *paquete=malloc(sizeof(t_paquete));
+	paquete = recibir(umc);
+	int valor;
+	memcpy(valor, paquete->data, 4);
+	free(paquete);
+	return valor;
+
 }
 
 void asignar(t_puntero direccion_variable,t_valor_variable valor)
