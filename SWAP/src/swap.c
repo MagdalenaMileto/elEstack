@@ -24,7 +24,7 @@ int contadorProcesos;
 
 void *discoParaleloNoVirtualMappeado;
 
-#define FALLORESERVARMEMORIA 15;
+#define FALLORESERVARMEMORIA -1;
 #define EXITORESERVARMEMORIA 10;
 #define PROCESOLIBERADO 11;
 #define EXITOLECTURA 12;
@@ -48,6 +48,7 @@ int main(int argc,char **argv) {
 	crearArchivo();
 	mapearArchivo();
 
+
 	//strncpy(discoParaleloNoVirtualMappeado, "HOLA MICA MICA HOLA",17);
 	//memcpy(discoParaleloNoVirtualMappeado, "HOLA PUTO PUTO PUTO", 16);
 	sock_lst = socket_escucha("localhost", PUERTO_SWAP);
@@ -70,9 +71,16 @@ int main(int argc,char **argv) {
 				//Deserializar Mensaje
 				memcpy(&pid, mensaje->data, sizeof(int));
 				memcpy(&pagina, mensaje->data + sizeof(int), sizeof(int));
-				paquetin = malloc(pagina * TAMANIO_PAGINA);
-				memcpy(paquetin, mensaje->data + sizeof(int) * 2, TAMANIO_PAGINA * pagina);
-				//printf("%s, %d %d \n",(char*)paquetin, pid, pagina);
+
+				int tamanio_codigo;
+				tamanio_codigo = mensaje->tamanio - 2 * sizeof(int);
+
+				paquetin = malloc(TAMANIO_PAGINA * pagina);
+
+				memset(paquetin, '\0',TAMANIO_PAGINA * pagina);
+				memcpy(paquetin, mensaje->data + sizeof(int) * 2, tamanio_codigo);
+
+				//printf("UMC: %s, %d %d \n",(char*)paquetin, pid, pagina);
 
 				printf("Se creara un nuevo proceso de %d paginas y con PID: %d \n", pagina, pid);
 				sleep(RETARDO_ACCESO);
@@ -98,7 +106,9 @@ int main(int argc,char **argv) {
 					for(i=0;i<pagina;i++){
 						void *dataPaginaAEscribir;
 						dataPaginaAEscribir = malloc(TAMANIO_PAGINA);
+						if(tamanio_codigo<=TAMANIO_PAGINA)
 						memcpy(dataPaginaAEscribir, paquetin + (i*TAMANIO_PAGINA), TAMANIO_PAGINA);
+						//printf("codigo  DIVIDO EN PAGINAS: %s \n", (char*)dataPaginaAEscribir);
 						error = escribirPaginaProceso(pid, i, dataPaginaAEscribir);
 						free(dataPaginaAEscribir);
 						if (error == -1){
@@ -107,6 +117,8 @@ int main(int argc,char **argv) {
 						}
 					}
 				}
+
+				printf("respuesta:%d \n", flagRespuesta);
 
 				enviar(new_lst, flagRespuesta, sizeof(int), &pid);
 				free(paquetin);
@@ -536,6 +548,7 @@ int escribirPaginaProceso(int idProceso, int nroPag, void*data){
 		printf("No puede escribir en %d, no esta en su rango \n", nroPag);
 		return -1;
 	}
+
 	printf("Se escribira la pagina %d del proceso: %d, cuya asociada es %d \n", nroPag,idProceso,paginaAEscribir);
 	resultado = escribirPagina(paginaAEscribir, data);
 	return resultado;
@@ -549,6 +562,9 @@ int escribirPagina(int nroPag, void*dataPagina){
 	int numero = nroPag;
 	leerPagina(numero, &inicioPag, &finPag); //con esto determino los valores de inicio de escritura y de fin
 	memset(discoParaleloNoVirtualMappeado +inicioPag, '\0', TAMANIO_PAGINA);
+	///printf("codigo: %s \n", (char*)dataPagina);
+
+	printf("Pagina de Inicio en la que va a copiar:%d y el fin es:%d\n",inicioPag, finPag);
 	memcpy(discoParaleloNoVirtualMappeado +inicioPag, dataPagina, TAMANIO_PAGINA);
 	printf("Pagina %d, copiada con exito! \n", nroPag);
 //	if(updatearArchivoDisco()==1)
