@@ -55,7 +55,7 @@ int socketconsola, socketcpu;
 
 //Eliminar todo lo que sea de mas de aca
 int listenningSocket, socketCliente, servidorSocket, servidorCPU, clienteSocket, losClientes, clientesCPU, umc, ultimoCPU;
-
+int rodo=0;
 char codigo[200] = "#!/usr/bin/ansisop\nbegin\nvariables i,b\ni=1\n:inicio_for\ni=i+1\nprint i\nb=i­10\n:cosita\njnz b inicio_for\njnz b cosita\n#fuera del for\nend";
 
 
@@ -231,14 +231,16 @@ void mandarCodigoAUmc(char* codigo, int size, t_proceso *proceso) {
 	proceso->pcb->indiceDeEtiquetas = malloc(proceso->pcb->sizeIndiceDeEtiquetas * sizeof(char));
 	memcpy(proceso->pcb->indiceDeEtiquetas, metadata_program->etiquetas, proceso->pcb->sizeIndiceDeEtiquetas * sizeof(char));
 
-	proceso->pcb->contextoActual = malloc(1 * sizeof(proceso->pcb->contextoActual));
+	proceso->pcb->contextoActual = list_create();
 	t_contexto *contextocero;
 	contextocero = malloc(sizeof(t_contexto));
 
-	proceso->pcb->contextoActual[0] = contextocero;
-	proceso->pcb->contextoActual[0]->sizeVars = 0;
-	proceso->pcb->contextoActual[0]->sizeArgs = 0;
-	proceso->pcb->contextoActual[0]->pos = 0;
+	contextocero->sizeVars = 0;
+	contextocero->sizeArgs = 0;
+	contextocero->pos = 0;
+	list_add(proceso->pcb->contextoActual, (void*)contextocero);
+
+	
 	proceso->pcb->sizeContextoActual = 1;
 	proceso->pcb->pc = 0;
 	proceso->pcb->paginasDeMemoria=(int)ceil((double)config_nucleo->STACK_SIZE / (double)config_nucleo->TAMPAG);
@@ -434,6 +436,12 @@ void *hilo_CONEXION_CONSOLA(void *socket) {
 		t_paquete* paquete; 
 		paquete = recibir(*(int*)socket);
 		switch (paquete->codigo_operacion) {
+			case -1:
+				printf("NUCLEO: consola desconecto \n");
+				//TODO:borrar proceso del sistema
+				free(socket);
+				free(paquete);
+				return;
 			case 103:
 				mandarCodigoAUmc(paquete->data, paquete->tamanio, proceso);
 				pthread_mutex_lock(&mutex_cola_new);
@@ -442,6 +450,7 @@ void *hilo_CONEXION_CONSOLA(void *socket) {
 				pthread_mutex_unlock(&mutex_cola_new);
 			break;
 		}
+		//liberar_paquete()
 	}
 	//TODO: free el int socket
 }
@@ -522,12 +531,14 @@ void *hilo_CONEXION_CPU(void *socket) {
 
 			break;
 
-		case 320:
+		case 320: //
 			proceso = dameProceso(cola_exec, *(int*)socket);
 			printf("NUCLEO: Recibi proceso %d por fin de ejecucion, encolando en cola exit\n", proceso->pcb->pid);
 			queue_push(cola_exit, proceso);
 			queue_push(cola_CPU_libres, (void*)*(int*)socket);
 			sem_post(&sem_cpu);
+			enviar(umc, 6, sizeof(int), &
+				proceso->pcb->pid);
 			break;
 
 		case 340:
@@ -672,7 +683,12 @@ void *hilo_mock_consola(void *arg) {
 	sleep(4);
 	consola = cliente("127.0.0.1", 1209);
 	printf("\x1b[36mCONSOLAMOCK: Conecté%d \n \x1b[0m", consola);
+	codigo[0]='a'+rodo;
+	rodo++;
 	enviar(consola, 103, sizeof(codigo), codigo);
+	sleep(5);
+	//close(consola);
+
 	while (1) {}
 }
 

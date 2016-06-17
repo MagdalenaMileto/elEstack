@@ -97,9 +97,11 @@ void enviar(un_socket socket_para_enviar, int codigo_operacion, int tamanio,
 t_paquete* recibir(un_socket socket_para_recibir) {
 
 	t_paquete * paquete_recibido = malloc(sizeof(t_paquete));
-
-	recv(socket_para_recibir, &paquete_recibido->codigo_operacion, sizeof(int),
+	int retorno = 0;
+	retorno = recv(socket_para_recibir, &paquete_recibido->codigo_operacion, sizeof(int),
 	MSG_WAITALL);
+
+	if(retorno==0){paquete_recibido->codigo_operacion=-1;return;}
 	recv(socket_para_recibir, &paquete_recibido->tamanio, sizeof(int),
 	MSG_WAITALL);
 
