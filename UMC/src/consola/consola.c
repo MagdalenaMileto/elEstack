@@ -166,14 +166,12 @@ void dump_proceso(int pid) {
 
 void dump_entrada(t_entrada_tabla_de_paginas * entrada) {
 
-	FILE * dump = fopen("../memory.dump", "a");
-
-	char * linea = string_from_format("La pagina %d del proceso %d",
+	char * linea = string_from_format("La pagina %d del proceso %d ",
 			entrada->pagina, entrada->pid);
 
 	if (entrada->presencia) {
 		string_append(&linea,
-				string_from_format("esta presente en el marco %d",
+				string_from_format("esta presente en el marco %d ",
 						entrada->marco));
 	} else {
 		string_append(&linea,
@@ -211,9 +209,7 @@ void dump_entrada(t_entrada_tabla_de_paginas * entrada) {
 
 	}
 
-	int largo = string_length(linea) + 1;
-
-	fwrite(linea, 1, largo, dump);
+	escribir_a_dump(linea);
 
 }
 
@@ -253,7 +249,7 @@ void escribir_a_dump(char * string) {
 
 	int largo = string_length(string) + 1;
 
-	FILE * dump = fopen("../memory.dump", "a");
+	FILE * dump = fopen("./memory.dump", "a");
 
 	fwrite(string, 1, largo, dump);
 
