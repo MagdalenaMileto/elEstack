@@ -10,7 +10,7 @@
 
 int PUERTO_NUCLEO = 9997;
 int socketConexionNucleo;
-
+int programa_finalizado=0;
 
 // estaria muy bueno hacer el log..
 
@@ -54,12 +54,40 @@ int main(int argc, char **argv) {
 	estado= enviarInformacionAlNucleo(script, nucleo, consola);
 
 	if(estado>0) printf("se envio script al nucleo.\n");
-
+	}
 
 free(script);
+t_paquete *paquete=malloc(sizeof(t_paquete));
+char* info_cadena;
+int info_variable;
+int codigo_op;
+
+while(!programa_finalizado){
+		paquete = recibir(nucleo);
+		memcpy(codigo_op, paquete->codigo_operacion, 4);
+
+
+		switch(codigo_op) {
+		case '':
+				 memcpy(info_cadena, paquete->data, sizeof(paquete->data));
+				 puts(info_cadena);
+				 break;
+		case '':
+				memcpy(info_variable, paquete->data, 4);
+				printf("%d\n", info_variable);
+				break;
+		case '':
+				puts("Programa Finalizado");
+				programa_finalizado=1;
+				break;
+		}
+
+}
+
+free(paquete);
 close(consola);
 printf("CONSOLA: Cierro\n");
-	}
+
 
 
 return 0;
