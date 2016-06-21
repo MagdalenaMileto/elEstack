@@ -56,7 +56,7 @@ int main(int argc,char **argv){
 			free(datos_para_umc);
 			t_paquete* instruccion=malloc(sizeof(t_paquete));
 			instruccion = recibir(umc);
-			char* sentencia= instruccion->data;
+			char* sentencia= instruccion->data; //chequear si hay una instruccion?
 			analizadorLinea(depurarSentencia(strdup(sentencia)), &primitivas, &primitivas_kernel);
 			liberar_paquete(instruccion);
 

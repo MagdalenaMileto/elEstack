@@ -65,6 +65,7 @@ AnSISOP_funciones primitivas = {
 		.AnSISOP_imprimir				= imprimir,
 		.AnSISOP_imprimirTexto			= imprimirTexto,
 		.AnSISOP_entradaSalida			= entradaSalida,
+		.AnSISOP_finalizar				= finalizar,
 
 };
 AnSISOP_kernel primitivas_kernel = {

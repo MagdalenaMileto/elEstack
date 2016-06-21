@@ -143,6 +143,10 @@ int entradaSalida(t_nombre_dispositivo dispositivo,int tiempo)
 	return 0;
 }
 
+void finalizar(){
+
+}
+
 int wait(t_nombre_semaforo identificador_semaforo)
 {
 	printf("Soy la funcion wait\n");

@@ -29,6 +29,7 @@ t_puntero_instruccion retornar(t_valor_variable retorno);
 int imprimir(t_valor_variable valor_mostrar);
 int imprimirTexto(char*texto);
 int entradaSalida(t_nombre_dispositivo dispositivo,int tiempo);
+void finalizar();
 int wait(t_nombre_semaforo identificador_semaforo);
 int signal(t_nombre_semaforo identificador_semaforo);
 
