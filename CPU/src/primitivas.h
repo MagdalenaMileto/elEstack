@@ -12,7 +12,7 @@
 void armarDireccionPrimeraPagina(t_direccion* direccionReal);
 void armarProximaDireccion(t_direccion* direccionReal);
 int primeraPagina();
-void armarDireccionDeFuncion(t_direccion* direccionReal);
+void armarDirecccionDeFuncion(t_direccion* direccionReal);
 void proximaDireccion(int posStack, int posUltVar, t_direccion* direccionReal);
 void buscarUbicacionVaraible(int posicionStack, t_nombre_variable identificador_variable, t_direccion* direccionReal);
 t_puntero definirVariable(t_nombre_variable identificador_variable);

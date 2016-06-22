@@ -212,7 +212,7 @@ int primeraPagina(){
 	return ((pcb->indiceDeCodigo[pcb->sizeIndiceDeCodigo-2])+pcb->indiceDeCodigo[pcb->sizeIndiceDeCodigo-1]/ tamanioPag)+2;
 }
 
-void armarDireccionDeFuncion(t_direccion *direccionReal){
+void armarDirecccionDeFuncion(t_direccion *direccionReal){
 	//t_direccion direccion = malloc(sizeof(t_direccion));
 	if(((t_contexto*)list_get(pcb->contextoActual, pcb->sizeContextoActual-1))->sizeArgs == 0){
 		int posicionStackAnterior = pcb->sizeContextoActual-2;
