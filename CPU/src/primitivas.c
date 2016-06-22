@@ -114,22 +114,23 @@ t_valor_variable asignarValorCompartida(t_nombre_compartida variable,t_valor_var
 	return 0;
 }
 
-t_puntero_instruccion irAlLabel(t_nombre_etiqueta etiqueta)
+void irAlLabel(t_nombre_etiqueta etiqueta)
 {
 	printf("Soy la funcion irAlLabel\n");
-	return 0;
+	return;
 }
 
 void llamarFuncion(t_nombre_etiqueta etiqueta, t_puntero donde_retornar)
 {
 		printf("Soy la funcion llamarConRetorno\n");
 		printf("Guardo contexto que es la etiqueta y retornar el valor\n");
+		return;
 }
 
-t_puntero_instruccion retornar(t_valor_variable retorno)
+void retornar(t_valor_variable retorno)
 {
 	printf("Soy la funcion retornar\n");
-	return 0;
+	return;
 }
 
 void imprimir(t_valor_variable valor_mostrar)
@@ -149,10 +150,10 @@ void imprimirTexto(char*texto)
 	return;
 }
 
-int entradaSalida(t_nombre_dispositivo dispositivo,int tiempo)
+void entradaSalida(t_nombre_dispositivo dispositivo,int tiempo)
 {
 	printf("Soy la funcion entradaSalida\n");
-	return 0;
+	return;
 }
 
 void finalizar(){
@@ -173,16 +174,16 @@ void finalizar(){
 
 }
 
-int wait(t_nombre_semaforo identificador_semaforo)
+void wait_k(t_nombre_semaforo identificador_semaforo)
 {
 	printf("Soy la funcion wait\n");
-	return 0;
+	return;
 }
 
-int signal(t_nombre_semaforo identificador_semaforo)
+void signal_k(t_nombre_semaforo identificador_semaforo)
 {
 	printf("Soy la funcion signal\n");
-	return 0;
+	return;
 }
 
 void armarDireccionPrimeraPagina(t_direccion *direccionReal){

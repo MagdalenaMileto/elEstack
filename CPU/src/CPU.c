@@ -36,15 +36,15 @@ AnSISOP_funciones primitivas = {
 
 };
 AnSISOP_kernel primitivas_kernel = {
-		.AnSISOP_wait					=wait,
-		.AnSISOP_signal					=signal,
+		.AnSISOP_wait					=wait_k,
+		.AnSISOP_signal					=signal_k,
 };
 
 
 
 
 int main(int argc,char **argv){
-
+	//int sigusr1_desactivado=0;
 	log= log_create(ARCHIVOLOG, "CPU", 0, LOG_LEVEL_INFO);
 	log_info(log,"Iniciando CPU\n");
 	char* serializado;
@@ -60,9 +60,7 @@ int main(int argc,char **argv){
 	t_paquete* datos_kernel=recibir(nucleo);  //una vez que nucleo se conecta con cpu debe mandar t_datos_kernel..
 
 	sigusr1_desactivado = 1;
-	if(signal(SIGUSR1, sig_handler) == SIG_ERR ){
-		log_error(log, "Error al atrapar señal SIGUSR1");
-	}
+	signal(SIGUSR1, sig_handler);
 
 
 	while(sigusr1_desactivado){
@@ -217,8 +215,6 @@ void sig_handler(int signo) {
 		sem_wait(&mutexSigu);
 		sigusr1_desactivado = 0;
 		sem_post(&mutexSigu);
-		log_info(log,
-				"Se recibió la señal SIGUSR_1, la CPU se cerrara al finalizar la ejecucion actual");
-			exit(EXIT_SUCCESS);
 	}
+	return;
 }
