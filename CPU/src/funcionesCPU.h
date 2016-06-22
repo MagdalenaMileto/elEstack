@@ -32,6 +32,10 @@
 #include <commons/log.h>
 #include <commons/collections/list.h>
 #include <theDebuggers/socketLibrary.h>
+#include <signal.h>
+#include <netdb.h>
+#include <unistd.h>
+#include <sys/types.h>
 
 typedef struct {
 	 int QUANTUM;

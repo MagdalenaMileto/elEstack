@@ -7,17 +7,12 @@
 
 #include "funcionesCPU.h"
 #include <commons/config.h>
-#include <signal.h>
-#include <unistd.h>
-#include <sys/types.h>
-#include <semaphore.h>
 #define ARCHIVOLOG "CPU.log"
 #define CONFIG_CPU "config_cpu"
 CONF_CPU config_cpu;
 
 t_log* log;  //en COMUNES tendrian que estar las estructuras del log?
 int sigusr1_desactivado;
-sem_t mutexSigu;
 
 AnSISOP_funciones primitivas = {
 		.AnSISOP_definirVariable		= definirVariable,
@@ -60,7 +55,8 @@ int main(int argc,char **argv){
 	t_paquete* datos_kernel=recibir(nucleo);  //una vez que nucleo se conecta con cpu debe mandar t_datos_kernel..
 
 	sigusr1_desactivado = 1;
-	signal(SIGUSR1, sig_handler);
+	if (signal(SIGUSR1, sig_handler) == SIG_ERR )
+			log_error(log, "Error al atrapar señal SIGUSR1");
 
 
 	while(sigusr1_desactivado){
@@ -212,9 +208,8 @@ char* depurarSentencia(char* sentencia){
 
 void sig_handler(int signo) {
 	if (signo == SIGUSR1) {
-		sem_wait(&mutexSigu);
 		sigusr1_desactivado = 0;
-		sem_post(&mutexSigu);
+		log_info(log,
+		"Se recibió la señal SIGUSR_1, la CPU se cerrara al finalizar la ejecucion actual");
 	}
-	return;
 }
