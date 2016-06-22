@@ -5,12 +5,7 @@
  *      Author: Franco Albornoz
  */
 
-#include "primitivas.h"
-//#include <stdlib.h>
-//#include "../../COMUNES/estructurasControl.h"
-//#include "funcionesCPU.h"
-
-//extern int programaFinalizado, programaBloqueado, programaAbortado;
+#include "funcionesCPU.h"
 
 t_puntero definirVariable(t_nombre_variable identificador_variable)
 {
@@ -52,9 +47,9 @@ t_puntero definirVariable(t_nombre_variable identificador_variable)
 
 	enviar(umc, 404, sizeof(t_direccion), direccion_variable);
 
-	//if(recibir(umc)->data=="Error"){ //hablar con umc sobre el error
-		//programaAbortado=1;
-	//}
+	if(recibir(umc)->data=="Error"){ //hablar con umc sobre el error
+		programaAbortado=1;
+	}
 
 	return direccion_variable;
 
@@ -75,7 +70,7 @@ t_puntero obtenerPosicionVariable (t_nombre_variable identificador_variable)
 		}
 		posMax--;
 	}
-//	programaAbortado=1;
+	programaAbortado=1;
 	return -1;
 
 }
@@ -172,7 +167,7 @@ void finalizar(){
 	list_destroy(contexto_a_finalizar->vars);
 	free(contexto_a_finalizar);
 	free((t_contexto *)list_get(pcb->contextoActual, pcb->sizeContextoActual-1));
-	//programaFinalizado=1;
+	programaFinalizado=1;
 	return;
 
 

@@ -50,36 +50,14 @@ typedef struct {
 }CONF_CPU;
 
 
-
-AnSISOP_funciones primitivas = {
-		.AnSISOP_definirVariable		= definirVariable,
-		.AnSISOP_obtenerPosicionVariable= obtenerPosicionVariable,
-		.AnSISOP_dereferenciar			= dereferenciar,
-		.AnSISOP_asignar				= asignar,
-		.AnSISOP_obtenerValorCompartida = obtenerValorCompartida,
-		.AnSISOP_asignarValorCompartida = asignarValorCompartida,
-		.AnSISOP_irAlLabel				= irAlLabel,
-		.AnSISOP_llamarConRetorno		= llamarFuncion,
-		.AnSISOP_retornar				= retornar,
-		.AnSISOP_imprimir				= imprimir,
-		.AnSISOP_imprimirTexto			= imprimirTexto,
-		.AnSISOP_entradaSalida			= entradaSalida,
-		.AnSISOP_finalizar				= finalizar,
-
-};
-AnSISOP_kernel primitivas_kernel = {
-		.AnSISOP_wait					=wait,
-		.AnSISOP_signal					=signal,
-};
-
-
-
 int umc, nucleo;
 t_pcb* pcb;
 int quantum;
 int tamanioPag;
 int quantum_sleep;
-
+int programaBloqueado;
+int programaFinalizado;
+int programaAbortado;
 
 
 int conectarConUmc();

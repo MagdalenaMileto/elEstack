@@ -4,10 +4,10 @@
  *  Created on: 26/4/2016
  *      Author: Franco Albornoz
  */
-#include "funcionesCPU.h"
+
 #ifndef PRIMITIVAS_H_
 #define PRIMITIVAS_H_
-
+#include "../../COMUNES/estructurasControl.h"
 
 void armarDireccionPrimeraPagina(t_direccion* direccionReal);
 void armarProximaDireccion(t_direccion* direccionReal);

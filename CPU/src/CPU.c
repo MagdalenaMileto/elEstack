@@ -13,9 +13,29 @@ CONF_CPU config_cpu;
 
 t_log* log;  //en COMUNES tendrian que estar las estructuras del log?
 
-int programaBloqueado = 0;
-int programaFinalizado = 0;
-int programaAbortado = 0;
+
+AnSISOP_funciones primitivas = {
+		.AnSISOP_definirVariable		= definirVariable,
+		.AnSISOP_obtenerPosicionVariable= obtenerPosicionVariable,
+		.AnSISOP_dereferenciar			= dereferenciar,
+		.AnSISOP_asignar				= asignar,
+		.AnSISOP_obtenerValorCompartida = obtenerValorCompartida,
+		.AnSISOP_asignarValorCompartida = asignarValorCompartida,
+		.AnSISOP_irAlLabel				= irAlLabel,
+		.AnSISOP_llamarConRetorno		= llamarFuncion,
+		.AnSISOP_retornar				= retornar,
+		.AnSISOP_imprimir				= imprimir,
+		.AnSISOP_imprimirTexto			= imprimirTexto,
+		.AnSISOP_entradaSalida			= entradaSalida,
+		.AnSISOP_finalizar				= finalizar,
+
+};
+AnSISOP_kernel primitivas_kernel = {
+		.AnSISOP_wait					=wait,
+		.AnSISOP_signal					=signal,
+};
+
+
 
 
 int main(int argc,char **argv){
@@ -24,6 +44,9 @@ int main(int argc,char **argv){
 	log= log_create(ARCHIVOLOG, "CPU", 0, LOG_LEVEL_INFO);
 	log_info(log,"Iniciando CPU\n");
 	char* serializado;
+	programaBloqueado = 0;
+	programaFinalizado = 0;
+	programaAbortado = 0;
 
 	levantar_configuraciones();
 
