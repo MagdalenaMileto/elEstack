@@ -68,15 +68,15 @@ while(!programa_finalizado){
 
 
 		switch(codigo_op) {
-		case '':
+		case 101:
 				 memcpy(info_cadena, paquete->data, sizeof(paquete->data));
 				 puts(info_cadena);
 				 break;
-		case '':
+		case 102:
 				memcpy(info_variable, paquete->data, 4);
 				printf("%d\n", info_variable);
 				break;
-		case '':
+		case 103:
 				puts("Programa Finalizado");
 				programa_finalizado=1;
 				break;

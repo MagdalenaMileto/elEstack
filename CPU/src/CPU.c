@@ -13,6 +13,9 @@ CONF_CPU config_cpu;
 
 t_log* log;  //en COMUNES tendrian que estar las estructuras del log?
 
+int programaBloqueado = 0;
+int programaFinalizado = 0;
+int programaAbortado = 0;
 
 
 int main(int argc,char **argv){

@@ -6,12 +6,11 @@
  */
 
 #include "primitivas.h"
-#include <stdlib.h>
-#include "../../COMUNES/estructurasControl.h"
-#include "../../COMUNES/estructurasControl.c"
-#include "funcionesCPU.h"
+//#include <stdlib.h>
+//#include "../../COMUNES/estructurasControl.h"
+//#include "funcionesCPU.h"
 
-
+//extern int programaFinalizado, programaBloqueado, programaAbortado;
 
 t_puntero definirVariable(t_nombre_variable identificador_variable)
 {
@@ -53,9 +52,9 @@ t_puntero definirVariable(t_nombre_variable identificador_variable)
 
 	enviar(umc, 404, sizeof(t_direccion), direccion_variable);
 
-	if(recibir(umc)->data=="Error"){ //hablar con umc sobre el error
-		programaAbortado=1;
-	}
+	//if(recibir(umc)->data=="Error"){ //hablar con umc sobre el error
+		//programaAbortado=1;
+	//}
 
 	return direccion_variable;
 
@@ -66,17 +65,17 @@ t_puntero obtenerPosicionVariable (t_nombre_variable identificador_variable)
 {
 	int posicionStack=pcb->sizeContextoActual-1;
 	t_variable *variable_nueva=malloc(sizeof(t_variable));
-	int posMax= ((t_contexto*)(list_get(pcb->contextoActual, posicionStack)))->sizeVars-1;
+	int posMax= (((t_contexto*)(list_get(pcb->contextoActual, posicionStack)))->sizeVars)-1;
 	while(posMax>=0){
-		variable_nueva=((t_variable*)(list_get(((t_contexto*)(list_get(pcb->contextoActual, posicionStack)))->vars), posMax));
+		variable_nueva=((t_variable*)(list_get(((t_contexto*)(list_get(pcb->contextoActual, posicionStack)))->vars, posMax)));
 		if(variable_nueva->etiqueta==identificador_variable){
 			free(variable_nueva);
-			return ((t_variable*)(list_get(((t_contexto*)(list_get(pcb->contextoActual, posicionStack)))->vars), posMax))->direccion; //no queda claro en el enunciado que devuelve
+			return (((t_variable*)(list_get(((t_contexto*)(list_get(pcb->contextoActual, posicionStack)))->vars, posMax)))->direccion); //no queda claro en el enunciado que devuelve
 
 		}
 		posMax--;
 	}
-	programaAbortado=1;
+//	programaAbortado=1;
 	return -1;
 
 }
@@ -165,13 +164,15 @@ void finalizar(){
 	t_contexto *contexto_a_finalizar= malloc(sizeof(t_contexto));
 	contexto_a_finalizar= list_get(pcb->contextoActual, pcb->sizeContextoActual-1);
 	while(contexto_a_finalizar->sizeVars != 0){
-		free(((t_variable)list_get(contexto_a_finalizar->vars, contexto_a_finalizar->sizeVars-1))->direccion);
-		list_remove_and_destroy_element(contexto_a_finalizar->vars, contexto_a_finalizar->sizeVars-1);
+		free(((t_variable *)list_get(contexto_a_finalizar->vars, contexto_a_finalizar->sizeVars-1))->direccion);
+		free(((t_variable *)list_get(contexto_a_finalizar->vars, contexto_a_finalizar->sizeVars-1)));
+		list_remove(contexto_a_finalizar->vars, (contexto_a_finalizar->sizeVars)-1);
 		contexto_a_finalizar->sizeVars--;
 	}
-	list_destroy_and_destroy_elements(contexto_a_finalizar->vars);
+	list_destroy(contexto_a_finalizar->vars);
 	free(contexto_a_finalizar);
-	programaFinalizado=1;
+	free((t_contexto *)list_get(pcb->contextoActual, pcb->sizeContextoActual-1));
+	//programaFinalizado=1;
 	return;
 
 
