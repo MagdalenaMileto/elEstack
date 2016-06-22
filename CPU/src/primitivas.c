@@ -52,6 +52,11 @@ t_puntero definirVariable(t_nombre_variable identificador_variable)
 	}
 
 	enviar(umc, 404, sizeof(t_direccion), direccion_variable);
+
+	if(recibir(umc)->data=="Error"){ //hablar con umc sobre el error
+		programaAbortado=1;
+	}
+
 	return direccion_variable;
 
 }
@@ -60,17 +65,18 @@ t_puntero definirVariable(t_nombre_variable identificador_variable)
 t_puntero obtenerPosicionVariable (t_nombre_variable identificador_variable)
 {
 	int posicionStack=pcb->sizeContextoActual-1;
-	t_variable *variable=malloc(sizeof(t_variable));
+	t_variable *variable_nueva=malloc(sizeof(t_variable));
 	int posMax= ((t_contexto*)(list_get(pcb->contextoActual, posicionStack)))->sizeVars-1;
 	while(posMax>=0){
-		variable=((t_variable*)(list_get(((t_contexto*)(list_get(pcb->contextoActual, posicionStack)))->vars), posMax));
-		if(variable->etiqueta==identificador_variable){
-			free(variable);
+		variable_nueva=((t_variable*)(list_get(((t_contexto*)(list_get(pcb->contextoActual, posicionStack)))->vars), posMax));
+		if(variable_nueva->etiqueta==identificador_variable){
+			free(variable_nueva);
 			return ((t_variable*)(list_get(((t_contexto*)(list_get(pcb->contextoActual, posicionStack)))->vars), posMax))->direccion; //no queda claro en el enunciado que devuelve
 
 		}
 		posMax--;
 	}
+	programaAbortado=1;
 	return -1;
 
 }
@@ -91,8 +97,15 @@ t_valor_variable dereferenciar(t_puntero direccion_variable)
 }
 
 void asignar(t_puntero direccion_variable,t_valor_variable valor)
-{
-	printf("Soy la funcion asignar\n");
+{	t_direccion *direccion= malloc(sizeof(t_direccion));
+	direccion = &direccion_variable;
+	int *valor_real= malloc(sizeof(t_valor_variable));
+	valor_real= &valor;
+	enviar(umc, 355, sizeof(t_direccion), direccion); //ver cod de op con umc
+	enviar(umc, 356, sizeof(t_valor_variable), valor_real); //codigo de op valor
+	free(direccion);
+	free(valor_real);
+	return;
 }
 
 t_valor_variable obtenerValorCompartida(t_nombre_compartida variable)
@@ -125,16 +138,21 @@ t_puntero_instruccion retornar(t_valor_variable retorno)
 	return 0;
 }
 
-int imprimir(t_valor_variable valor_mostrar)
+void imprimir(t_valor_variable valor_mostrar)
 {
-	printf("Soy la funcion imprimir\n");
-	return 0;
+	int *valor = malloc(sizeof(t_valor_variable));
+	valor=&valor_mostrar;
+	enviar(nucleo, 360, sizeof(t_valor_variable), valor);
+	free(valor);
+	return;
 }
 
-int imprimirTexto(char*texto)
-{
-	printf("Soy la funcion imprimirTexto\n");
-	return 0;
+void imprimirTexto(char*texto)
+{	char *texto_mostrar = malloc(sizeof(texto));
+	texto_mostrar = texto;
+	enviar(nucleo, 360, sizeof(texto_mostrar), texto_mostrar); //preguntar si esta bien mandando el texto
+	free(texto_mostrar);
+	return;
 }
 
 int entradaSalida(t_nombre_dispositivo dispositivo,int tiempo)
@@ -144,6 +162,18 @@ int entradaSalida(t_nombre_dispositivo dispositivo,int tiempo)
 }
 
 void finalizar(){
+	t_contexto *contexto_a_finalizar= malloc(sizeof(t_contexto));
+	contexto_a_finalizar= list_get(pcb->contextoActual, pcb->sizeContextoActual-1);
+	while(contexto_a_finalizar->sizeVars != 0){
+		free(((t_variable)list_get(contexto_a_finalizar->vars, contexto_a_finalizar->sizeVars-1))->direccion);
+		list_remove_and_destroy_element(contexto_a_finalizar->vars, contexto_a_finalizar->sizeVars-1);
+		contexto_a_finalizar->sizeVars--;
+	}
+	list_destroy_and_destroy_elements(contexto_a_finalizar->vars);
+	free(contexto_a_finalizar);
+	programaFinalizado=1;
+	return;
+
 
 }
 

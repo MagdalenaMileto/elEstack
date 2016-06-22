@@ -44,9 +44,6 @@ int main(int argc,char **argv){
 		int pid = pcb->pid;
 		enviar(umc, 405, sizeof(int), pid); // codigo 405: cambio de proceso activo NUCLEO - UMC
 
-		int programaBloqueado = 0;
-		int programaFinalizado = 0;
-		int programaAbortado = 0;
 
 		while(quantum && !programaBloqueado && !programaFinalizado && !programaAbortado){
 

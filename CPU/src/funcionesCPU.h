@@ -80,6 +80,9 @@ t_pcb* pcb;
 int quantum;
 int tamanioPag;
 int quantum_sleep;
+int programaBloqueado = 0;
+int programaFinalizado = 0;
+int programaAbortado = 0;
 
 
 int conectarConUmc();
