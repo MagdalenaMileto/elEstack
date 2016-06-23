@@ -22,7 +22,7 @@ AnSISOP_funciones primitivas = {
 		.AnSISOP_obtenerValorCompartida = obtenerValorCompartida,
 		.AnSISOP_asignarValorCompartida = asignarValorCompartida,
 		.AnSISOP_irAlLabel				= irAlLabel,
-		.AnSISOP_llamarConRetorno		= llamarFuncion,
+		.AnSISOP_llamarConRetorno		= llamarConRetorno,
 		.AnSISOP_retornar				= retornar,
 		.AnSISOP_imprimir				= imprimir,
 		.AnSISOP_imprimirTexto			= imprimirTexto,
@@ -31,8 +31,8 @@ AnSISOP_funciones primitivas = {
 
 };
 AnSISOP_kernel primitivas_kernel = {
-		.AnSISOP_wait					=wait_k,
-		.AnSISOP_signal					=signal_k,
+		.AnSISOP_wait					=wait_kernel,
+		.AnSISOP_signal					=signal_kernel,
 };
 
 
@@ -55,8 +55,6 @@ int main(int argc,char **argv){
 	t_paquete* datos_kernel=recibir(nucleo);  //una vez que nucleo se conecta con cpu debe mandar t_datos_kernel..
 
 	sigusr1_desactivado = 1;
-	if (signal(SIGUSR1, sig_handler) == SIG_ERR )
-			log_error(log, "Error al atrapar señal SIGUSR1");
 
 
 	while(sigusr1_desactivado){
@@ -65,7 +63,8 @@ int main(int argc,char **argv){
 		tamanioPag = ((t_datos_kernel*)(datos_kernel->data))->TAMPAG;
 		quantum_sleep = ((t_datos_kernel*)(datos_kernel->data))->QUANTUM_SLEEP;
 
-
+		if (signal(SIGUSR1, sig_handler) == SIG_ERR )
+					log_error(log, "Error al atrapar señal SIGUSR1");
 
 		t_paquete* paquete_recibido = recibir(nucleo);
 		pcb = desserializarPCB(paquete_recibido->data);

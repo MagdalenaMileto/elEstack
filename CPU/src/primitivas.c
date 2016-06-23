@@ -51,7 +51,8 @@ t_puntero definirVariable(t_nombre_variable identificador_variable)
 		programaAbortado=1;
 	}
 
-	return direccion_variable;
+	int direccionRetorno = convertirDireccionAPuntero(direccion_variable);
+	return (direccionRetorno);
 
 }
 
@@ -61,11 +62,13 @@ t_puntero obtenerPosicionVariable (t_nombre_variable identificador_variable)
 	int posicionStack=pcb->sizeContextoActual-1;
 	t_variable *variable_nueva=malloc(sizeof(t_variable));
 	int posMax= (((t_contexto*)(list_get(pcb->contextoActual, posicionStack)))->sizeVars)-1;
+	int direccionRetorno;
 	while(posMax>=0){
 		variable_nueva=((t_variable*)(list_get(((t_contexto*)(list_get(pcb->contextoActual, posicionStack)))->vars, posMax)));
 		if(variable_nueva->etiqueta==identificador_variable){
 			free(variable_nueva);
-			return (((t_variable*)(list_get(((t_contexto*)(list_get(pcb->contextoActual, posicionStack)))->vars, posMax)))->direccion); //no queda claro en el enunciado que devuelve
+			direccionRetorno = convertirDireccionAPuntero(((t_variable*)(list_get(((t_contexto*)(list_get(pcb->contextoActual, posicionStack)))->vars, posMax)))->direccion);
+			return(direccionRetorno); //no queda claro en el enunciado que devuelve
 
 		}
 		posMax--;
@@ -78,13 +81,13 @@ t_puntero obtenerPosicionVariable (t_nombre_variable identificador_variable)
 t_valor_variable dereferenciar(t_puntero direccion_variable)
 {
 	t_direccion *direccion= malloc(sizeof(t_direccion));
-	direccion = &direccion_variable;
+	convertirPunteroADireccion(direccion_variable, direccion);
 	enviar(umc, 351, sizeof(t_direccion), direccion);
 	free(direccion);
 	t_paquete *paquete=malloc(sizeof(t_paquete));
 	paquete = recibir(umc);
 	int valor;
-	memcpy(valor, paquete->data, 4);
+	memcpy(&valor, paquete->data, 4);
 	free(paquete);
 	return valor;
 
@@ -92,39 +95,55 @@ t_valor_variable dereferenciar(t_puntero direccion_variable)
 
 void asignar(t_puntero direccion_variable,t_valor_variable valor)
 {	t_direccion *direccion= malloc(sizeof(t_direccion));
-	direccion = &direccion_variable;
-	int *valor_real= malloc(sizeof(t_valor_variable));
-	valor_real= &valor;
+	convertirPunteroADireccion(direccion_variable, direccion);
 	enviar(umc, 355, sizeof(t_direccion), direccion); //ver cod de op con umc
-	enviar(umc, 356, sizeof(t_valor_variable), valor_real); //codigo de op valor
+	enviar(umc, 356, sizeof(t_valor_variable), &valor); //codigo de op valor
 	free(direccion);
-	free(valor_real);
 	return;
 }
 
 t_valor_variable obtenerValorCompartida(t_nombre_compartida variable)
 {
-	printf("Soy la funcion obtenerValorCompartida\n");
-	return 0;
+	char variable_compartida= malloc(sizeof(variable));
+	variable_compartida=variable;
+	t_paquete* paquete_nuevo;
+	int valor;
+	enviar(nucleo, 368, sizeof(variable_compartida), variable_compartida); //ver cod de operacion obtenerVariableCompartida
+	paquete_nuevo = recibir(nucleo);
+	memcpy(&valor, paquete_nuevo->data, sizeof(int));
+	free(paquete_nuevo);
+	return valor;
 }
 
 t_valor_variable asignarValorCompartida(t_nombre_compartida variable,t_valor_variable valor)
 {
-	printf("Soy la funcion asignarValorCompartida\n");
-	return 0;
+	char *variable_compartida= malloc(sizeof(variable));
+	variable_compartida=variable;
+	enviar(nucleo, 369, sizeof(variable_compartida), variable_compartida);//ver cod de operacion asignarVariableCompartida
+	enviar(nucleo, 370, 4, &valor);	 //
+	free(variable_compartida);
+	return valor;
 }
 
 void irAlLabel(t_nombre_etiqueta etiqueta)
-{
-	printf("Soy la funcion irAlLabel\n");
+{	t_puntero_instruccion instruccion;
+	instruccion = metadata_buscar_etiqueta(etiqueta, pcb->indiceDeEtiquetas, 1);
+	int i;
+	int contador=0;
+	i=pcb->indiceDeCodigo[contador];
+	while(i!=instruccion){
+		contador+=2;
+		i=pcb->indiceDeCodigo[contador];
+	}
+	pcb->pc=(contador/2);
 	return;
 }
 
-void llamarFuncion(t_nombre_etiqueta etiqueta, t_puntero donde_retornar)
+void llamarConRetorno(t_nombre_etiqueta etiqueta, t_puntero donde_retornar)
 {
-		printf("Soy la funcion llamarConRetorno\n");
-		printf("Guardo contexto que es la etiqueta y retornar el valor\n");
-		return;
+	//creamos nuevo contexto
+
+	return;
 }
 
 void retornar(t_valor_variable retorno)
@@ -135,10 +154,7 @@ void retornar(t_valor_variable retorno)
 
 void imprimir(t_valor_variable valor_mostrar)
 {
-	int *valor = malloc(sizeof(t_valor_variable));
-	valor=&valor_mostrar;
-	enviar(nucleo, 360, sizeof(t_valor_variable), valor);
-	free(valor);
+	enviar(nucleo, 360, sizeof(t_valor_variable), &valor_mostrar);
 	return;
 }
 
@@ -151,8 +167,12 @@ void imprimirTexto(char*texto)
 }
 
 void entradaSalida(t_nombre_dispositivo dispositivo,int tiempo)
-{
-	printf("Soy la funcion entradaSalida\n");
+{	char* nombre_dispositivo=malloc(sizeof(dispositivo));
+	nombre_dispositivo = dispositivo;
+	enviar(nucleo, 380, sizeof(nombre_dispositivo), nombre_dispositivo);
+	enviar(nucleo, 381, 4, &tiempo);
+	//programaBloqueado=1; // se bloquea?
+	free(nombre_dispositivo);
 	return;
 }
 
@@ -174,15 +194,23 @@ void finalizar(){
 
 }
 
-void wait_k(t_nombre_semaforo identificador_semaforo)
-{
-	printf("Soy la funcion wait\n");
+void wait_kernel(t_nombre_semaforo identificador_semaforo){
+	char* nombre_semaforo=malloc(sizeof(identificador_semaforo));
+	nombre_semaforo = identificador_semaforo;
+	enviar(nucleo, 341, sizeof(nombre_semaforo), nombre_semaforo);
+	t_paquete* paquete = malloc(sizeof(paquete));
+	paquete = recibir(nucleo);
+	memcpy(&programaBloqueado, paquete->data, 4);
+	free(nombre_semaforo);
+	free(paquete);
 	return;
 }
 
-void signal_k(t_nombre_semaforo identificador_semaforo)
-{
-	printf("Soy la funcion signal\n");
+void signal_kernel(t_nombre_semaforo identificador_semaforo){
+	char* nombre_semaforo=malloc(sizeof(identificador_semaforo));
+	nombre_semaforo = identificador_semaforo;
+	enviar(nucleo, 342, sizeof(nombre_semaforo), nombre_semaforo);
+	free(nombre_semaforo);
 	return;
 }
 
@@ -243,3 +271,23 @@ void proximaDireccion(int posStack, int posUltVar, t_direccion* direccionReal){
 		return;
 }
 
+int convertirDireccionAPuntero(t_direccion* direccion){
+	int direccion_real,pagina,offset;
+	pagina=(direccion->pagina)*tamanioPag;
+	offset=direccion->offset;
+	direccion_real=pagina+offset;
+	return direccion_real;
+}
+
+void convertirPunteroADireccion(int puntero, t_direccion* direccion){
+	if(tamanioPag>puntero){
+		direccion->pagina=0;
+		direccion->offset=puntero;
+		direccion->size=4;
+	}else{
+		direccion->pagina = (puntero/tamanioPag);
+		direccion->offset = puntero%tamanioPag;
+		direccion->size=4;
+	}
+	return;
+}
