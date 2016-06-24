@@ -300,19 +300,20 @@ void convertirPunteroADireccion(int puntero, t_direccion* direccion){
 
 void enviarDirecParaEscribirUMC(char* UMC, t_direccion* direccion, int valor){
 
-		memcpy(UMC, direccion->pagina , 4);
-		memcpy(UMC+4, direccion->offset , 4);
-		memcpy(UMC+8, direccion->size , 4);
+		memcpy(UMC, &direccion->pagina , 4);
+		memcpy(UMC+4, &direccion->offset , 4);
+		memcpy(UMC+8, &direccion->size , 4);
 		memcpy(UMC+12, &valor , 4);
 		enviar(umc, 2, 16, UMC);
 
 }
 
-void enviarDirecParaLeerUMC(char* UMC, t_direccion* direccion){
+void enviarDirecParaLeerUMC(char* UMC_1, t_direccion* direccion){
 
-		memcpy(UMC, direccion->pagina , 4);
-		memcpy(UMC+4, direccion->offset , 4);
-		memcpy(UMC+8, direccion->size , 4);
-		enviar(umc, 1, 12, UMC);
+		memcpy(UMC_1, &direccion->pagina , 4);
+		memcpy(UMC_1+4, &direccion->offset , 4);
+		memcpy(UMC_1+8, &direccion->size , 4);
+		printf("Cargue direccion: %d %d %d\n",((int*)(UMC_1))[0],((int*)(UMC_1))[1],((int*)(UMC_1))[2]);
+		enviar(umc, 1, 12, UMC_1);
 
 }

@@ -47,11 +47,15 @@ int main(int argc,char **argv){
 	programaFinalizado = 0;
 	programaAbortado = 0;
 
-	levantar_configuraciones();
+	//levantar_configuraciones();
+
+
 
 	umc = conectarConUmc();
+	printf("holaUMC\n");
 
 	nucleo = conectarConNucleo();
+	printf("holanucleo\n");
 	t_paquete* datos_kernel=recibir(nucleo);  //una vez que nucleo se conecta con cpu debe mandar t_datos_kernel..
 
 	quantum = ((t_datos_kernel*)(datos_kernel->data))->QUANTUM;
@@ -68,22 +72,32 @@ int main(int argc,char **argv){
 		pcb = malloc(sizeof(t_pcb));
 		t_paquete* paquete_recibido = recibir(nucleo);
 		pcb = desserializarPCB(paquete_recibido->data);
+		log_info(log,"Recibi PCB del nucleo\n");
+		printf("recibi PCB\n");
 		liberar_paquete(paquete_recibido);
 
 		int pid = pcb->pid;
-		enviar(umc, 3, sizeof(int), pid);
+		enviar(umc, 3, sizeof(int), &pid);
+		printf("Envie pid a UMC\n");
 
 
 		while(quantum && !programaBloqueado && !programaFinalizado && !programaAbortado){
 
-			t_direccion* datos_para_umc = malloc(sizeof(t_direccion));
+			t_direccion* datos_para_umc = malloc(12);
 			crearEstructuraParaUMC(pcb, tamanioPag, datos_para_umc);
-			enviar(umc, 404, datos_para_umc->size, datos_para_umc);
+			char * lecturaUMC= malloc(12);
+			printf("Voy a pedir instruccion\n");
+			printf("Direccion= Pag:%d Offset:%d Size:%d\n", datos_para_umc->pagina, datos_para_umc->offset, datos_para_umc->size);
+			enviarDirecParaLeerUMC(lecturaUMC, datos_para_umc);
+			printf("Pido Instruccion\n");
+			free(lecturaUMC);
 			free(datos_para_umc);
 			t_paquete* instruccion=malloc(sizeof(t_paquete));
 			instruccion = recibir(umc);
-			char* sentencia;
-			memcpy(sentencia, instruccion->data, instruccion->tamanio); //chequear si hay una instruccion?
+			printf("Recibi instruccion de UMC\n");
+			char* sentencia=instruccion->data;
+			//memcpy(sentencia, &instruccion->data, (int)instruccion->tamanio); //chequear si hay una instruccion?
+			printf("Recibi sentencia: %s\n", sentencia);
 			analizadorLinea(depurarSentencia(strdup(sentencia)), &primitivas, &primitivas_kernel);
 			liberar_paquete(instruccion);
 
@@ -133,7 +147,7 @@ return 0;
 //*******************************************FUNCIONES**********************************************************
 
 int conectarConUmc(){
-		int umc = conectar_a(config_cpu.IP_UMC, config_cpu.PUERTO_UMC);
+		int umc = conectar_a("192.168.0.57", "1200");
 		if(umc==-1){
 			log_info(log,"CPU: No encontre memoria\n");
 			exit (EXIT_FAILURE);
@@ -152,20 +166,20 @@ return umc;
 
 
 int conectarConNucleo(){
-		int nucleo = conectar_a(config_cpu.IP_NUCLEO, config_cpu.PUERTO_NUCLEO);
+		int nucleo = conectar_a("192.168.0.58", "1202");
 		if(nucleo==-1){
 			log_info(log,"CPU: No encontre nucleo\n");
 			exit (EXIT_FAILURE);
 		}
 		log_info(log,"CPU: Conecta bien nucleo %d\n", nucleo);
-		bool estado = realizar_handshake(nucleo);
-		if (!estado) {
-			log_info(log,"CPU:Handshake invalido con nucleo\n");
-			exit(EXIT_FAILURE);
-		}
-		else{
-			log_info(log,"CPU:Handshake exitoso con nucleo\n");
-		}
+		//bool estado = realizar_handshake(nucleo);
+		//if (!estado) {
+		//	log_info(log,"CPU:Handshake invalido con nucleo\n");
+		//	exit(EXIT_FAILURE);
+		//}
+		//else{
+		//	log_info(log,"CPU:Handshake exitoso con nucleo\n");
+		//}
 return nucleo;
 }
 
@@ -175,7 +189,7 @@ void crearEstructuraParaUMC (t_pcb* pcb, int tamPag, t_direccion* informacion){
 	info->pagina=pcb->indiceDeCodigo [(pcb->pc)*2]/ tamPag;
 	info->offset=pcb->indiceDeCodigo [((pcb->pc)*2)];
 	info->size=pcb->indiceDeCodigo [((pcb->pc)*2)+1];
-	memcpy(informacion, info, sizeof(t_direccion*));
+	memcpy(informacion, info, 12);
 	free(info);
 	return;
 }

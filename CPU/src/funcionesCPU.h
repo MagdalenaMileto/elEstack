@@ -44,9 +44,9 @@ typedef struct {
 
 
 typedef struct {
-  int PUERTO_NUCLEO;
+  char* PUERTO_NUCLEO;
   char* IP_NUCLEO;
-  int PUERTO_UMC;
+  char* PUERTO_UMC;
   char* IP_UMC;
   int STACK_SIZE;
   int SIZE_PAGINA;
