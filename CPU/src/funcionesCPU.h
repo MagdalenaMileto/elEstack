@@ -27,7 +27,6 @@
 #include "../../COMUNES/estructurasControl.h"
 #include "../../COMUNES/handshake.h"
 #include "primitivas.h"
-#include "primitivas.h"
 #include <commons/config.h>
 #include <commons/log.h>
 #include <commons/collections/list.h>
