@@ -17,6 +17,8 @@ void proximaDireccion(int posStack, int posUltVar, t_direccion* direccionReal);
 void buscarUbicacionVaraible(int posicionStack, t_nombre_variable identificador_variable, t_direccion* direccionReal);
 int convertirDireccionAPuntero(t_direccion* direccion);
 void convertirPunteroADireccion(int puntero, t_direccion* direccion);
+void enviarDirecParaEscribirUMC(char* UMC, t_direccion* direccion, int valor);
+void enviarDirecParaLeerUMC(char* UMC, t_direccion* direccion);
 t_puntero definirVariable(t_nombre_variable identificador_variable);
 t_puntero obtenerPosicionVariable (t_nombre_variable identificador_variable);
 t_valor_variable dereferenciar(t_puntero direccion_variable);

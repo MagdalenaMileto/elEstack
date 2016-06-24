@@ -11,9 +11,9 @@ t_puntero definirVariable(t_nombre_variable identificador_variable)
 {
 	t_direccion *direccion_variable= malloc(sizeof(t_direccion));
 	t_variable *variable= malloc(sizeof(t_variable));
-	t_contexto *contexto= malloc(sizeof(t_contexto));
+	t_contexto *contexto; //= malloc(sizeof(t_contexto));
 	int posicionStack = pcb->sizeContextoActual-1;
-	contexto= list_get(pcb->contextoActual, pcb->sizeContextoActual-1);
+	contexto= (t_contexto*)(list_get(pcb->contextoActual, pcb->sizeContextoActual-1));
 
 	if(pcb->sizeContextoActual==1 &&  contexto->sizeVars==0 ){
 
@@ -45,7 +45,10 @@ t_puntero definirVariable(t_nombre_variable identificador_variable)
 		contexto->sizeVars++;
 	}
 
-	enviar(umc, 404, sizeof(t_direccion), direccion_variable);
+	char* escribirUMC= malloc(16);
+	int valor;
+	enviarDirecParaEscribirUMC(escribirUMC, direccion_variable, valor);
+	free(escribirUMC);
 
 	if(recibir(umc)->data=="Error"){ //hablar con umc sobre el error
 		programaAbortado=1;
@@ -59,22 +62,23 @@ t_puntero definirVariable(t_nombre_variable identificador_variable)
 
 t_puntero obtenerPosicionVariable (t_nombre_variable identificador_variable)
 {
-	int posicionStack=pcb->sizeContextoActual-1;
-	t_variable *variable_nueva=malloc(sizeof(t_variable));
-	int posMax= (((t_contexto*)(list_get(pcb->contextoActual, posicionStack)))->sizeVars)-1;
-	int direccionRetorno;
-	while(posMax>=0){
-		variable_nueva=((t_variable*)(list_get(((t_contexto*)(list_get(pcb->contextoActual, posicionStack)))->vars, posMax)));
-		if(variable_nueva->etiqueta==identificador_variable){
-			free(variable_nueva);
-			direccionRetorno = convertirDireccionAPuntero(((t_variable*)(list_get(((t_contexto*)(list_get(pcb->contextoActual, posicionStack)))->vars, posMax)))->direccion);
-			return(direccionRetorno); //no queda claro en el enunciado que devuelve
 
+		int posicionStack=pcb->sizeContextoActual-1;
+		t_variable *variable_nueva=malloc(sizeof(t_variable));
+		int posMax= (((t_contexto*)(list_get(pcb->contextoActual, posicionStack)))->sizeVars)-1;
+		int direccionRetorno;
+		while(posMax>=0){
+			variable_nueva=((t_variable*)(list_get(((t_contexto*)(list_get(pcb->contextoActual, posicionStack)))->vars, posMax)));
+			if(variable_nueva->etiqueta==identificador_variable){
+				direccionRetorno = convertirDireccionAPuntero(((t_variable*)(list_get(((t_contexto*)(list_get(pcb->contextoActual, posicionStack)))->vars, posMax)))->direccion);
+				free(variable_nueva);
+				return(direccionRetorno); //no queda claro en el enunciado que devuelve
+
+			}
+			posMax--;
 		}
-		posMax--;
-	}
-	programaAbortado=1;
-	return -1;
+		programaAbortado=1;
+		return -1;
 
 }
 
@@ -82,12 +86,14 @@ t_valor_variable dereferenciar(t_puntero direccion_variable)
 {
 	t_direccion *direccion= malloc(sizeof(t_direccion));
 	convertirPunteroADireccion(direccion_variable, direccion);
-	enviar(umc, 351, sizeof(t_direccion), direccion);
+	char* leerUMC=malloc(12);
+	enviarDirecParaLeerUMC(leerUMC, direccion);
+	free(leerUMC);
 	free(direccion);
 	t_paquete *paquete=malloc(sizeof(t_paquete));
 	paquete = recibir(umc);
 	int valor;
-	memcpy(&valor, paquete->data, 4);
+	memcpy(&valor, &paquete->data, 4);
 	free(paquete);
 	return valor;
 
@@ -96,8 +102,9 @@ t_valor_variable dereferenciar(t_puntero direccion_variable)
 void asignar(t_puntero direccion_variable,t_valor_variable valor)
 {	t_direccion *direccion= malloc(sizeof(t_direccion));
 	convertirPunteroADireccion(direccion_variable, direccion);
-	enviar(umc, 355, sizeof(t_direccion), direccion); //ver cod de op con umc
-	enviar(umc, 356, sizeof(t_valor_variable), &valor); //codigo de op valor
+	char* escribirUMC= malloc(16);
+	enviarDirecParaEscribirUMC(escribirUMC, direccion, valor);
+	free(escribirUMC);
 	free(direccion);
 	return;
 }
@@ -108,7 +115,7 @@ t_valor_variable obtenerValorCompartida(t_nombre_compartida variable)
 	variable_compartida=variable;
 	t_paquete* paquete_nuevo;
 	int valor;
-	enviar(nucleo, 368, sizeof(variable_compartida), variable_compartida); //ver cod de operacion obtenerVariableCompartida
+	enviar(nucleo, 351, sizeof(variable_compartida), variable_compartida);
 	paquete_nuevo = recibir(nucleo);
 	memcpy(&valor, paquete_nuevo->data, sizeof(int));
 	free(paquete_nuevo);
@@ -117,10 +124,10 @@ t_valor_variable obtenerValorCompartida(t_nombre_compartida variable)
 
 t_valor_variable asignarValorCompartida(t_nombre_compartida variable,t_valor_variable valor)
 {
-	char *variable_compartida= malloc(sizeof(variable));
-	variable_compartida=variable;
-	enviar(nucleo, 369, sizeof(variable_compartida), variable_compartida);//ver cod de operacion asignarVariableCompartida
-	enviar(nucleo, 370, 4, &valor);	 //
+	char *variable_compartida= malloc(4+sizeof(variable));
+	memcpy(variable_compartida, &valor, 4);
+	memcpy(variable_compartida+4, variable, sizeof(variable));
+	enviar(nucleo, 350, sizeof(variable_compartida), variable_compartida);
 	free(variable_compartida);
 	return valor;
 }
@@ -161,7 +168,7 @@ void imprimir(t_valor_variable valor_mostrar)
 void imprimirTexto(char*texto)
 {	char *texto_mostrar = malloc(sizeof(texto));
 	texto_mostrar = texto;
-	enviar(nucleo, 360, sizeof(texto_mostrar), texto_mostrar); //preguntar si esta bien mandando el texto
+	enviar(nucleo, 361, sizeof(texto_mostrar), texto_mostrar);
 	free(texto_mostrar);
 	return;
 }
@@ -171,13 +178,13 @@ void entradaSalida(t_nombre_dispositivo dispositivo,int tiempo)
 	nombre_dispositivo = dispositivo;
 	enviar(nucleo, 380, sizeof(nombre_dispositivo), nombre_dispositivo);
 	enviar(nucleo, 381, 4, &tiempo);
-	//programaBloqueado=1; // se bloquea?
+	programaBloqueado=1;
 	free(nombre_dispositivo);
 	return;
 }
 
 void finalizar(){
-	t_contexto *contexto_a_finalizar= malloc(sizeof(t_contexto));
+	t_contexto *contexto_a_finalizar; //= malloc(sizeof(t_contexto));
 	contexto_a_finalizar= list_get(pcb->contextoActual, pcb->sizeContextoActual-1);
 	while(contexto_a_finalizar->sizeVars != 0){
 		free(((t_variable *)list_get(contexto_a_finalizar->vars, contexto_a_finalizar->sizeVars-1))->direccion);
@@ -186,7 +193,6 @@ void finalizar(){
 		contexto_a_finalizar->sizeVars--;
 	}
 	list_destroy(contexto_a_finalizar->vars);
-	free(contexto_a_finalizar);
 	free((t_contexto *)list_get(pcb->contextoActual, pcb->sizeContextoActual-1));
 	programaFinalizado=1;
 	return;
@@ -199,8 +205,8 @@ void wait_kernel(t_nombre_semaforo identificador_semaforo){
 	nombre_semaforo = identificador_semaforo;
 	enviar(nucleo, 341, sizeof(nombre_semaforo), nombre_semaforo);
 	t_paquete* paquete = malloc(sizeof(paquete));
-	paquete = recibir(nucleo);
-	memcpy(&programaBloqueado, paquete->data, 4);
+	paquete = recibir(nucleo);//devuelve el int con el valor del sem, falta el if para ver si se bloquea o no
+	memcpy(&programaBloqueado, &paquete->data, 4); //ver esto
 	free(nombre_semaforo);
 	free(paquete);
 	return;
@@ -219,7 +225,7 @@ void armarDireccionPrimeraPagina(t_direccion *direccionReal){
 	direccion->offset=0;
 	direccion->size=4;
 	direccion->pagina=primeraPagina();
-	memcpy(&direccionReal, &direccion , sizeof(t_direccion));
+	memcpy(direccionReal, direccion , sizeof(t_direccion));
 	free(direccion);
 
 	return;
@@ -254,17 +260,17 @@ void armarDirecccionDeFuncion(t_direccion *direccionReal){
 void proximaDireccion(int posStack, int posUltVar, t_direccion* direccionReal){
 	t_direccion *direccion = malloc(sizeof(t_direccion));
 	int offset = ((t_variable*)(list_get(((t_contexto*)(list_get(pcb->contextoActual, posStack)))->vars, posUltVar)))->direccion->offset + 4;
-		if(offset>tamanioPag){
+		if(offset>=tamanioPag){
 			direccion->pagina = ((t_variable*)(list_get(((t_contexto*)(list_get(pcb->contextoActual, posStack)))->vars, posUltVar)))->direccion->pagina + 1;
 			direccion->offset = 0;
 			direccion->size=4;
-			memcpy(&direccionReal, &direccion , sizeof(t_direccion));
+			memcpy(direccionReal, direccion , sizeof(t_direccion));
 			free(direccion);
 		}else{
 			direccion->pagina = ((t_variable*)(list_get(((t_contexto*)(list_get(pcb->contextoActual, posStack)))->vars, posUltVar)))->direccion->pagina;
 			direccion->offset = offset;
 			direccion->size=4;
-			memcpy(&direccionReal, &direccion , sizeof(t_direccion));
+			memcpy(direccionReal, direccion , sizeof(t_direccion));
 			free(direccion);
 		}
 
@@ -290,4 +296,23 @@ void convertirPunteroADireccion(int puntero, t_direccion* direccion){
 		direccion->size=4;
 	}
 	return;
+}
+
+void enviarDirecParaEscribirUMC(char* UMC, t_direccion* direccion, int valor){
+
+		memcpy(UMC, direccion->pagina , 4);
+		memcpy(UMC+4, direccion->offset , 4);
+		memcpy(UMC+8, direccion->size , 4);
+		memcpy(UMC+12, &valor , 4);
+		enviar(umc, 2, 16, UMC);
+
+}
+
+void enviarDirecParaLeerUMC(char* UMC, t_direccion* direccion){
+
+		memcpy(UMC, direccion->pagina , 4);
+		memcpy(UMC+4, direccion->offset , 4);
+		memcpy(UMC+8, direccion->size , 4);
+		enviar(umc, 1, 12, UMC);
+
 }

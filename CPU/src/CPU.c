@@ -54,24 +54,24 @@ int main(int argc,char **argv){
 	nucleo = conectarConNucleo();
 	t_paquete* datos_kernel=recibir(nucleo);  //una vez que nucleo se conecta con cpu debe mandar t_datos_kernel..
 
+	quantum = ((t_datos_kernel*)(datos_kernel->data))->QUANTUM;
+	tamanioPag = ((t_datos_kernel*)(datos_kernel->data))->TAMPAG;
+	quantum_sleep = ((t_datos_kernel*)(datos_kernel->data))->QUANTUM_SLEEP;
+
 	sigusr1_desactivado = 1;
 
+	//if (signal(SIGUSR1, sig_handler) == SIG_ERR )
+						//log_error(log, "Error al atrapar señal SIGUSR1");
 
 	while(sigusr1_desactivado){
 
-		quantum = ((t_datos_kernel*)(datos_kernel->data))->QUANTUM;
-		tamanioPag = ((t_datos_kernel*)(datos_kernel->data))->TAMPAG;
-		quantum_sleep = ((t_datos_kernel*)(datos_kernel->data))->QUANTUM_SLEEP;
-
-		if (signal(SIGUSR1, sig_handler) == SIG_ERR )
-					log_error(log, "Error al atrapar señal SIGUSR1");
-
+		pcb = malloc(sizeof(t_pcb));
 		t_paquete* paquete_recibido = recibir(nucleo);
 		pcb = desserializarPCB(paquete_recibido->data);
 		liberar_paquete(paquete_recibido);
 
 		int pid = pcb->pid;
-		enviar(umc, 405, sizeof(int), pid); // codigo 405: cambio de proceso activo NUCLEO - UMC
+		enviar(umc, 3, sizeof(int), pid);
 
 
 		while(quantum && !programaBloqueado && !programaFinalizado && !programaAbortado){
@@ -82,7 +82,8 @@ int main(int argc,char **argv){
 			free(datos_para_umc);
 			t_paquete* instruccion=malloc(sizeof(t_paquete));
 			instruccion = recibir(umc);
-			char* sentencia= instruccion->data; //chequear si hay una instruccion?
+			char* sentencia;
+			memcpy(sentencia, instruccion->data, instruccion->tamanio); //chequear si hay una instruccion?
 			analizadorLinea(depurarSentencia(strdup(sentencia)), &primitivas, &primitivas_kernel);
 			liberar_paquete(instruccion);
 
@@ -100,25 +101,25 @@ int main(int argc,char **argv){
 			if (programaAbortado){
 				log_info(log, "El programa aborto");
 				serializado = serializarPCB(pcb);
-				enviar(nucleo, 333, sizeof(serializado), serializado); //codigo de op 333, pcb abortado
+				enviar(nucleo, 370, sizeof(serializado), serializado);
 				destruirPCB(pcb);
 			}
 
 			if (programaFinalizado){
 				log_debug(log, "El programa finalizo");
-				enviar(nucleo, 320, sizeof(int), programaFinalizado); //codigo de op 320, pcb finalizo
+				enviar(nucleo, 320, sizeof(int), &programaFinalizado);
 				destruirPCB(pcb);
 			}
 
 			if(quantum &&!programaFinalizado&&!programaBloqueado&&!programaAbortado){
 				serializado = serializarPCB(pcb);
-				enviar(nucleo, 304, sizeof(serializado), serializado); //codigo de op 304, pcb salio por quantum
+				enviar(nucleo, 304, sizeof(serializado), serializado);
 				destruirPCB(pcb);
 			}
 		}
 
 		liberar_paquete(datos_kernel);
-
+		free(pcb);
 		close(nucleo);
 		close(umc);
 
