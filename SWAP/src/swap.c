@@ -158,6 +158,8 @@ int main(int argc,char **argv) {
 				case 3: { //caso de Lectura de pagina
 					void *paginaALeer;
 					paginaALeer = malloc(TAMANIO_PAGINA);
+					memset(paginaALeer, '\0',TAMANIO_PAGINA);
+
 
 					memcpy(&pid, mensaje->data, sizeof(int));
 					memcpy(&pagina, mensaje->data + sizeof(int), sizeof(int));
@@ -165,6 +167,7 @@ int main(int argc,char **argv) {
 					printf("Se leera la pagina: %d, del proceso %d \n", pagina, pid);
 					sleep(RETARDO_ACCESO);
 					flagRespuesta = leerPaginaProceso(pid, pagina, paginaALeer);
+				//	printf("codigo: %s \n", (char*)paginaALeer);
 //					if (flagRespuesta == FALLOLECTURA){
 //						return -1;
 //					}
@@ -580,6 +583,10 @@ int leerPaginaProceso(int idProceso, int nroPag, void* paginaALeer){
 	int primerPag=getPrimerPagProc(idProceso);
 	int cantPagsEnUso = procesos[posProc].cantPagsUsando;
 	int posPag = primerPag +nroPag;
+
+	printf("codigo todo: %s \n", (char*)discoParaleloNoVirtualMappeado);
+
+
 	if(nroPag>cantPagsEnUso)
 	{
 		printf("No puede leer la pagina %d, no tiene permisos \n",nroPag);
@@ -587,11 +594,18 @@ int leerPaginaProceso(int idProceso, int nroPag, void* paginaALeer){
 	}
 	long int inicio,fin;
 	flagResult = leerPagina(posPag,&inicio,&fin); //con esto determino los valores de inicio de lectura y de fin
+
+	printf("inicio: %d \n", inicio);
+
 	if (flagResult == -1){
 		return -1;
 	}
 
-	memcpy(&paginaALeer, discoParaleloNoVirtualMappeado + inicio, TAMANIO_PAGINA);
+	memcpy(paginaALeer, discoParaleloNoVirtualMappeado + inicio, TAMANIO_PAGINA);
+
+	//printf("codigo: %s \n", (char*)paginaALeer);
+
+
 	return 1;
 }
 
