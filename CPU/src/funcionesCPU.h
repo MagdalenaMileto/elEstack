@@ -36,6 +36,8 @@
 #include <unistd.h>
 #include <sys/types.h>
 
+t_log* log;
+
 typedef struct {
 	 int QUANTUM;
 	 int QUANTUM_SLEEP;
@@ -48,8 +50,6 @@ typedef struct {
   char* IP_NUCLEO;
   char* PUERTO_UMC;
   char* IP_UMC;
-  int STACK_SIZE;
-  int SIZE_PAGINA;
 }CONF_CPU;
 
 

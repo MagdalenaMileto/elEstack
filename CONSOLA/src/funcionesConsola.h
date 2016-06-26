@@ -24,13 +24,12 @@
 #include <commons/collections/list.h>
 #include <theDebuggers/socketLibrary.h>
 
-char *puerto_consola, *ip_nucleo, *puerto_nucleo;
+char *ip_nucleo, *puerto_nucleo;
 
-int iniciarConsola();
 void archivoDeConfiguracion();
 char* leerElArchivo(FILE *archivo);
 int conectarConElNucleo();
-int enviarInformacionAlNucleo(char * script, int nucleo, int consola);
+int enviarInformacionAlNucleo(char * script, int nucleo);
 
 
 

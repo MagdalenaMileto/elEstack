@@ -313,7 +313,7 @@ void enviarDirecParaLeerUMC(char* UMC_1, t_direccion* direccion){
 		memcpy(UMC_1, &direccion->pagina , 4);
 		memcpy(UMC_1+4, &direccion->offset , 4);
 		memcpy(UMC_1+8, &direccion->size , 4);
-		printf("Cargue direccion: %d %d %d\n",((int*)(UMC_1))[0],((int*)(UMC_1))[1],((int*)(UMC_1))[2]);
+		log_info(log,"Cargue direccion: %d %d %d\n",((int*)(UMC_1))[0],((int*)(UMC_1))[1],((int*)(UMC_1))[2]);
 		enviar(umc, 1, 12, UMC_1);
 
 }
