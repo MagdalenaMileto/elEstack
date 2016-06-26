@@ -147,7 +147,7 @@ return 0;
 //*******************************************FUNCIONES**********************************************************
 
 int conectarConUmc(){
-		int umc = conectar_a("192.168.0.57", "1200");
+		int umc = conectar_a("localhost", "1200");
 		if(umc==-1){
 			log_info(log,"CPU: No encontre memoria\n");
 			exit (EXIT_FAILURE);
@@ -166,7 +166,7 @@ return umc;
 
 
 int conectarConNucleo(){
-		int nucleo = conectar_a("192.168.0.58", "1202");
+		int nucleo = conectar_a("localhost", "1202");
 		if(nucleo==-1){
 			log_info(log,"CPU: No encontre nucleo\n");
 			exit (EXIT_FAILURE);

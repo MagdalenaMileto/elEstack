@@ -226,7 +226,7 @@ int mandarCodigoAUmc(char* codigo, int size, t_proceso *proceso) {
 	int tamanoIndiceCodigo;
 	t_medatada_program* metadata_program;
 	metadata_program = metadata_desde_literal(codigo);
-
+	printf("OLA\n");
 	proceso->pcb->paginasDeCodigo = ceil((double)size / (double)config_nucleo->TAMPAG);
 	proceso->pcb->sizeIndiceDeCodigo =  (metadata_program->instrucciones_size);
 	proceso->pcb->indiceDeCodigo = malloc(proceso->pcb->sizeIndiceDeCodigo * 2 * sizeof(int));
@@ -265,9 +265,9 @@ int mandarCodigoAUmc(char* codigo, int size, t_proceso *proceso) {
 	memcpy(paqueteUMC+sizeof(int), &temp, sizeof(int));
 	memcpy(paqueteUMC+2*sizeof(int), &size, sizeof(int));
 	memcpy(paqueteUMC+3*sizeof(int), codigo, size);
-
+	printf("OLAl\n");
 	enviar(umc, 4,(size+3*sizeof(int)),paqueteUMC );
-
+	printf("OLAkk\n");
 	//TODO: mutex a umc
 	t_paquete* paquete; 
 	paquete = recibir(umc);
@@ -737,7 +737,7 @@ while(1){}
 void *hilo_mock_consola(void *arg) {
 	int consola;
 	sleep(4);
-	consola = cliente("127.0.0.1", 1209);
+	consola = cliente("127.0.0.1", 1210);
 	printf("\x1b[36mCONSOLAMOCK: Conecté%d \n\x1b[0m", consola);
 	//codigo[0]='a'+rodo;
 	//rodo++;
