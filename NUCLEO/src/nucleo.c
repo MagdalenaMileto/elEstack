@@ -35,7 +35,9 @@ sem_t sem_new;
 //Colas sem
 t_queue** colas_semaforos;
 
-pthread_mutex_t mutex_cola_new, mutex_cola_ready, mutex_variables,total;
+pthread_mutex_t mutex_cola_new, mutex_cola_ready, mutex_variables,total,umcm;
+
+pthread_mutex_t mutex_config;
 
 int pidcounter = 0;
 
@@ -56,7 +58,9 @@ int socketconsola, socketcpu;
 //Eliminar todo lo que sea de mas de aca
 int listenningSocket, socketCliente, servidorSocket, servidorCPU, clienteSocket, losClientes, clientesCPU, umc, ultimoCPU;
 int rodo=0;
-char codigo[200] = "#!/usr/bin/ansisop\nbegin\nvariables i,b\ni=1\n:inicio_for\ni=i+1\nprint i\nb=i­10\n:cosita\njnz b inicio_for\njnz b cosita\n#fuera del for\nend";
+//char codigo[200] = "#!/usr/bin/ansisop\nbegin\nvariables i,b\ni=1\n:inicio_for\ni=i+1\nprint i\nb=i­10\n:cosita\njnz b inicio_for\njnz b cosita\n#fuera del for\nend";
+
+char codigo[250] = "#!/usr/bin/ansisop\nbegin\nvariables a\na = 4\nprint a\nend";
 
 
 //char codigo[300] = "#!/usr/bin/ansisop\nbegin\nvariables a, b\na=20\nprint a\nb <­- prueba\nprint b\nprint a\nend\nfunction prueba\nvariables a,b \na=2\nb=16\nprint b\nprint a\na=a+b\nreturn a\nend";
@@ -69,7 +73,9 @@ int main() {
 	printf("NUCLEO: INICIÓ\n");
 
 	//Levantar archivo de configuracion
+	
 	config_nucleo = malloc(sizeof(CONF_NUCLEO));
+	
 	get_config_nucleo(config_nucleo);//Crea y setea el config del kernel
 
 	//MOCK SACAR UNA VEZ INTEGRADO
@@ -90,6 +96,7 @@ int main() {
 	cola_exit = queue_create();
 	cola_CPU_libres = queue_create();
 
+	pthread_mutex_init(&umcm, NULL);
 	pthread_mutex_init(&mutex_cola_new, NULL);
 	pthread_mutex_init(&total, NULL);
 
@@ -144,7 +151,9 @@ int main() {
 
 
 void conectarUmc(void) {
+	pthread_mutex_lock(&mutex_config);
 	umc = conectar_a(config_nucleo->IP_UMC, config_nucleo->PUERTO_UMC);
+	pthread_mutex_unlock(&mutex_config);
 	//Tengo que hacer handshake?
 }
 
@@ -209,7 +218,8 @@ t_proceso* crearPrograma(int sock) {
 	return procesoNuevo;
 }
 
-void mandarCodigoAUmc(char* codigo, int size, t_proceso *proceso) {
+int mandarCodigoAUmc(char* codigo, int size, t_proceso *proceso) {
+	pthread_mutex_lock(&umcm);
 	int cuantasPaginasCodigo, estado, i;
 	t_header header;
 	int *indiceCodigo;
@@ -223,7 +233,7 @@ void mandarCodigoAUmc(char* codigo, int size, t_proceso *proceso) {
 
 	//Creamos el indice de codigo
 	for (i = 0; i < metadata_program->instrucciones_size; i++) {
-		//printf("Instruccion %.*s",metadata_program->instrucciones_serializado[i].offset,codigo+metadata_program->instrucciones_serializado[i].start);
+		printf("Instruccion %.*s\n",metadata_program->instrucciones_serializado[i].offset,codigo+metadata_program->instrucciones_serializado[i].start);
 		proceso->pcb->indiceDeCodigo[i * 2] = metadata_program->instrucciones_serializado[i].start;
 		proceso->pcb->indiceDeCodigo[i * 2 + 1] = metadata_program->instrucciones_serializado[i].offset;
 	}
@@ -249,6 +259,7 @@ void mandarCodigoAUmc(char* codigo, int size, t_proceso *proceso) {
 
 	char*paqueteUMC; paqueteUMC=malloc(size+3*sizeof(int));
 	int temp =proceso->pcb->paginasDeCodigo+proceso->pcb->paginasDeMemoria;
+	//printf("Cantidad de paingas %d\n",temp);
 
 	memcpy(paqueteUMC,&(proceso->pcb->pid), sizeof(int));
 	memcpy(paqueteUMC+sizeof(int), &temp, sizeof(int));
@@ -257,12 +268,20 @@ void mandarCodigoAUmc(char* codigo, int size, t_proceso *proceso) {
 
 	enviar(umc, 4,(size+3*sizeof(int)),paqueteUMC );
 
+	//TODO: mutex a umc
+	t_paquete* paquete; 
+	paquete = recibir(umc);
+
+
 	free(paqueteUMC);
+	pthread_mutex_unlock(&umcm);
+	return paquete->codigo_operacion;
 }
 
 int *pideSemaforo(char *semaforo, int semaforoSize) {
 	int i;
 	printf("NUCLEO: pide sem %s\n", semaforo);
+
 	for (i = 0; i < strlen((char*)config_nucleo->SEM_IDS) / sizeof(char*); i++) {
 		//TODO:aca esta funcando con el \n OJO
 		//TODO: mutex confignucleo
@@ -289,9 +308,10 @@ int *pideVariable(char *variable, int tamanio) {
 }
 
 
-void escribeVariable(char *variable, int tamanio) {
+void escribeVariable(char *variable, int tamanio) {//
+	//TODO ME TIENEN QUE MANDAR primero el int y luego el  string
 	int *valor = (int*)variable;
-	variable += sizeof(int);
+	variable += tamanio;
 	int i;
 	for (i = 0; i < strlen((char*)config_nucleo->SHARED_VARS) / sizeof(char*); i++) {
 		//TODO:aca esta funcando con el \n OJO
@@ -433,6 +453,7 @@ void *hilo_CONEXION_CONSOLA(void *socket) {
 	printf("NUCLEO:Handshake valido consola, creando proceso %d\n", proceso->pcb->pid);
 
 	while (1) {
+		int estado;
 		t_paquete* paquete; 
 		paquete = recibir(*(int*)socket);
 		switch (paquete->codigo_operacion) {
@@ -443,7 +464,14 @@ void *hilo_CONEXION_CONSOLA(void *socket) {
 				free(paquete);
 				return;
 			case 103:
-				mandarCodigoAUmc(paquete->data, paquete->tamanio, proceso);
+				estado = mandarCodigoAUmc(paquete->data, paquete->tamanio, proceso);
+
+				if(estado==-1){
+					printf("NUCLEO: ERROR EN SWAP\n");exit(0);
+				}
+
+				//TODO: ver lo del flag -1 fracaso / esito 1
+
 				pthread_mutex_lock(&mutex_cola_new);
 				queue_push(cola_new, proceso);
 				sem_post(&sem_new);
@@ -499,11 +527,16 @@ void *hilo_CONEXION_CPU(void *socket) {
 	datos_kernel.TAMPAG = config_nucleo->TAMPAG;
 
 	//O que no me envie nada? timeouts?
+	printf("HOLA\n");
 	enviar(*(int*)socket, 301, sizeof(t_datos_kernel), &datos_kernel);
-	elPaquete = recibir(*(int*)socket);
-	liberar_paquete(elPaquete);
+		printf("REHOLA\n");
 
-	if(!elPaquete->codigo_operacion==302){printf("Error en handshake CPU\n");exit(0);}
+	//TODO VER ESTO
+
+	//elPaquete = recibir(*(int*)socket);
+	//liberar_paquete(elPaquete);
+
+	//if(!elPaquete->codigo_operacion==302){printf("Error en handshake CPU\n");exit(0);}
 
 	//TODO: mutex
 	queue_push(cola_CPU_libres, (void*)*(int*)socket);
@@ -513,6 +546,16 @@ void *hilo_CONEXION_CPU(void *socket) {
 
 		elPaquete = recibir(*(int*)socket);
 		//printf("CRASH2 %d %d\n", elPaquete->codigo_operacion, *(int*)socket);
+
+
+
+
+		//TODO IMPLEMENTAR FUNCION DE CAMBIAR EL CONTEXTO DEL QUUANTUM
+
+		//TODO 370: abortado -> con pcb y destruyo
+
+
+
 
 		switch (elPaquete->codigo_operacion) {
 		case 304:
@@ -537,8 +580,7 @@ void *hilo_CONEXION_CPU(void *socket) {
 			queue_push(cola_exit, proceso);
 			queue_push(cola_CPU_libres, (void*)*(int*)socket);
 			sem_post(&sem_cpu);
-			enviar(umc, 6, sizeof(int), &
-				proceso->pcb->pid);
+			enviar(umc, 6, sizeof(int), &proceso->pcb->pid);
 			break;
 
 		case 340:
@@ -550,10 +592,14 @@ void *hilo_CONEXION_CPU(void *socket) {
 			proceso->pcb = bloqueo->pcb;
 
 			if (bloqueo->ioSize) {
+				pthread_mutex_lock(&mutex_config);
 				bloqueoIoManager(proceso, bloqueo->io, bloqueo->ioSize, bloqueo->IO_time);
+				pthread_mutex_unlock(&mutex_config);
 			}
 			if (bloqueo->semaforoSize) {
+				pthread_mutex_lock(&mutex_config);
 				bloqueoSemaforoManager(proceso, bloqueo->semaforo, bloqueo->semaforoSize);
+				pthread_mutex_unlock(&mutex_config);
 			}
 
 			free(bloqueo->io);
@@ -574,19 +620,25 @@ void *hilo_CONEXION_CPU(void *socket) {
 		case 343: //Libera semaforo
 			proceso = dameProceso(cola_exec, *(int*)socket);
 			queue_push(cola_exec, proceso);
+			pthread_mutex_lock(&mutex_config);
 			liberaSemaforo(elPaquete->data, elPaquete->tamanio);
+			pthread_mutex_unlock(&mutex_config);
 			break;
 
 		case 350: //Escribe variable
 			proceso = dameProceso(cola_exec, *(int*)socket);
 			queue_push(cola_exec, proceso);
+			pthread_mutex_lock(&mutex_config);
 			escribeVariable(elPaquete->data, elPaquete->tamanio);
+			pthread_mutex_unlock(&mutex_config);
 			break;
 
 		case 351: //Pide variable
 			proceso = dameProceso(cola_exec, *(int*)socket);
 			queue_push(cola_exec, proceso);
+			pthread_mutex_lock(&mutex_config);
 			enviar(*(int*)socket, 352, sizeof(int), pideVariable(elPaquete->data, elPaquete->tamanio));
+			pthread_mutex_unlock(&mutex_config);
 			break;
 
 		case 360: //imprimir
@@ -654,15 +706,19 @@ void *hilo_mock(void *arg) {
 
 	struct sockaddr_in addr;  socklen_t addrlen = sizeof(addr);
 	pthread_t thmock_consola, thmock_consola2, thmock_consola3, thmock_cpu;
+	//	pthread_create(&thmock_cpu, NULL, hilo_mock_cpu, NULL);
+
 	pthread_create(&thmock_consola, NULL, hilo_mock_consola, NULL);
-	pthread_create(&thmock_consola2, NULL, hilo_mock_consola, NULL);
-	// pthread_create(&thmock_consola3, NULL, hilo_mock_consola, NULL);
+//	pthread_create(&thmock_consola2, NULL, hilo_mock_consola, NULL);
 
-	pthread_create(&thmock_cpu, NULL, hilo_mock_cpu, NULL);
+	sleep(10);
+	printf("HILOMOCK: envio");
+	//pthread_create(&thmock_consola3, NULL, hilo_mock_consola, NULL);
 
+while(1){}
 	umcMock = servidor(1207);
 	listen(umcMock, 5);
-	clienteUmc = accept(umcMock, (struct sockaddr *) &addr, &addrlen);
+//	clienteUmc = accept(umcMock, (struct sockaddr *) &addr, &addrlen);
 
 	printf("\x1b[31mUMCMOCK: Acepte conexion%d\n\x1b[0m", clienteUmc);
 
@@ -682,9 +738,9 @@ void *hilo_mock_consola(void *arg) {
 	int consola;
 	sleep(4);
 	consola = cliente("127.0.0.1", 1209);
-	printf("\x1b[36mCONSOLAMOCK: Conecté%d \n \x1b[0m", consola);
-	codigo[0]='a'+rodo;
-	rodo++;
+	printf("\x1b[36mCONSOLAMOCK: Conecté%d \n\x1b[0m", consola);
+	//codigo[0]='a'+rodo;
+	//rodo++;
 	enviar(consola, 103, sizeof(codigo), codigo);
 	sleep(5);
 	//close(consola);
@@ -744,8 +800,17 @@ void *hilo_mock_cpu(void *arg) {
 			pcb = desserializarPCB(paquete_nuevo->data);
 			serializado = (t_pcb*)serializarPCB(pcb);
 
+
+			if(pcb->pid==1){
+			enviar(cpu, 320, serializado->sizeTotal, serializado );
+			printf("CPUMOCK: envie PCB a nucleo\n");
+
+			}else{
+
 			enviar(cpu, 304, serializado->sizeTotal, serializado );
 			printf("CPUMOCK: envie PCB a nucleo\n");
+
+			}
 
 
 
