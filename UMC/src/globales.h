@@ -13,6 +13,8 @@
 #include <commons/collections/list.h>
 #include <commons/log.h>
 
+#define ARCHIVOLOG "UMC.log"
+
 char *puerto_umc, *ip_swap, *puerto_swap;
 
 int cantidad_marcos, tamanio_marco, cantidad_maxima_marcos, entradas_TLB,

@@ -14,6 +14,7 @@ context(commons) {
 		t_list * lista;
 
 		before {
+			log = log_create(ARCHIVOLOG, "UMC", 0, LOG_LEVEL_INFO);
 			lista = list_create();
 		}end
 

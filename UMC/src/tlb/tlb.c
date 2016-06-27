@@ -16,9 +16,10 @@ t_entrada_tabla_de_paginas * buscar_tlb(int numero_pagina) {
 				&& entrada->pid == proceso_actual;
 	}
 
-
 	t_entrada_tabla_de_paginas * resultado = list_find(tlb,
 			filtrar_por_proceso_y_pagina);
+
+	log_info(log, "Acierto en la TLB.");
 
 	if (resultado) {
 
@@ -42,6 +43,9 @@ void agregar_entrada_tlb(t_entrada_tabla_de_paginas * entrada) {
 	if (hay_entradas_tlb_disponibles()) {
 
 		list_add(tlb, entrada);
+
+		log_info(log,
+				"Se agrega entrada en la TLB sin necesidad del algoritmo de reemplazo");
 	} else {
 
 		remplazo_lru(entrada);
@@ -73,7 +77,13 @@ void remplazo_lru(t_entrada_tabla_de_paginas * entrada) {
 
 	list_remove(tlb, 0);
 
+	log_info(log,
+			"Se remueve de su marco el proceso con la referencia mas vieja");
+
 	list_add(tlb, entrada);
+
+	log_info(log,
+			"Se agrega en su respectivo marco el nuevo proceso en la TLB");
 
 }
 

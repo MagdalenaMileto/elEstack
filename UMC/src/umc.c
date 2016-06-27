@@ -2,6 +2,9 @@
 
 int main(int argc, char** argv) {
 
+	log = log_create(ARCHIVOLOG, "UMC", 0, LOG_LEVEL_INFO);
+	log_info(log, "Iniciando UMC");
+
 	setbuf(stdout, NULL);
 
 	inicializar_semaforos();
@@ -69,7 +72,7 @@ void esperar_al_nucleo() {
 	//	exit(EXIT_FAILURE);
 //	}
 
-	log_info (log, "COnexion con Nucleo.");
+	log_info(log, "Conexion con Nucleo.");
 }
 
 void atender_conexiones() {
