@@ -20,6 +20,8 @@
 
 #include <commons/config.h>
 
+#include "consola/consola.h"
+
 
 void inicializar_semaforos();
 void levantar_configuraciones();
@@ -27,5 +29,6 @@ void comunicarse_con_el_swap();
 void esperar_al_nucleo();
 void atender_conexiones();
 void solicitar_bloque_memoria();
+void atender_hilo_consola();
 
 #endif /* SRC_UMC_H_ */

@@ -10,6 +10,7 @@ int main(int argc, char** argv) {
 	comunicarse_con_el_swap();
 	esperar_al_nucleo();
 	atender_conexiones();
+	atender_hilo_consola();
 	close(socket_conexiones_nuevas);
 	close(socket_swap);
 	return EXIT_SUCCESS;
@@ -38,13 +39,13 @@ void levantar_configuraciones() {
 void comunicarse_con_el_swap() {
 
 	socket_swap = conectar_a(ip_swap, puerto_swap);
-/*
-	bool resultado = realizar_handshake(socket_swap);
+	/*
+	 bool resultado = realizar_handshake(socket_swap);
 
-	if (!resultado) {
-		error_show("No se autenticó la conexión con el swap");
-		exit(EXIT_FAILURE);
-	}*/
+	 if (!resultado) {
+	 error_show("No se autenticó la conexión con el swap");
+	 exit(EXIT_FAILURE);
+	 }*/
 
 }
 
@@ -57,9 +58,9 @@ void esperar_al_nucleo() {
 	socket_nucleo = aceptar_conexion(socket_conexiones_nuevas);
 //	bool resultado = esperar_handshake(socket_nucleo);
 	//if (resultado) {
-		pthread_create(&hilo_nucleo, NULL, (void *) atender_nucleo, NULL);
+	pthread_create(&hilo_nucleo, NULL, (void *) atender_nucleo, NULL);
 	//} else {
-		//error_show("No se autenticó la conexión con el Nucleo");
+	//error_show("No se autenticó la conexión con el Nucleo");
 	//	exit(EXIT_FAILURE);
 //	}
 
@@ -102,3 +103,11 @@ void solicitar_bloque_memoria() {
 	}
 
 }
+
+void atender_hilo_consola() {
+
+	pthread_t nuevo_hilo_consola;
+
+	pthread_create(&nuevo_hilo_consola, NULL, esperar_comando, NULL);
+}
+
