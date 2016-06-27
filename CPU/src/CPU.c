@@ -116,7 +116,7 @@ int main(int argc,char **argv){
 				destruirPCB(pcb);
 			}
 
-			if(quantum &&!programaFinalizado&&!programaBloqueado&&!programaAbortado){
+			if((quantum==0) &&!programaFinalizado&&!programaBloqueado&&!programaAbortado){
 				printf("Serializando\n");
 				serializado = serializarPCB(pcb);
 				printf("Serializado terminado\n");
