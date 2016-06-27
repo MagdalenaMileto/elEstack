@@ -204,12 +204,12 @@ void imprimirTexto(char*texto)
 }
 
 void entradaSalida(t_nombre_dispositivo dispositivo,int tiempo)
-{	char* nombre_dispositivo=malloc(sizeof(dispositivo));
-	nombre_dispositivo = dispositivo;
-	enviar(nucleo, 380, sizeof(nombre_dispositivo), nombre_dispositivo);
-	enviar(nucleo, 381, 4, &tiempo);
+{	char* estructura_dispositivo=malloc(4+sizeof(dispositivo));
+	memcpy(estructura_dispositivo, &tiempo, 4);
+	memcpy(estructura_dispositivo+4, dispositivo, sizeof(dispositivo));
+	enviar(nucleo, 380, sizeof(estructura_dispositivo), estructura_dispositivo);
 	programaBloqueado=1;
-	free(nombre_dispositivo);
+	free(estructura_dispositivo);
 	return;
 }
 
@@ -235,8 +235,8 @@ void wait_kernel(t_nombre_semaforo identificador_semaforo){
 	nombre_semaforo = identificador_semaforo;
 	enviar(nucleo, 341, sizeof(nombre_semaforo), nombre_semaforo);
 	t_paquete* paquete = malloc(sizeof(paquete));
-	paquete = recibir(nucleo);//devuelve el int con el valor del sem, falta el if para ver si se bloquea o no
-	memcpy(&programaBloqueado, &paquete->data, 4); //ver esto
+	paquete = recibir(nucleo);//devuelve 0 si no se bloquea, 1 si se bloquea
+	memcpy(&programaBloqueado, &paquete->data, 4);
 	free(nombre_semaforo);
 	free(paquete);
 	return;
