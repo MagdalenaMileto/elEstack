@@ -11,6 +11,7 @@
 #include <stdbool.h>
 #include <string.h>
 
+#include <commons/log.h>
 #include <theDebuggers/socketLibrary.h>
 
 #include "../../tabla_de_paginas/estructuras.h"

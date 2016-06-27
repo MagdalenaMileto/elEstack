@@ -2,6 +2,8 @@
 
 t_entrada_tabla_de_paginas * buscar_pagina_tabla_de_paginas(int numero_pagina) {
 
+	usleep(retardo * 1000);
+
 	bool filtrar_por_proceso_y_pagina(void * elemento_de_la_lista) {
 
 		t_entrada_tabla_de_paginas * entrada = elemento_de_la_lista;
@@ -46,5 +48,9 @@ void eliminar_proceso_tabla_de_paginas(int pid) {
 
 	remove_and_destroy_all_such_that(tabla_de_paginas, lambda_coincide_pid,
 			free);
-}
 
+	log_info(log,
+			"Se eliminan todas las referencias al proceso %d de la memoria",
+			pid);
+
+}
