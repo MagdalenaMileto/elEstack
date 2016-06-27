@@ -50,11 +50,12 @@ t_puntero definirVariable(t_nombre_variable identificador_variable)
 	enviarDirecParaEscribirUMC(escribirUMC, direccion_variable, valor);
 	free(escribirUMC);
 
-	if(recibir(umc)->data=="Error"){ //hablar con umc sobre el error
+	/*if(recibir(umc)->data=="Error"){ //hablar con umc sobre el error, usar stringcompare
 		programaAbortado=1;
-	}
+	}*/
 
 	int direccionRetorno = convertirDireccionAPuntero(direccion_variable);
+	log_info(log,"Devuelvo direccion: %d\n", direccionRetorno);
 	return (direccionRetorno);
 
 }
@@ -327,13 +328,14 @@ void convertirPunteroADireccion(int puntero, t_direccion* direccion){
 	return;
 }
 
-void enviarDirecParaEscribirUMC(char* UMC, t_direccion* direccion, int valor){
+void enviarDirecParaEscribirUMC(char* UMC_1, t_direccion* direccion, int valor){
 
-		memcpy(UMC, &direccion->pagina , 4);
-		memcpy(UMC+4, &direccion->offset , 4);
-		memcpy(UMC+8, &direccion->size , 4);
-		memcpy(UMC+12, &valor , 4);
-		enviar(umc, 2, 16, UMC);
+		memcpy(UMC_1, &direccion->pagina , 4);
+		memcpy(UMC_1+4, &direccion->offset , 4);
+		memcpy(UMC_1+8, &direccion->size , 4);
+		memcpy(UMC_1+12, &valor , 4);
+		log_info(log,"Quiero escribir en la direccion: %d %d %d\n",((int*)(UMC_1))[0],((int*)(UMC_1))[1],((int*)(UMC_1))[2]);
+		enviar(umc, 2, 16, UMC_1);
 
 }
 
@@ -342,7 +344,7 @@ void enviarDirecParaLeerUMC(char* UMC_1, t_direccion* direccion){
 		memcpy(UMC_1, &direccion->pagina , 4);
 		memcpy(UMC_1+4, &direccion->offset , 4);
 		memcpy(UMC_1+8, &direccion->size , 4);
-		log_info(log,"Cargue direccion: %d %d %d\n",((int*)(UMC_1))[0],((int*)(UMC_1))[1],((int*)(UMC_1))[2]);
+		log_info(log,"Quiero leer en la direccion: %d %d %d\n",((int*)(UMC_1))[0],((int*)(UMC_1))[1],((int*)(UMC_1))[2]);
 		enviar(umc, 1, 12, UMC_1);
 
 }

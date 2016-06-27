@@ -56,6 +56,7 @@ int main(int argc,char **argv){
 	quantum = ((t_datos_kernel*)(datos_kernel->data))->QUANTUM;
 	tamanioPag = ((t_datos_kernel*)(datos_kernel->data))->TAMPAG;
 	quantum_sleep = ((t_datos_kernel*)(datos_kernel->data))->QUANTUM_SLEEP;
+	log_info(log,"Quantum: %d TamPag: %d Quantum Sleep: %d\n", quantum, tamanioPag, quantum_sleep);
 
 	sigusr1_desactivado = 1;
 
@@ -93,7 +94,7 @@ int main(int argc,char **argv){
 
 			pcb->pc++;
 			quantum--;
-			usleep(quantum_sleep);
+			usleep(quantum_sleep*1000);
 
 			if (programaBloqueado){
 				log_info(log, "El programa salió por bloqueo");
@@ -116,7 +117,9 @@ int main(int argc,char **argv){
 			}
 
 			if(quantum &&!programaFinalizado&&!programaBloqueado&&!programaAbortado){
+				printf("Serializando\n");
 				serializado = serializarPCB(pcb);
+				printf("Serializado terminado\n");
 				enviar(nucleo, 304, sizeof(serializado), serializado);
 				destruirPCB(pcb);
 			}
