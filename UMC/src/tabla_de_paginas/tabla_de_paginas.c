@@ -48,5 +48,9 @@ void eliminar_proceso_tabla_de_paginas(int pid) {
 
 	remove_and_destroy_all_such_that(tabla_de_paginas, lambda_coincide_pid,
 			free);
-}
 
+	log_info(log,
+			"Se eliminan todas las referencias al proceso %d de la memoria",
+			pid);
+
+}

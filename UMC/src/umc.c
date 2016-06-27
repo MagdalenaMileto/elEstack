@@ -18,6 +18,7 @@ int main(int argc, char** argv) {
 
 void inicializar_semaforos() {
 	pthread_mutex_init(&semaforo_mutex_cpu, NULL);
+	log_info(log, "Se inicializan los semaforos.");
 }
 
 void levantar_configuraciones() {
@@ -34,6 +35,8 @@ void levantar_configuraciones() {
 	entradas_TLB = config_get_int_value(archivo_configuracion, "ENTRADAS_TLB");
 	retardo = config_get_int_value(archivo_configuracion, "RETARDO");
 
+	log_info(log, "Se levantan con exito las configuraciones.");
+
 }
 
 void comunicarse_con_el_swap() {
@@ -46,6 +49,8 @@ void comunicarse_con_el_swap() {
 	 error_show("No se autenticó la conexión con el swap");
 	 exit(EXIT_FAILURE);
 	 }*/
+
+	log_info(log, "Conexion con SWAP.");
 
 }
 
@@ -64,6 +69,7 @@ void esperar_al_nucleo() {
 	//	exit(EXIT_FAILURE);
 //	}
 
+	log_info (log, "COnexion con Nucleo.");
 }
 
 void atender_conexiones() {

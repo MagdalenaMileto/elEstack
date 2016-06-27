@@ -8,10 +8,6 @@
 
 bool swap_inicializar_proceso(int pid, int cantidad_paginas, char * codigo) {
 
-	log_info(log,
-			"El nucleo envia un nuevo proceso. Su id es: %d y la cantidad de paginas son %d\n",
-			pid, cantidad_paginas);
-
 	int tamanio_codigo = string_length(codigo);
 	int tamanio_paquete = (sizeof(int) * 2) + tamanio_codigo;
 	void * data = malloc(tamanio_paquete);
@@ -34,17 +30,19 @@ bool swap_inicializar_proceso(int pid, int cantidad_paginas, char * codigo) {
 	liberar_paquete(respuesta);
 	free(data);
 
+	log_info(log, "Se liberan las estructuras.");
+
 	return resultado;
 
 }
 
 void swap_finalizar_proceso(int pid) {
 
-	log_info(log, "El nucleo desea finalizar el proceso cuya id es %d\n", pid);
-
 	enviar(socket_swap, SWAP_FINALIZAR, sizeof(int), (void *) &pid);
 
-	log_info(log, "Se envia exitosamente la peticion de finalizacion el proceso SWAP");
+	log_info(log,
+			"Se envia exitosamente la peticion de finalizacion del proceso %d al SWAP",
+			pid);
 }
 
 void * swap_leer(int pid, int numero_pagina) {
