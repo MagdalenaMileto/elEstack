@@ -176,8 +176,16 @@ void llamarConRetorno(t_nombre_etiqueta etiqueta, t_puntero donde_retornar)
 
 void retornar(t_valor_variable retorno)
 {
-	printf("Soy la funcion retornar\n");
-	return;
+	/*
+	int posicionStack = pcb->sizeContextoActual-2;
+	t_contexto *contexto_anterior;
+	contexto_anterior = (t_contexto *)(list_get(pcb->contextoActual, posicionStack));
+	pcb->pc --;
+	retorno = contexto_anterior->retPos;
+	//finalizar();
+	//finalizar o programa abortado??
+	*/
+
 }
 
 void imprimir(t_valor_variable valor_mostrar)
