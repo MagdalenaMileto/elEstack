@@ -45,7 +45,9 @@ t_pcb *desserializarPCB(char *serializado) {
 
 	//serializado += pcb->sizeContextoActual * sizeof(t_contexto*);
 
-
+	printf("SIZE CONTEXTO %d\n",pcb->sizeIndiceDeEtiquetas);
+	printf("SIZE CONTEXTO %d\n",pcb->paginasDeCodigo);
+printf("SIZE CONTEXTO %d\n",pcb->sizeContextoActual);
 	for (i = 0; i < pcb->sizeContextoActual; i++) {
 	
 
@@ -59,25 +61,34 @@ t_pcb *desserializarPCB(char *serializado) {
 		temp->vars= list_create();
 		temp->args= list_create();
 
+		printf("SIZE arg %d\n",temp->sizeArgs);
 		for (y = 0; y < temp->sizeArgs; y++) {
 			t_direccion *dir = malloc(sizeof(t_direccion));
 			memcpy(dir, serializado, sizeof(t_direccion));
 			serializado += sizeof(t_direccion);
 			list_add(temp->args, (void*)dir);
 		}
-
+		printf("SIZE var %d\n",temp->sizeVars);
 		for (y = 0; y < temp->sizeVars; y++) {
+			printf("AkkkkkSD\n");
 			t_variable *var = malloc(sizeof(t_variable));
-			t_direccion *dir = malloc(sizeof(t_direccion));
+			printf("1AkkkkkSD\n");
+			var->direccion = malloc(sizeof(t_direccion));
+			printf("2AkkkkkSD\n");
 			memcpy(var, serializado, sizeof(t_variable));
+			printf("3AkkkkkSD\n");
 			serializado += sizeof(t_variable);
-			memcpy(var->direccion, serializado, sizeof(t_direccion));
+			printf("4AkkkkkSD\n");
+			memcpy(&var->direccion, serializado, sizeof(t_direccion));
+			printf("5AkkkkkSD\n");
 			serializado += sizeof(t_direccion);
-
+			printf("6AooooSD\n");
 			list_add(temp->vars, (void*)var);
 		}
+		printf("ASD\n");
 		list_add(pcb->contextoActual, (void*)temp);
 	}
+	printf("RERE\n");
 
 	return pcb;
 
@@ -178,7 +189,7 @@ char *serializarPCB(t_pcb *pcb) {
 
 	int size = 0;
 	char *retorno, *retornotemp, *retornotempp;
-
+	printf("PC%d\n",pcb->pc);
 	size += sizeof(t_pcb);
 
 	size += pcb->sizeIndiceDeEtiquetas * sizeof(char);;
