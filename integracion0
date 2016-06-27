@@ -35,7 +35,7 @@ pid[2]=$!
 cd -
 sleep 4
 cd CPU
-./CPU &
+#./CPU &
 #pid[3]=$!
 #cd -
 #sleep 1

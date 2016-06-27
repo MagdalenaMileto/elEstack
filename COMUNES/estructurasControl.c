@@ -74,7 +74,7 @@ t_pcb *desserializarPCB(char *serializado) {
 			memcpy(var->direccion, serializado, sizeof(t_direccion));
 			serializado += sizeof(t_direccion);
 
-			list_add(temp->vars, (void*)dir);
+			list_add(temp->vars, (void*)var);
 		}
 		list_add(pcb->contextoActual, (void*)temp);
 	}

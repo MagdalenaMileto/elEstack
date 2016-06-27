@@ -541,7 +541,7 @@ void *hilo_CONEXION_CPU(void *socket) {
 	//TODO: mutex
 	queue_push(cola_CPU_libres, (void*)*(int*)socket);
 	sem_post(&sem_cpu);
-	
+	t_pcb *temp;
 	while (1) {
 
 		elPaquete = recibir(*(int*)socket);
@@ -560,7 +560,8 @@ void *hilo_CONEXION_CPU(void *socket) {
 		switch (elPaquete->codigo_operacion) {
 		case 304:
 			proceso = dameProceso(cola_exec,*(int*)socket);
-			t_pcb *temp;
+
+			printf("ANTES DE DES\n");
 			temp = desserializarPCB(elPaquete->data);
 			printf("NUCLEO: Recibi proceso %d por fin de quantum, encolando en cola ready\n", proceso->pcb->pid);
 
@@ -583,18 +584,38 @@ void *hilo_CONEXION_CPU(void *socket) {
 			enviar(umc, 6, sizeof(int), &proceso->pcb->pid);
 			break;
 
-		case 340:
+		case 380:
+			proceso = dameProceso(cola_exec, *(int*)socket);
+			int tiempo;
+			tiempo=((int*)(elPaquete->data))[0];
+
+//0 que no se bloquea.
+			//340
+			pthread_mutex_lock(&mutex_config);
+			bloqueoIoManager(proceso, elPaquete->data+4, 10, tiempo);
+			pthread_mutex_unlock(&mutex_config);
+
+			elPaquete = recibir(*(int*)socket);
+			//t_pcb *temp;
+			printf("ANTES DE DES\n");
+			temp = desserializarPCB(elPaquete->data);
+			destruirPCB(proceso->pcb);
+			proceso->pcb = temp;
+
+
+			break;
+
+		case 399:
 			proceso = dameProceso(cola_exec, *(int*)socket);
 			t_blocked *bloqueo;
-
+			printf("ANTES DE DES\n");
 			bloqueo = desserializarBLOQUEO(elPaquete->data);
+			printf(" DE DES\n");
 			destruirPCB(proceso->pcb);
 			proceso->pcb = bloqueo->pcb;
 
 			if (bloqueo->ioSize) {
-				pthread_mutex_lock(&mutex_config);
-				bloqueoIoManager(proceso, bloqueo->io, bloqueo->ioSize, bloqueo->IO_time);
-				pthread_mutex_unlock(&mutex_config);
+
 			}
 			if (bloqueo->semaforoSize) {
 				pthread_mutex_lock(&mutex_config);
