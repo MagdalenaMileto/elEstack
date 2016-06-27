@@ -18,19 +18,31 @@ bool swap_inicializar_proceso(int pid, int cantidad_paginas, char * codigo) {
 
 	enviar(socket_swap, SWAP_INICIALIZAR, tamanio_paquete, data);
 
+	log_info(log, "Se envia el paquete a swap");
+
 	t_paquete * respuesta = recibir(socket_swap);
 
 	bool resultado = respuesta->codigo_operacion == SWAP_EXITO;
 
+	log_info(log,
+			"El paquete fue recepcionado exitosamente por el proceso SWAP");
+
 	liberar_paquete(respuesta);
 	free(data);
+
+	log_info(log, "Se liberan las estructuras.");
 
 	return resultado;
 
 }
 
 void swap_finalizar_proceso(int pid) {
+
 	enviar(socket_swap, SWAP_FINALIZAR, sizeof(int), (void *) &pid);
+
+	log_info(log,
+			"Se envia exitosamente la peticion de finalizacion del proceso %d al SWAP",
+			pid);
 }
 
 void * swap_leer(int pid, int numero_pagina) {
@@ -49,7 +61,7 @@ void * swap_leer(int pid, int numero_pagina) {
 
 }
 
-void swap_escribir(t_entrada_tabla_de_paginas * entrada){
+void swap_escribir(t_entrada_tabla_de_paginas * entrada) {
 
 	int tamanio = tamanio_marco + sizeof(int) * 2;
 
@@ -59,9 +71,10 @@ void swap_escribir(t_entrada_tabla_de_paginas * entrada){
 
 	memcpy(data, &entrada->pid, sizeof(int));
 	memcpy(data + sizeof(int), &entrada->pagina, sizeof(int));
-	memcpy(data + sizeof(int) * 2, memoria + marco * tamanio_marco,tamanio_marco);
+	memcpy(data + sizeof(int) * 2, memoria + marco * tamanio_marco,
+			tamanio_marco);
 
-	enviar(socket_swap, SWAP_ESCRIBIR,tamanio,data);
+	enviar(socket_swap, SWAP_ESCRIBIR, tamanio, data);
 
 	free(data);
 

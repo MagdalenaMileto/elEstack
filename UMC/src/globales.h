@@ -11,6 +11,7 @@
 
 #include <pthread.h>
 #include <commons/collections/list.h>
+#include <commons/log.h>
 
 char *puerto_umc, *ip_swap, *puerto_swap;
 
@@ -34,5 +35,7 @@ t_list * tlb;
 t_list * control_de_marcos;
 
 pthread_t hilo_nucleo, hilo_cpu;
+
+t_log * log;
 
 #endif /* SRC_GLOBALES_H_ */
