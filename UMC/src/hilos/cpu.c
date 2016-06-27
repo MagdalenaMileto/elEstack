@@ -45,9 +45,14 @@ void atender_cpu(void * parametro_hilo) {
 			memcpy(&offset, paquete_nuevo->data + sizeof(int), sizeof(int));
 			memcpy(&tamanio, paquete_nuevo->data + sizeof(int) * 2,
 					sizeof(int));
-			memcpy(&buffer, paquete_nuevo->data + sizeof(int) * 3, tamanio);
+
+			buffer = malloc(tamanio);
+
+			memcpy(buffer, paquete_nuevo->data + sizeof(int) * 3, tamanio);
 
 			escribir_una_pagina(numero_pagina, offset, tamanio, buffer);
+
+			free(buffer);
 
 			break;
 
