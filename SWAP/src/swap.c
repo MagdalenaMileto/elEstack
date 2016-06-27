@@ -176,7 +176,7 @@ int main(int argc,char **argv) {
 					free(paginaALeer);
 					break;
 				}
-				default: printf("Pedido incorrecto");
+				default: printf("Pedido incorrecto");exit(0);
 			}
 		}
 	}

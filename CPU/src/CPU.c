@@ -44,7 +44,7 @@ int main(int argc,char **argv){
 	programaFinalizado = 0;
 	programaAbortado = 0;
 
-	//levantar_configuraciones();
+	levantar_configuraciones();
 
 
 
@@ -188,12 +188,11 @@ void crearEstructuraParaUMC (t_pcb* pcb, int tamPag, t_direccion* informacion){
 
 void levantar_configuraciones() {
 
-	t_config * archivo_configuracion = config_create("./CPU.confg");
-
+	t_config * archivo_configuracion = config_create("CPU.confg");
 	config_cpu.PUERTO_NUCLEO = config_get_string_value(archivo_configuracion, "PUERTO_NUCLEO");
 	config_cpu.IP_NUCLEO = config_get_string_value(archivo_configuracion, "IP_NUCLEO");
 	config_cpu.PUERTO_UMC = config_get_string_value(archivo_configuracion, "PUERTO_UMC");
-	config_cpu.IP_UMC = config_get_int_value(archivo_configuracion, "IP_UMC");
+	config_cpu.IP_UMC = config_get_string_value(archivo_configuracion, "IP_UMC");
 }
 
 

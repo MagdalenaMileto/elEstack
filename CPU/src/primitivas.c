@@ -268,7 +268,7 @@ void armarProximaDireccion(t_direccion* direccionReal){
 }
 
 int primeraPagina(){
-	return ((pcb->indiceDeCodigo[pcb->sizeIndiceDeCodigo-2])+pcb->indiceDeCodigo[pcb->sizeIndiceDeCodigo-1]/ tamanioPag)+2;
+	return pcb->paginasDeCodigo;//((pcb->indiceDeCodigo[pcb->sizeIndiceDeCodigo-2])+pcb->indiceDeCodigo[pcb->sizeIndiceDeCodigo-1]/ tamanioPag)+2;
 }
 
 void armarDirecccionDeFuncion(t_direccion *direccionReal){
