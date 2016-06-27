@@ -187,7 +187,7 @@ void mandarAEjecutar(t_proceso *proceso, int sock) {
 	printf("CHOCOLATE%d\n",proceso->pcb->pc);
 
 	pcbSerializado = (t_pcb*)serializarPCB(proceso->pcb);
-	printf("CHOCOLATE%d\n",(t_pcb*)pcbSerializado->pc);
+	printf("lalammmmmm%d\n",pcbSerializado->pc);
 
 	proceso->socket_CPU = sock;
 	//TODO:mutex

@@ -186,15 +186,18 @@ char *serializarBLOQUEO(t_blocked *bloqueo) {
 
 
 char *serializarPCB(t_pcb *pcb) {
+	int g=0;
+
 
 	int size = 0;
 	char *retorno, *retornotemp, *retornotempp;
-	printf("PC%d\n",pcb->pc);
+
 	size += sizeof(t_pcb);
 
 	size += pcb->sizeIndiceDeEtiquetas * sizeof(char);;
 	size += pcb->sizeIndiceDeCodigo * 2 * sizeof(int);;
 	int i, y;
+
 
 
 	//size += pcb->sizeContextoActual * sizeof(t_contexto*);
@@ -203,6 +206,8 @@ char *serializarPCB(t_pcb *pcb) {
 		int y;
 		t_contexto * contexto;
 		contexto = list_get(pcb->contextoActual, i);
+
+
 		for (y = 0; y < contexto->sizeArgs; y++) {
 			size += sizeof(t_direccion);
 		}
@@ -212,7 +217,6 @@ char *serializarPCB(t_pcb *pcb) {
 			size += sizeof(t_direccion);
 		}
 	}
-
 
 	retorno = malloc(size);
 	retornotemp = retorno;
@@ -229,10 +233,14 @@ char *serializarPCB(t_pcb *pcb) {
 	retornotempp = retornotemp;
 
 
+
+
 	retornotemp += pcb->sizeIndiceDeEtiquetas * sizeof(char);
 
 	//memcpy(retornotemp, pcb->contextoActual, pcb->sizeContextoActual * sizeof(t_contexto*));
 	//retornotemp += pcb->sizeContextoActual * sizeof(t_contexto*);
+
+
 
 	for (i = 0; i < pcb->sizeContextoActual; i++) {
 		t_contexto *contexto;
@@ -248,6 +256,8 @@ char *serializarPCB(t_pcb *pcb) {
 			memcpy(retornotemp, dir, sizeof(t_direccion));
 			retornotemp += sizeof(t_direccion);
 		}
+
+
 		for (y = 0; y < contexto->sizeVars; y++) {
 			t_variable *var;
 			t_direccion *dir;
@@ -259,7 +269,7 @@ char *serializarPCB(t_pcb *pcb) {
 
 
 			retornotemp += sizeof(t_variable);
-			memcpy(retornotemp, var->direccion, sizeof(t_direccion));
+			memcpy(retornotemp, &var->direccion, sizeof(t_direccion));
 			retornotemp += sizeof(t_direccion);
 
 		}
