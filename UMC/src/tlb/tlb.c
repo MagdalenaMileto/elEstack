@@ -16,6 +16,7 @@ t_entrada_tabla_de_paginas * buscar_tlb(int numero_pagina) {
 				&& entrada->pid == proceso_actual;
 	}
 
+
 	t_entrada_tabla_de_paginas * resultado = list_find(tlb,
 			filtrar_por_proceso_y_pagina);
 
