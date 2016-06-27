@@ -184,7 +184,11 @@ void *hilo_PLP(void *arg) {
 
 void mandarAEjecutar(t_proceso *proceso, int sock) {
 	t_pcb *pcbSerializado;
+	printf("CHOCOLATE%d\n",proceso->pcb->pc);
+
 	pcbSerializado = (t_pcb*)serializarPCB(proceso->pcb);
+	printf("CHOCOLATE%d\n",(t_pcb*)pcbSerializado->pc);
+
 	proceso->socket_CPU = sock;
 	//TODO:mutex
 	queue_push(cola_exec, proceso);
@@ -561,7 +565,7 @@ void *hilo_CONEXION_CPU(void *socket) {
 		case 304:
 			proceso = dameProceso(cola_exec,*(int*)socket);
 
-			printf("ANTES DE DES\n");
+			printf("****ANTES DE DES\n");
 			temp = desserializarPCB(elPaquete->data);
 			printf("NUCLEO: Recibi proceso %d por fin de quantum, encolando en cola ready\n", proceso->pcb->pid);
 
@@ -602,6 +606,8 @@ void *hilo_CONEXION_CPU(void *socket) {
 			destruirPCB(proceso->pcb);
 			proceso->pcb = temp;
 
+
+			//TOO NO HAY QUE HACER UN PUSH DE PROCESO?
 
 			break;
 
@@ -666,7 +672,10 @@ void *hilo_CONEXION_CPU(void *socket) {
 			proceso = dameProceso(cola_exec, *(int*)socket);
 			queue_push(cola_exec, proceso);
 			enviar(proceso->socket_CONSOLA, 160, elPaquete->tamanio, elPaquete->data);
-
+			//int *a= elPaquete->data;
+			printf("IMRPMMIR %d\n",*(int*)elPaquete->data);
+		//	printf("IMRPMMIR %d\n",elPaquete->data);
+		//	printf("IMRPMMIR %d\n",(int)*);
 		case 361: //imprimir texto
 			proceso = dameProceso(cola_exec, *(int*)socket);
 			queue_push(cola_exec, proceso);
@@ -676,7 +685,7 @@ void *hilo_CONEXION_CPU(void *socket) {
 
 
 	//TODO ver que mo rompa;		
-	liberar_paquete(elPaquete);
+//	liberar_paquete(elPaquete);
 	}
 
 }
