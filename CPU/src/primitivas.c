@@ -167,6 +167,10 @@ void llamarConRetorno(t_nombre_etiqueta etiqueta, t_puntero donde_retornar)
 	list_add(contexto_nuevo, (t_list *)lista_argumentos);
 
 	irAlLabel(etiqueta);
+
+	//free(contexto_nuevo); // se liberan las listas? list_create reserva memoria..
+	//free(lista_variable);
+	//free(lista_argumentos);
 	*/
 }
 
