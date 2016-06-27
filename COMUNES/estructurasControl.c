@@ -71,10 +71,10 @@ t_pcb *desserializarPCB(char *serializado) {
 			t_direccion *dir = malloc(sizeof(t_direccion));
 			memcpy(var, serializado, sizeof(t_variable));
 			serializado += sizeof(t_variable);
-			memcpy(dir, serializado, sizeof(t_direccion));
+			memcpy(var->direccion, serializado, sizeof(t_direccion));
 			serializado += sizeof(t_direccion);
 
-			list_add(temp->vars, (void*)dir);
+			list_add(temp->vars, (void*)var);
 		}
 		list_add(pcb->contextoActual, (void*)temp);
 	}
@@ -184,6 +184,8 @@ char *serializarPCB(t_pcb *pcb) {
 	size += pcb->sizeIndiceDeEtiquetas * sizeof(char);;
 	size += pcb->sizeIndiceDeCodigo * 2 * sizeof(int);;
 	int i, y;
+
+
 	//size += pcb->sizeContextoActual * sizeof(t_contexto*);
 	for (i = 0; i < pcb->sizeContextoActual; i++) {
 		size += sizeof(t_contexto);
@@ -200,6 +202,7 @@ char *serializarPCB(t_pcb *pcb) {
 		}
 	}
 
+
 	retorno = malloc(size);
 	retornotemp = retorno;
 	pcb->sizeTotal = size;
@@ -207,11 +210,13 @@ char *serializarPCB(t_pcb *pcb) {
 
 	retornotemp += sizeof(t_pcb);
 
+
 	memcpy(retornotemp, pcb->indiceDeCodigo, pcb->sizeIndiceDeCodigo * 2 * sizeof(int));
 	retornotemp += pcb->sizeIndiceDeCodigo * 2 * sizeof(int);
 
 	memcpy(retornotemp, pcb->indiceDeEtiquetas, pcb->sizeIndiceDeEtiquetas * sizeof(char));
 	retornotempp = retornotemp;
+
 
 	retornotemp += pcb->sizeIndiceDeEtiquetas * sizeof(char);
 
@@ -220,6 +225,7 @@ char *serializarPCB(t_pcb *pcb) {
 
 	for (i = 0; i < pcb->sizeContextoActual; i++) {
 		t_contexto *contexto;
+
 		contexto = list_get(pcb->contextoActual, i);
 		memcpy(retornotemp, contexto, sizeof(t_contexto));
 
@@ -234,14 +240,21 @@ char *serializarPCB(t_pcb *pcb) {
 		for (y = 0; y < contexto->sizeVars; y++) {
 			t_variable *var;
 			t_direccion *dir;
+
 			var = list_get(contexto->vars, y);
+
+
 			memcpy(retornotemp, var, sizeof(t_variable));
+
+
 			retornotemp += sizeof(t_variable);
-			memcpy(retornotemp, dir, sizeof(t_direccion));
+			memcpy(retornotemp, var->direccion, sizeof(t_direccion));
 			retornotemp += sizeof(t_direccion);
+
 		}
 
 	}
+
 	//printf("SIZE%d\n",size);
 	return retorno;
 }

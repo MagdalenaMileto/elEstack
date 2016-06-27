@@ -48,8 +48,8 @@ context(consola) {
 				inicializar_programa(1,1);
 				inicializar_programa(2,1);
 
-				escribir(0,0,4,".>>");
-				escribir(2,0,4,"<<.");
+				escribir(0,0,5,"hola");
+				escribir(2,0,7,"ke ase");
 
 				dump_total();
 

@@ -3,7 +3,10 @@
 
 #Protocolos  
 
-
+###Post build command
+```
+cp -f ${BuildArtifactFilePrefix}${BuildArtifactFileName} ${ProjDirPath}
+```
 
 ##Consola - Nucleo  
 

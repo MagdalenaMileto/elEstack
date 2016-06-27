@@ -29,32 +29,24 @@ int main(int argc, char **argv) {
 	char nomArchivo[50];
 	signed int nucleo;
 	signed int estado;
-	signed int consola;
 
-
-	consola=iniciarConsola();
 	archivoDeConfiguracion();
 
-	if(consola!=1){
-
-		strcpy(nomArchivo,argv[1]);
-
-		if ((archivo = fopen("nomArchivo", "r")) == NULL){
-				printf("No se pudo acceder al script.\n");
-				return EXIT_FAILURE;
-		}
-
-		else{
-				script = leerElArchivo(archivo);					//lee el archivo y reserva memoria
-				fclose(archivo);
-				printf("Exito en lectura de scrit.\n");
-		}
+	strcpy(nomArchivo,argv[1]);
+	if ((archivo = fopen("nomArchivo", "r")) == NULL){
+			printf("No se pudo acceder al script.\n");
+			return EXIT_FAILURE;
+	}
+	else{
+			script = leerElArchivo(archivo);
+			fclose(archivo);
+			printf("Exito en lectura de scrit.\n");
+	}
 
 	nucleo= conectarConElNucleo();
-	estado= enviarInformacionAlNucleo(script, nucleo, consola);
+	estado= enviarInformacionAlNucleo(script, nucleo);
 
 	if(estado>0) printf("se envio script al nucleo.\n");
-	}
 
 free(script);
 t_paquete *paquete=malloc(sizeof(t_paquete));
@@ -64,20 +56,23 @@ int codigo_op;
 
 while(!programa_finalizado){
 		paquete = recibir(nucleo);
-		memcpy(codigo_op, paquete->codigo_operacion, 4);
+		codigo_op = paquete->codigo_operacion;
+		//memcpy(codigo_op, paquete->codigo_operacion, 4);
 
 
 		switch(codigo_op) {
 		case 101:
-				 memcpy(info_cadena, paquete->data, sizeof(paquete->data));
+				info_cadena = (char *)paquete->data;
+				 //memcpy(info_cadena, paquete->data, sizeof(paquete->data));
 				 puts(info_cadena);
 				 break;
 		case 102:
-				memcpy(info_variable, paquete->data, 4);
+				info_variable = (int)paquete->data;
+				//memcpy(info_variable, paquete->data, 4);
 				printf("%d\n", info_variable);
 				break;
 		case 103:
-				puts("Programa Finalizado");
+				puts("Programa Finalizado\n");
 				programa_finalizado=1;
 				break;
 		}
@@ -85,10 +80,7 @@ while(!programa_finalizado){
 }
 
 free(paquete);
-close(consola);
 printf("CONSOLA: Cierro\n");
-
-
 
 return 0;
 }
@@ -98,30 +90,12 @@ return 0;
 //********************************************FUNCIONES********************************************
 
 
-int iniciarConsola() {
-
-	struct sockaddr_in direccionServidor;
-		direccionServidor.sin_family = AF_INET;
-		direccionServidor.sin_addr.s_addr = inet_addr("127.0.0.1");
-		direccionServidor.sin_port = htons(1201);
-
-		int consola = socket(AF_INET, SOCK_STREAM, 0);
-		if (connect(consola, (void*) &direccionServidor, sizeof(direccionServidor)) != 0) {
-			perror("CONSOLA: No se pudo conectar/ cerrando...");
-			close(consola);
-			return 1;
-		}
-	return consola;
-}
-
 void archivoDeConfiguracion() {
 
 	t_config * archivo_configuracion = config_create("./consola.confg");
 
-	puerto_consola = config_get_string_value(archivo_configuracion, "PUERTO");
-	ip_nucleo = config_get_string_value(archivo_configuracion, "IP_NUCLEO");
 	puerto_nucleo = config_get_string_value(archivo_configuracion, "PUERTO_NUCLEO");
-
+	ip_nucleo = config_get_string_value(archivo_configuracion, "IP_NUCLEO");
 }
 
 
@@ -160,20 +134,20 @@ return nucleo;
 }
 
 
-int enviarInformacionAlNucleo(char * script, signed int nucleo, signed int consola){
+int enviarInformacionAlNucleo(char * script, signed int nucleo){
 
-	t_paquete* paquete,paqueteEnviar;
+	t_paquete *paquete, *paqueteEnviar;
 
 
 	 while(1){
 
 	     	if(paquete->codigo_operacion==103){   //codigo operacion no oficial
 
-	     		paqueteEnviar.codigo_operacion=205;  //codigo operacion no oficial
-	     		paqueteEnviar.data=&script;
-	     		paqueteEnviar.tamanio=sizeof(int);
+	     		paqueteEnviar->codigo_operacion = 205;  //codigo operacion no oficial
+	     		paqueteEnviar->data = script;
+	     		paqueteEnviar->tamanio = sizeof(int);
 
-	     		enviar(nucleo, 101, paqueteEnviar.tamanio, paqueteEnviar.data); //segundo parametro cambiar cod de op
+	     		enviar(nucleo, 101, paqueteEnviar->tamanio, paqueteEnviar->data);
 	     	}
 
 	     	 if(paquete->codigo_operacion==108){ //no oficial codigo operacion
@@ -182,7 +156,7 @@ int enviarInformacionAlNucleo(char * script, signed int nucleo, signed int conso
 
 	     	}
 
-	     	liberar_paquete(paquete); //hacer los cases....
+	     	liberar_paquete(paquete);
 
 	 	 }
 
