@@ -12,7 +12,7 @@ t_puntero definirVariable(t_nombre_variable identificador_variable)
 	t_direccion *direccion_variable= malloc(sizeof(t_direccion));
 	t_variable *variable= malloc(sizeof(t_variable));
 	t_contexto *contexto; //= malloc(sizeof(t_contexto));
-	int posicionStack = pcb->sizeContextoActual-1;
+	//int posicionStack = pcb->sizeContextoActual-1;
 	contexto= (t_contexto*)(list_get(pcb->contextoActual, pcb->sizeContextoActual-1));
 
 	if(pcb->sizeContextoActual==1 &&  contexto->sizeVars==0 ){
@@ -111,8 +111,8 @@ void asignar(t_puntero direccion_variable,t_valor_variable valor)
 
 t_valor_variable obtenerValorCompartida(t_nombre_compartida variable)
 {
-	char variable_compartida= malloc(sizeof(variable));
-	variable_compartida=variable;
+	char *variable_compartida= malloc(sizeof(t_nombre_compartida));
+	variable_compartida = variable;
 	t_paquete* paquete_nuevo;
 	int valor;
 	enviar(nucleo, 351, sizeof(variable_compartida), variable_compartida);
@@ -124,9 +124,9 @@ t_valor_variable obtenerValorCompartida(t_nombre_compartida variable)
 
 t_valor_variable asignarValorCompartida(t_nombre_compartida variable,t_valor_variable valor)
 {
-	char *variable_compartida= malloc(4+sizeof(variable));
+	char *variable_compartida= malloc(4+sizeof(t_nombre_compartida));
 	memcpy(variable_compartida, &valor, 4);
-	memcpy(variable_compartida+4, variable, sizeof(variable));
+	memcpy(variable_compartida+4, &variable, sizeof(t_nombre_compartida));
 	enviar(nucleo, 350, sizeof(variable_compartida), variable_compartida);
 	free(variable_compartida);
 	return valor;
@@ -148,9 +148,26 @@ void irAlLabel(t_nombre_etiqueta etiqueta)
 
 void llamarConRetorno(t_nombre_etiqueta etiqueta, t_puntero donde_retornar)
 {
-	//creamos nuevo contexto
+	/*
+	int posicionStack = pcb->sizeContextoActual-1;
+	t_contexto *contexto_retorno;
+	contexto_retorno = (t_contexto *)(list_get(pcb->contextoActual, posicionStack));
+	enviar(umc, 2, sizeof(t_direccion), (t_direccion *)contexto_retorno->sizeVars);
+	t_paquete *paquete_recibido = recibir (umc);
+	memcpy(&donde_retornar, &paquete_recibido->data, sizeof(t_puntero));
 
-	return;
+	pcb->pc ++;
+	pcb->sizeContextoActual = 0;
+	t_list *contexto_nuevo = list_create();
+	memcpy(pcb->contextoActual, contexto_nuevo, sizeof(t_list));
+
+	t_list *lista_variables = list_create();
+	list_add(contexto_nuevo, (t_list *)lista_variables);
+	t_list *lista_argumentos = list_create();
+	list_add(contexto_nuevo, (t_list *)lista_argumentos);
+
+	irAlLabel(etiqueta);
+	*/
 }
 
 void retornar(t_valor_variable retorno)
