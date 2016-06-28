@@ -210,10 +210,11 @@ void imprimirTexto(char*texto)
 }
 
 void entradaSalida(t_nombre_dispositivo dispositivo,int tiempo)
-{	char* estructura_dispositivo=malloc(4+sizeof(dispositivo));
+{	char* estructura_dispositivo=malloc(4+strlen(dispositivo));
 	memcpy(estructura_dispositivo, &tiempo, 4);
-	memcpy(estructura_dispositivo+4, dispositivo, sizeof(dispositivo));
-	enviar(nucleo, 380, sizeof(estructura_dispositivo), estructura_dispositivo);
+	memcpy(estructura_dispositivo+4, dispositivo, strlen(dispositivo));
+	log_info(log,"Pido i/o por %d unidades de tiempo al %s\n", (int*)estructura_dispositivo[0], (char*)(estructura_dispositivo+4));
+	enviar(nucleo, 380, 4+strlen(dispositivo), estructura_dispositivo);
 	programaBloqueado=1;
 	free(estructura_dispositivo);
 	return;

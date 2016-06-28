@@ -40,9 +40,6 @@ int main(int argc,char **argv){
 	log= log_create(ARCHIVOLOG, "CPU", 0, LOG_LEVEL_INFO);
 	log_info(log,"Iniciando CPU\n");
 	char* serializado;
-	programaBloqueado = 0;
-	programaFinalizado = 0;
-	programaAbortado = 0;
 
 	levantar_configuraciones();
 
@@ -61,10 +58,14 @@ int main(int argc,char **argv){
 	sigusr1_desactivado = 1;
 
 	while(sigusr1_desactivado){
+		programaBloqueado = 0;
+		programaFinalizado = 0;
+		programaAbortado = 0;
 		int quantum_aux=quantum;
 		log_info(log,"Esperando Pcb\n");
 		pcb = malloc(sizeof(t_pcb));
 		t_paquete* paquete_recibido = recibir(nucleo);
+		sleep(5);
 		pcb = desserializarPCB(paquete_recibido->data);
 		log_info(log,"Recibi PCB del nucleo con el program counter en: %d\n", pcb->pc);
 		liberar_paquete(paquete_recibido);
@@ -101,15 +102,16 @@ int main(int argc,char **argv){
 
 			if (programaBloqueado){
 				log_info(log, "El programa salió por bloqueo\n");
+				log_info(log, "PC= %d\n", pcb->pc);
 				serializado = serializarPCB(pcb);
-				enviar(nucleo, 340, sizeof(serializado), serializado);
+				enviar(nucleo, 340, ((t_pcb*)serializado)->sizeTotal, serializado);
 				destruirPCB(pcb);
 					}
 
 			if (programaAbortado){
 				log_info(log, "El programa aborto\n");
 				serializado = serializarPCB(pcb);
-				enviar(nucleo, 370, sizeof(serializado), serializado);
+				enviar(nucleo, 370, ((t_pcb*)serializado)->sizeTotal, serializado);
 				destruirPCB(pcb);
 			}
 
