@@ -25,6 +25,7 @@
 #include <theDebuggers/socketLibrary.h>
 
 char *ip_nucleo, *puerto_nucleo;
+signed int nucleo;
 
 void archivoDeConfiguracion(char* pathconf);
 char* leerElArchivo(FILE *archivo);

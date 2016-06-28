@@ -60,8 +60,9 @@ int listenningSocket, socketCliente, servidorSocket, servidorCPU, clienteSocket,
 int rodo=0;
 //char codigo[200] = "#!/usr/bin/ansisop\nbegin\nvariables i,b\ni=1\n:inicio_for\ni=i+1\nprint i\nb=i­10\n:cosita\njnz b inicio_for\njnz b cosita\n#fuera del for\nend";
 
-char codigo[250] = "#!/usr/bin/ansisop\nbegin\nvariables a\na = 4\nprint a\nend";
+//char codigo[250] = "#!/usr/bin/ansisop\nbegin\nvariables a\na = 4\nprint a\nend";
 
+char codigo[250] = "#!/usr/bin/ansisop\nbegin\nio Disco 1\nend";
 
 //char codigo[300] = "#!/usr/bin/ansisop\nbegin\nvariables a, b\na=20\nprint a\nb <­- prueba\nprint b\nprint a\nend\nfunction prueba\nvariables a,b \na=2\nb=16\nprint b\nprint a\na=a+b\nreturn a\nend";
 
@@ -193,6 +194,7 @@ void mandarAEjecutar(t_proceso *proceso, int sock) {
 	//TODO:mutex
 	queue_push(cola_exec, proceso);
 	enviar(sock, 303, pcbSerializado->sizeTotal, (char*)pcbSerializado);
+	printf("ENVIE A EJECUTAR CON COD %d 303:\n",pcbSerializado->pc);
 	free(pcbSerializado);
 }
 
@@ -305,27 +307,29 @@ int *pideVariable(char *variable, int tamanio) {
 		//TODO:aca esta funcando con el \n OJO
 		//TODO: mutex confignucleo
 		if (strcmp((char*)config_nucleo->SHARED_VARS[i], variable) == 0) {
+			printf("voy aretornar\n");
 			return &config_nucleo->VALOR_SHARED_VARS[i];
 		}
 	}
-	printf("No encontre variable id, exit\n");exit(0);
+	printf("No encontre variable %s %d id, exit\n",variable,strlen(variable));exit(0);
 }
 
 
 void escribeVariable(char *variable, int tamanio) {//
 	//TODO ME TIENEN QUE MANDAR primero el int y luego el  string
 	int *valor = (int*)variable;
-	variable += tamanio;
+	variable += 4;
 	int i;
 	for (i = 0; i < strlen((char*)config_nucleo->SHARED_VARS) / sizeof(char*); i++) {
 		//TODO:aca esta funcando con el \n OJO
 		//TODO: mutex confignucleo
 		if (strcmp((char*)config_nucleo->SHARED_VARS[i], variable) == 0) {
+			printf("ASIGNO%d\n",*valor);
 			memcpy(&config_nucleo->VALOR_SHARED_VARS[i], valor, sizeof(int));
 			return;
 		}
 	}
-	printf("No encontre VAR id, exit\n");exit(0);
+	printf("No encontre VAR %s id, exit\n",variable);exit(0);
 
 }
 
@@ -367,7 +371,7 @@ void  bloqueoSemaforoManager(t_proceso *proceso, char *semaforo, int semSize) {
 
 void bloqueoIoManager(t_proceso *proceso, char *ioString, int sizeString, int unidadesBloqueado) {
 	int i; int b = 0;
-	printf("NUCLEO: mando proceso %d a BLOCK por IO\n", proceso->pcb->pid);
+	printf("NUCLEO: mando  %s proceso %d a BLOCK por IO\n",ioString, proceso->pcb->pid);
 	for (i = 0; i < strlen((char*)config_nucleo->IO_IDS) / sizeof(char*); i++) {
 		if (strcmp((char*)config_nucleo->IO_IDS[i], ioString) == 0) {
 			//TODO: ojo con el \n
@@ -431,6 +435,7 @@ void analizarIO(int sig, siginfo_t *si, void *uc) {
 	printf("\x1b[32mNUCLEO: Saco proceso %d de Cola IO %d mando READY\n\x1b[0m", proceso->pcb->pid, io);
 	queue_push(cola_ready, proceso);
 	sem_post(&sem_ready);
+	printf("RERE\n");
 	if (queue_size(colas_ios[io]) != 0) {
 		proceso = (t_proceso*)list_get(colas_ios[io]->elements, queue_size(colas_ios[io]) - 1);
 		makeTimer(timers[io], config_nucleo->VALOR_IO[io] * proceso->unidadesBloqueado, 0); //2ms
@@ -585,18 +590,22 @@ void *hilo_CONEXION_CPU(void *socket) {
 			queue_push(cola_exit, proceso);
 			queue_push(cola_CPU_libres, (void*)*(int*)socket);
 			sem_post(&sem_cpu);
+			//162
+
 			enviar(umc, 6, sizeof(int), &proceso->pcb->pid);
+			//TODO fijarte de que me detect que cierra.
+			enviar(proceso->socket_CONSOLA,162,sizeof(int),&proceso->pcb->pid);
 			break;
 
 		case 380:
 			proceso = dameProceso(cola_exec, *(int*)socket);
 			int tiempo;
 			tiempo=((int*)(elPaquete->data))[0];
-
+			printf("TIEMPO IO %d %d %s\n",tiempo,strlen(elPaquete->data+4),(char*)(elPaquete->data+4));
 //0 que no se bloquea.
 			//340
 			pthread_mutex_lock(&mutex_config);
-			bloqueoIoManager(proceso, elPaquete->data+4, 10, tiempo);
+			bloqueoIoManager(proceso, (elPaquete->data)+4, 10, tiempo);
 			pthread_mutex_unlock(&mutex_config);
 
 			elPaquete = recibir(*(int*)socket);
@@ -605,9 +614,12 @@ void *hilo_CONEXION_CPU(void *socket) {
 			temp = desserializarPCB(elPaquete->data);
 			destruirPCB(proceso->pcb);
 			proceso->pcb = temp;
+			printf("PCCCCCCCCCCC %d\n",temp->pc);
+			queue_push(cola_CPU_libres, (void*)*(int*)socket);
 
 
 			//TOO NO HAY QUE HACER UN PUSH DE PROCESO?
+			sem_post(&sem_cpu);
 
 			break;
 
@@ -676,6 +688,7 @@ void *hilo_CONEXION_CPU(void *socket) {
 			printf("IMRPMMIR %d\n",*(int*)elPaquete->data);
 		//	printf("IMRPMMIR %d\n",elPaquete->data);
 		//	printf("IMRPMMIR %d\n",(int)*);
+			break;
 		case 361: //imprimir texto
 			proceso = dameProceso(cola_exec, *(int*)socket);
 			queue_push(cola_exec, proceso);
@@ -738,7 +751,7 @@ void *hilo_mock(void *arg) {
 	pthread_t thmock_consola, thmock_consola2, thmock_consola3, thmock_cpu;
 	//	pthread_create(&thmock_cpu, NULL, hilo_mock_cpu, NULL);
 
-	pthread_create(&thmock_consola, NULL, hilo_mock_consola, NULL);
+//	pthread_create(&thmock_consola, NULL, hilo_mock_consola, NULL);
 //	pthread_create(&thmock_consola2, NULL, hilo_mock_consola, NULL);
 
 	sleep(10);

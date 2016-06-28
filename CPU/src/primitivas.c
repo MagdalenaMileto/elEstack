@@ -115,24 +115,31 @@ void asignar(t_puntero direccion_variable,t_valor_variable valor)
 }
 
 t_valor_variable obtenerValorCompartida(t_nombre_compartida variable)
-{
-	char *variable_compartida= malloc(sizeof(t_nombre_compartida));
-	variable_compartida = variable;
+{	char *variable_compartida= malloc(strlen(variable)+1);
+	log_info(log,"Tamanio de variable global %d\n", strlen(variable));
+	char* barra_cero="\0";
+	memcpy(variable_compartida, variable, strlen(variable));
+	memcpy(variable_compartida+(strlen(variable)+1), barra_cero, 1);
+	log_info(log,"Obteniendo variable compartida %s\n", variable_compartida);
 	t_paquete* paquete_nuevo;
 	int valor;
-	enviar(nucleo, 351, sizeof(variable_compartida), variable_compartida);
+	enviar(nucleo, 351, strlen(variable), variable_compartida); // agregar +1 en el size si se agrega el barra_cero
 	paquete_nuevo = recibir(nucleo);
-	memcpy(&valor, paquete_nuevo->data, sizeof(int));
-	free(paquete_nuevo);
+	memcpy(&valor, paquete_nuevo->data, 4);
+	log_info(log,"%s vale %d\n", variable_compartida, valor);
+	free(variable_compartida);
+	log_info(log,"Saliendo para imprimir %d\n", valor);
 	return valor;
 }
 
 t_valor_variable asignarValorCompartida(t_nombre_compartida variable,t_valor_variable valor)
-{
-	char *variable_compartida= malloc(4+sizeof(t_nombre_compartida));
+{	char *variable_compartida= malloc(5+strlen(variable));
+	char* barra_cero="\0";
 	memcpy(variable_compartida, &valor, 4);
-	memcpy(variable_compartida+4, &variable, sizeof(t_nombre_compartida));
-	enviar(nucleo, 350, sizeof(variable_compartida), variable_compartida);
+	memcpy(variable_compartida+4, variable, strlen(variable));
+	memcpy(variable_compartida+strlen(variable)+4, barra_cero, 1);
+	log_info(log,"Variable %s le asigno %d\n", variable_compartida+4, (int*)variable_compartida[0]);
+	enviar(nucleo, 350, 5+strlen(variable), variable_compartida);
 	free(variable_compartida);
 	return valor;
 }
@@ -210,11 +217,16 @@ void imprimirTexto(char*texto)
 }
 
 void entradaSalida(t_nombre_dispositivo dispositivo,int tiempo)
-{	char* estructura_dispositivo=malloc(4+strlen(dispositivo));
+{	char* estructura_dispositivo=malloc(5+strlen(dispositivo));
+	char* barra_cero="\0";
 	memcpy(estructura_dispositivo, &tiempo, 4);
 	memcpy(estructura_dispositivo+4, dispositivo, strlen(dispositivo));
+	memcpy(estructura_dispositivo+strlen(dispositivo)+4, barra_cero, 1);
+	log_info(log,"%d\n",(int*)estructura_dispositivo[0]);
+	log_info(log,"%s\n",(char*)(estructura_dispositivo+4));
+	log_info(log,"tamanio mensaje: %d", 5+strlen(dispositivo));
 	log_info(log,"Pido i/o por %d unidades de tiempo al %s\n", (int*)estructura_dispositivo[0], (char*)(estructura_dispositivo+4));
-	enviar(nucleo, 380, 4+strlen(dispositivo), estructura_dispositivo);
+	enviar(nucleo, 380, 5+strlen(dispositivo), estructura_dispositivo);
 	programaBloqueado=1;
 	free(estructura_dispositivo);
 	return;

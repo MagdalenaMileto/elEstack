@@ -6,10 +6,11 @@
  */
 
 
+
 #include "funcionesConsola.h"
 
 int socketConexionNucleo;
-int programa_finalizado=0;
+int programa_finalizado=1;
 
 
 int main(int argc, char **argv) {
@@ -17,14 +18,15 @@ int main(int argc, char **argv) {
 	char* script;
 	FILE *archivo;
 	char nomArchivo[50];
-	signed int nucleo;
+
 
 	archivoDeConfiguracion(argv[0]);
+	printf("pase archivo de configuracion\n");
 	strcpy(nomArchivo,argv[1]);
 	archivo = fopen(nomArchivo, "r");
 
 	if (archivo == NULL){
-			printf("No se pudo acceder al script.\n");
+			printf("No se pudo acceder al script\n");
 			return EXIT_FAILURE;
 	}
 	else{
@@ -33,36 +35,37 @@ int main(int argc, char **argv) {
 			printf("Ejecutando programa ansisop:\n");
 			printf("El script: %s\n", script);
 	}
-
 	char* script_enviar= malloc(strlen(script));
 	memcpy(script_enviar, script, strlen(script));
 	nucleo= conectarConElNucleo();
-	enviar(nucleo, 103, script_enviar, strlen(script_enviar));
+	enviar(nucleo, 103, strlen(script), script_enviar);
 	free(script_enviar);
 
 
 t_paquete *paquete;
 char* info_cadena;
 int info_variable;
-int codigo_op;
 
-while(!programa_finalizado){
+
+while(programa_finalizado){
+		printf("entro al while\n");
 		paquete = recibir(nucleo);
-		memcpy(&codigo_op, paquete->codigo_operacion, 4);
+		printf("recibi algo\n");
 
+		printf("tamanio:%d\n", paquete->tamanio);
+		printf("codigo de op:%d\n", paquete->codigo_operacion);
 
-		switch(codigo_op) {
+		switch(paquete->codigo_operacion) {
 		case 161:
 				 memcpy(info_cadena, paquete->data, paquete->tamanio);
-				 puts(info_cadena);
+				 printf("cadena: %s\n",info_cadena);
 				 break;
 		case 160:
-				memcpy(&info_variable, paquete->data, 4);
-				printf("%d\n", info_variable);
+				printf("%d\n", *(int*)paquete->data);
 				break;
 		case 162:
-				puts("Programa Finalizado\n");
-				programa_finalizado=1;
+				printf("Programa Finalizado\n");
+				programa_finalizado=0;
 				close(nucleo);
 				break;
 		}
@@ -84,13 +87,13 @@ return 0;
 void archivoDeConfiguracion(char * pathconf) {
 
 	char archi[15] = "/consola.confg";
-	char * archivo = malloc(15+ strlen(pathconf));
+	char * archivo = malloc(15+ strlen(pathconf)-7);
 
-	memcpy(archivo + strlen(pathconf),pathconf, strlen(pathconf));
-	memcpy(archivo, archi, 15);
+	memcpy(archivo ,pathconf, strlen(pathconf)-7);
+	memcpy(archivo+ strlen(pathconf)-7, archi, 15);
 
-	printf("%s\n", pathconf);
-	t_config * archivo_configuracion = config_create(pathconf);
+	printf("%s\n", archivo);
+	t_config * archivo_configuracion = config_create(archivo);
 
 	puerto_nucleo = config_get_string_value(archivo_configuracion, "PUERTO_NUCLEO");
 	ip_nucleo = config_get_string_value(archivo_configuracion, "IP_NUCLEO");
@@ -113,8 +116,8 @@ char* leerElArchivo(FILE *archivo) {
 }
 
 int conectarConElNucleo(){
-
-	int nucleo= conectar_a(ip_nucleo, puerto_nucleo);
+	printf("ip: %s puerto: %s\n", ip_nucleo, puerto_nucleo);
+	nucleo= conectar_a(ip_nucleo, puerto_nucleo);
 
 	if(nucleo==0){
 		printf("CONSOLA: No encontre NUCLEO\n");
@@ -124,11 +127,11 @@ int conectarConElNucleo(){
 	printf("CONSOLA: Conecta bien nucleo %d\n", nucleo);
 
 
-        if(realizar_handshake(nucleo)){
+        /*if(realizar_handshake(nucleo)){
             printf("CONSOLA:Handshake exitoso con nucleo\n");
         }else{
             printf("CONSOLA:Handshake invalido con nucleo\n");
-        }
+        }*/
 
 return nucleo;
 }
