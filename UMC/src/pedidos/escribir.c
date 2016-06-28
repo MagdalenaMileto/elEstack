@@ -3,6 +3,10 @@
 void escribir_una_pagina(int numero_pagina, int offset, int tamanio,
 		void * buffer) {
 
+	log_info(log,
+			"Llega una peticion de lectura por parte de una de las CPUs. La pagina solicitada a escribir es la %d y su offset %d.",
+			numero_pagina, offset);
+
 	t_entrada_tabla_de_paginas * pagina_encontrada = buscar_tlb(numero_pagina);
 
 	if (!pagina_encontrada->presencia) {
@@ -20,6 +24,8 @@ void escribir_una_pagina(int numero_pagina, int offset, int tamanio,
 
 	pagina_encontrada->modificado = true;
 	pagina_encontrada->uso = true;
+
+	log_info(log, "Se escribio con exito la pagina %id.", numero_pagina);
 
 }
 

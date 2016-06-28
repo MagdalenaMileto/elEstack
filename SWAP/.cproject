@@ -32,8 +32,7 @@
 							<tool id="cdt.managedbuild.tool.gnu.c.linker.exe.debug.1212983127" name="GCC C Linker" superClass="cdt.managedbuild.tool.gnu.c.linker.exe.debug">
 								<option id="gnu.c.link.option.libs.451611652" name="Libraries (-l)" superClass="gnu.c.link.option.libs" valueType="libs">
 									<listOptionValue builtIn="false" value="parser-ansisop"/>
-									<listOptionValue builtIn="false" value="rt"/>
-									<listOptionValue builtIn="false" value="m"/>
+									<listOptionValue builtIn="false" value="cspecs"/>
 									<listOptionValue builtIn="false" value="pthread"/>
 									<listOptionValue builtIn="false" value="theDebuggers"/>
 									<listOptionValue builtIn="false" value="commons"/>
@@ -49,8 +48,21 @@
 							</tool>
 						</toolChain>
 					</folderInfo>
+					<fileInfo id="cdt.managedbuild.config.gnu.exe.debug.1460759025.1515169763" name="testSwap.c" rcbsApplicability="disable" resourcePath="testSwap/testSwap.c" toolsToInvoke="cdt.managedbuild.tool.gnu.c.compiler.exe.debug.728275199.1332753722">
+						<tool id="cdt.managedbuild.tool.gnu.c.compiler.exe.debug.728275199.1332753722" name="GCC C Compiler" superClass="cdt.managedbuild.tool.gnu.c.compiler.exe.debug.728275199">
+							<option id="gnu.c.compiler.option.include.paths.1477791811" name="Include paths (-I)" superClass="gnu.c.compiler.option.include.paths" valueType="includePath"/>
+							<inputType id="cdt.managedbuild.tool.gnu.c.compiler.input.7585779" superClass="cdt.managedbuild.tool.gnu.c.compiler.input"/>
+						</tool>
+						<tool customBuildStep="true" id="org.eclipse.cdt.managedbuilder.ui.rcbs.1491827380" name="Resource Custom Build Step">
+							<inputType id="org.eclipse.cdt.managedbuilder.ui.rcbs.inputtype.274282207" name="Resource Custom Build Step Input Type">
+								<additionalInput kind="additionalinputdependency" paths=""/>
+							</inputType>
+							<outputType id="org.eclipse.cdt.managedbuilder.ui.rcbs.outputtype.1640235688" name="Resource Custom Build Step Output Type"/>
+						</tool>
+					</fileInfo>
 					<sourceEntries>
 						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="src"/>
+						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="testSwap"/>
 					</sourceEntries>
 				</configuration>
 			</storageModule>
@@ -98,6 +110,7 @@
 					</folderInfo>
 					<sourceEntries>
 						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="src"/>
+						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="testSwap"/>
 					</sourceEntries>
 				</configuration>
 			</storageModule>

@@ -30,3 +30,5 @@
 
 # Debug files
 *.dSYM/
+/CONSOLA/CONSOLA
+/SWAP/SWAP
