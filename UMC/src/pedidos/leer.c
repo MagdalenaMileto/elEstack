@@ -17,6 +17,8 @@ void * leer_una_pagina(int numero_pagina, int offset, int tamanio) {
 		escribir_marco(pagina_encontrada->marco, 0, tamanio_marco,
 				contenido_faltante);
 
+		pagina_encontrada->presencia = true;
+
 	}
 
 	pagina_encontrada->uso = true;
