@@ -27,6 +27,8 @@ void * leer_una_pagina(int numero_pagina, int offset, int tamanio) {
 
 	memcpy(contenido, memoria + desplazamiento, tamanio);
 
+	log_info(log, "Se leyo con exito la pagina %d.", numero_pagina);
+
 	return contenido;
 
 }

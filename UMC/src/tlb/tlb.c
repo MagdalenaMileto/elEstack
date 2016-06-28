@@ -19,9 +19,10 @@ t_entrada_tabla_de_paginas * buscar_tlb(int numero_pagina) {
 	t_entrada_tabla_de_paginas * resultado = list_find(tlb,
 			filtrar_por_proceso_y_pagina);
 
-	log_info(log, "Acierto en la TLB.");
 
 	if (resultado) {
+
+		log_info(log, "Acierto en la TLB.");
 
 		resultado->ultima_vez_usado = numero_operacion();
 
@@ -30,6 +31,7 @@ t_entrada_tabla_de_paginas * buscar_tlb(int numero_pagina) {
 		resultado = buscar_pagina_tabla_de_paginas(numero_pagina);
 
 		agregar_entrada_tlb(resultado);
+
 	}
 
 	return resultado;
