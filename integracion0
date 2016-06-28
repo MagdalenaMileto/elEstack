@@ -20,12 +20,12 @@ cd -
 
 echo "##fin compilacion"
 cd SWAP
-./SWAP&
+./SWAP2&
 pid[0]=$!
 cd -
 sleep 2
 cd UMC
-./UMC&
+./UMC2&
 pid[1]=$!
 sleep 2
 cd -

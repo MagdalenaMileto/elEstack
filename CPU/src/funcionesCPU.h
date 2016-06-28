@@ -86,5 +86,6 @@ void sig_handler(int signo);
  * 360->envio impromir un valor numerico
  * 361->envio imprimir texto
  */
+pthread_mutex_t mutex_pcb;
 
 #endif /* FUNCIONESCPU_H_ */
