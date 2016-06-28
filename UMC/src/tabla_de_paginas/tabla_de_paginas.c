@@ -15,6 +15,8 @@ t_entrada_tabla_de_paginas * buscar_pagina_tabla_de_paginas(int numero_pagina) {
 	t_entrada_tabla_de_paginas * pagina_encontrada = list_find(tabla_de_paginas,
 			filtrar_por_proceso_y_pagina);
 
+	log_info(log, "Acierto en la tabla de paginas.");
+
 	return pagina_encontrada;
 
 }

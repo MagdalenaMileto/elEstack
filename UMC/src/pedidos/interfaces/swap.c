@@ -47,6 +47,10 @@ void swap_finalizar_proceso(int pid) {
 
 void * swap_leer(int pid, int numero_pagina) {
 
+	log_info(log,
+			"Comienzo de peticion de lectura al proceso SWAP con el proceso %d y el numero de pagina %d.",
+			pid, numero_pagina);
+
 	int tamanio_paquete = sizeof(int) * 2;
 	void * data = malloc(tamanio_paquete);
 
@@ -55,7 +59,11 @@ void * swap_leer(int pid, int numero_pagina) {
 
 	enviar(socket_swap, SWAP_LEER, tamanio_paquete, data);
 
+	log_info(log, "Se envia el paquete al SWAP.");
+
 	t_paquete * paquete = recibir(socket_swap);
+
+	log_info(log, "Se recibe paquete de SWAP exitosamente.");
 
 	return paquete->data;
 

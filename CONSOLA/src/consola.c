@@ -8,22 +8,11 @@
 
 #include "funcionesConsola.h"
 
-int PUERTO_NUCLEO = 9997;
 int socketConexionNucleo;
 int programa_finalizado=0;
 
-// estaria muy bueno hacer el log..
-
 
 int main(int argc, char **argv) {
-	
-	if (argc != 2)
-		{
-			perror("No se paso la cantidad de parametros necesaria\n");
-			return EXIT_FAILURE;
-		}
-
-
 	char* script;
 	FILE *archivo;
 	char nomArchivo[50];
@@ -33,14 +22,18 @@ int main(int argc, char **argv) {
 	archivoDeConfiguracion();
 
 	strcpy(nomArchivo,argv[1]);
-	if ((archivo = fopen("nomArchivo", "r")) == NULL){
+	archivo = fopen(nomArchivo, "r");
+
+	if (archivo == NULL){
 			printf("No se pudo acceder al script.\n");
 			return EXIT_FAILURE;
 	}
 	else{
 			script = leerElArchivo(archivo);
+			printf("leo el archivo\n");
 			fclose(archivo);
 			printf("Exito en lectura de scrit.\n");
+			printf("El script: %s\n", script);
 	}
 
 	nucleo= conectarConElNucleo();
@@ -49,7 +42,7 @@ int main(int argc, char **argv) {
 	if(estado>0) printf("se envio script al nucleo.\n");
 
 free(script);
-t_paquete *paquete=malloc(sizeof(t_paquete));
+t_paquete *paquete;
 char* info_cadena;
 int info_variable;
 int codigo_op;
@@ -79,7 +72,7 @@ while(!programa_finalizado){
 
 }
 
-free(paquete);
+liberar_paquete(paquete);
 printf("CONSOLA: Cierro\n");
 
 return 0;
@@ -92,7 +85,7 @@ return 0;
 
 void archivoDeConfiguracion() {
 
-	t_config * archivo_configuracion = config_create("./consola.confg");
+	t_config * archivo_configuracion = config_create("consola.confg");
 
 	puerto_nucleo = config_get_string_value(archivo_configuracion, "PUERTO_NUCLEO");
 	ip_nucleo = config_get_string_value(archivo_configuracion, "IP_NUCLEO");

@@ -17,6 +17,9 @@ void marco_nuevo(t_entrada_tabla_de_paginas * entrada_que_necesita_marco) {
 
 		entrada_que_necesita_marco->presencia = true;
 
+		log_info(log,
+				"Se reemplaza exitosamente y se asigna la pagina al marco correspondiente.");
+
 	} else {
 
 		bool marco_disponible(void * entrada) {
@@ -42,6 +45,7 @@ void marco_nuevo(t_entrada_tabla_de_paginas * entrada_que_necesita_marco) {
 
 		entrada_que_necesita_marco->presencia = true;
 
+		log_info(log, "Se asigna el marco exitosamente.");
 	}
 }
 
@@ -207,6 +211,7 @@ void escribir_marco(int marco, int offset, int tamanio, void * contenido) {
 
 	memcpy(memoria + desplazamiento + offset, contenido, tamanio);
 
-}
+	log_info(log, "El marco se escribe con exito.");
 
+}
 

@@ -10,6 +10,10 @@
 context(tlb) {
 	describe("Funciones de la TLB") {
 
+		before {
+			log = log_create(ARCHIVOLOG, "UMC", 0, LOG_LEVEL_INFO);
+		}end
+
 		describe("Agregar Entradas") {
 
 			before {
