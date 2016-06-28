@@ -26,10 +26,9 @@
 
 char *ip_nucleo, *puerto_nucleo;
 
-void archivoDeConfiguracion();
+void archivoDeConfiguracion(char* pathconf);
 char* leerElArchivo(FILE *archivo);
 int conectarConElNucleo();
-int enviarInformacionAlNucleo(char * script, int nucleo);
 
 
 

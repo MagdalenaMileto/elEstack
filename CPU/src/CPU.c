@@ -40,9 +40,6 @@ int main(int argc,char **argv){
 	log= log_create(ARCHIVOLOG, "CPU", 0, LOG_LEVEL_INFO);
 	log_info(log,"Iniciando CPU\n");
 	char* serializado;
-	programaBloqueado = 0;
-	programaFinalizado = 0;
-	programaAbortado = 0;
 
 	levantar_configuraciones();
 
@@ -61,11 +58,16 @@ int main(int argc,char **argv){
 	sigusr1_desactivado = 1;
 
 	while(sigusr1_desactivado){
-
+		programaBloqueado = 0;
+		programaFinalizado = 0;
+		programaAbortado = 0;
+		int quantum_aux=quantum;
+		log_info(log,"Esperando Pcb\n");
 		pcb = malloc(sizeof(t_pcb));
 		t_paquete* paquete_recibido = recibir(nucleo);
+		sleep(5);
 		pcb = desserializarPCB(paquete_recibido->data);
-		log_info(log,"Recibi PCB del nucleo\n");
+		log_info(log,"Recibi PCB del nucleo con el program counter en: %d\n", pcb->pc);
 		liberar_paquete(paquete_recibido);
 
 		int pid = pcb->pid;
@@ -73,7 +75,7 @@ int main(int argc,char **argv){
 		log_info(log, "Envie pid a UMC\n");
 
 
-		while(quantum && !programaBloqueado && !programaFinalizado && !programaAbortado){
+		while((quantum_aux!=0) && !programaBloqueado && !programaFinalizado && !programaAbortado){
 
 			t_direccion* datos_para_umc = malloc(12);
 			crearEstructuraParaUMC(pcb, tamanioPag, datos_para_umc);
@@ -81,58 +83,61 @@ int main(int argc,char **argv){
 			log_info(log, "Direccion= Pag:%d Offset:%d Size:%d\n", datos_para_umc->pagina, datos_para_umc->offset, datos_para_umc->size);
 			enviarDirecParaLeerUMC(lecturaUMC, datos_para_umc);
 			log_info(log, "Pido instruccion\n");
-			free(lecturaUMC);
-			free(datos_para_umc);
 			t_paquete* instruccion=malloc(sizeof(t_paquete));
 			instruccion = recibir(umc);
 			log_info(log, "Recibi instruccion de UMC\n");
 
-			char* sentencia=instruccion->data;
-			log_info(log,"Recibi sentencia: %s\n", sentencia);
+			char* sentencia=malloc(datos_para_umc->size);
+			memcpy(sentencia, instruccion->data, datos_para_umc->size);
+			log_info(log,"Recibi sentencia: %s\n", depurarSentencia(strdup(sentencia)));
 			analizadorLinea(depurarSentencia(strdup(sentencia)), &primitivas, &primitivas_kernel);
 			liberar_paquete(instruccion);
+			free(lecturaUMC);
+			free(datos_para_umc);
+			free(sentencia);
 
 			pcb->pc++;
-			quantum--;
+			quantum_aux--;
 			usleep(quantum_sleep*1000);
 
 			if (programaBloqueado){
-				log_info(log, "El programa salió por bloqueo");
+				log_info(log, "El programa salió por bloqueo\n");
+				log_info(log, "PC= %d\n", pcb->pc);
 				serializado = serializarPCB(pcb);
-				enviar(nucleo, 340, sizeof(serializado), serializado);
+				enviar(nucleo, 340, ((t_pcb*)serializado)->sizeTotal, serializado);
 				destruirPCB(pcb);
 					}
 
 			if (programaAbortado){
-				log_info(log, "El programa aborto");
+				log_info(log, "El programa aborto\n");
 				serializado = serializarPCB(pcb);
-				enviar(nucleo, 370, sizeof(serializado), serializado);
+				enviar(nucleo, 370, ((t_pcb*)serializado)->sizeTotal, serializado);
 				destruirPCB(pcb);
 			}
 
 			if (programaFinalizado){
-				log_debug(log, "El programa finalizo");
+				log_debug(log, "El programa finalizo\n");
 				enviar(nucleo, 320, sizeof(int), &programaFinalizado);
 				destruirPCB(pcb);
 			}
 
-			if((quantum==0) &&!programaFinalizado&&!programaBloqueado&&!programaAbortado){
-				printf("Serializando\n");
+			if((quantum_aux==0) &&!programaFinalizado&&!programaBloqueado&&!programaAbortado){
+
+				log_info(log,"Saliendo por fin de quantum\n");
+				log_info(log,"SizeContextoActual antes: %d\n", pcb->sizeContextoActual);
 				serializado = serializarPCB(pcb);
-				printf("Serializado terminado\n");
-				enviar(nucleo, 304, sizeof(serializado), serializado);
+				log_info(log,"SizeContextoActual despues: %d\n", pcb->sizeContextoActual);
+				enviar(nucleo, 304, ((t_pcb*)serializado)->sizeTotal, serializado);
 				destruirPCB(pcb);
 			}
 		}
 
-		liberar_paquete(datos_kernel);
-		free(pcb);
-		close(nucleo);
-		close(umc);
-
-		return 0;
 	}
 
+liberar_paquete(datos_kernel);
+free(pcb);
+close(nucleo);
+close(umc);
 return 0;
 
 }
@@ -180,6 +185,8 @@ return nucleo;
 void crearEstructuraParaUMC (t_pcb* pcb, int tamPag, t_direccion* informacion){
 
 	t_direccion* info=malloc(sizeof(t_direccion));
+	log_info(log,"Program counter: %d", pcb->pc);
+	log_info(log,"Voy a leer en la posicion de indice de codigo:%d\n",pcb->indiceDeCodigo [(pcb->pc)*2]);
 	info->pagina=pcb->indiceDeCodigo [(pcb->pc)*2]/ tamPag;
 	info->offset=pcb->indiceDeCodigo [((pcb->pc)*2)];
 	info->size=pcb->indiceDeCodigo [((pcb->pc)*2)+1];

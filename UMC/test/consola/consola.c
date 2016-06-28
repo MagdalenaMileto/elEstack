@@ -12,6 +12,7 @@ context(consola) {
 	describe("Dump") {
 
 		before {
+			log = log_create(ARCHIVOLOG, "UMC", 0, LOG_LEVEL_INFO);
 			tabla_de_paginas = list_create();
 			remove("./memory.dump");
 		}end

@@ -37,6 +37,8 @@ void atender_cpu(void * parametro_hilo) {
 
 			enviar(socket_cpu, 6, tamanio, contenido);
 
+			log_info(log, "Se envia con exito a la CPU.");
+
 			break;
 
 		case ESCRIBIR:

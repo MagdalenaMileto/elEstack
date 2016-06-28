@@ -12,6 +12,7 @@ context(asignacion_de_marcos) {
 	describe("Asignacion de marcos") {
 
 		before {
+			log = log_create(ARCHIVOLOG, "UMC", 0, LOG_LEVEL_INFO);
 			tabla_de_paginas = list_create();
 		}end
 
