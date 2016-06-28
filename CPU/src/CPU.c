@@ -40,6 +40,7 @@ int main(int argc,char **argv){
 	log= log_create(ARCHIVOLOG, "CPU", 0, LOG_LEVEL_INFO);
 	log_info(log,"Iniciando CPU\n");
 	char* serializado;
+	pthread_mutex_init(&mutex_pcb, NULL);
 
 	levantar_configuraciones();
 
@@ -67,7 +68,7 @@ int main(int argc,char **argv){
 		t_paquete* paquete_recibido = recibir(nucleo);
 		sleep(5);
 		pcb = desserializarPCB(paquete_recibido->data);
-		log_info(log,"Recibi PCB del nucleo con el program counter en: %d\n", pcb->pc);
+		log_info(log,"Recibi PCB del nucleo con el program counter en: %d y SizeContextoActual en %d\n", pcb->pc, pcb->sizeContextoActual);
 		liberar_paquete(paquete_recibido);
 
 		int pid = pcb->pid;
@@ -119,11 +120,6 @@ int main(int argc,char **argv){
 				destruirPCB(pcb);
 			}
 
-			if (programaFinalizado){
-				log_debug(log, "El programa finalizo\n");
-				enviar(nucleo, 320, sizeof(int), &programaFinalizado);
-				destruirPCB(pcb);
-			}
 
 			if((quantum_aux==0) &&!programaFinalizado&&!programaBloqueado&&!programaAbortado){
 

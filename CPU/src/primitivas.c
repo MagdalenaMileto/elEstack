@@ -8,7 +8,7 @@
 #include "funcionesCPU.h"
 
 t_puntero definirVariable(t_nombre_variable identificador_variable)
-{
+{	log_info(log,"Entre a definir variable %c\n", identificador_variable);
 	t_direccion *direccion_variable= malloc(sizeof(t_direccion));
 	t_variable *variable= malloc(sizeof(t_variable));
 	t_contexto *contexto; //= malloc(sizeof(t_contexto));
@@ -25,10 +25,17 @@ t_puntero definirVariable(t_nombre_variable identificador_variable)
 		contexto->sizeVars++;
 
 	}
+	else if((identificador_variable>='0')&&(identificador_variable<='9')){
+		log_info(log,"Creando argumento %c\n", identificador_variable);
+		armarDireccionDeArgumento(direccion_variable);
+		list_add(contexto->args, direccion_variable);
+		log_info(log,"Direccion de argumento %c es %d %d %d\n", identificador_variable, direccion_variable->pagina, direccion_variable->offset, direccion_variable->size);
+		contexto->sizeArgs++;
+	}
 
 	else if(contexto->sizeVars == 0 && (pcb->sizeContextoActual)>1){
 		//La posicion va a estar definida cuando se llama a la primitiva funcion
-
+		log_info(log,"Declarando variable %c de funcion\n", identificador_variable);
 		armarDirecccionDeFuncion(direccion_variable);
 		variable->etiqueta=identificador_variable;
 		variable->direccion=direccion_variable;
@@ -63,22 +70,29 @@ t_puntero definirVariable(t_nombre_variable identificador_variable)
 
 t_puntero obtenerPosicionVariable (t_nombre_variable identificador_variable)
 {
-		log_info(log,"Entre a obtenerVariable");
+		log_info(log,"Entre a obtenerVariable %c\n", identificador_variable);
 		int posicionStack=pcb->sizeContextoActual-1;
-		t_variable *variable_nueva;
-		int posMax= (((t_contexto*)(list_get(pcb->contextoActual, posicionStack)))->sizeVars)-1;
 		int direccionRetorno;
-		log_info(log,"PosMax= %d\n", posMax);
-		while(posMax>=0){
+		if((identificador_variable>='0')&&(identificador_variable<='9')){
+			t_direccion *direccion= (t_direccion*)(list_get(((t_contexto*)(list_get(pcb->contextoActual, posicionStack)))->args, (int)identificador_variable-48));
+			direccionRetorno=convertirDireccionAPuntero(direccion);
+			log_info(log,"Obtengo valor de %c: %d %d %d\n", identificador_variable, direccion->pagina, direccion->offset, direccion->size);
+			return(direccionRetorno);
+		}else{
+
+			t_variable *variable_nueva;
+			int posMax= (((t_contexto*)(list_get(pcb->contextoActual, posicionStack)))->sizeVars)-1;
+			int direccionRetorno;
+			while(posMax>=0){
 			variable_nueva=((t_variable*)(list_get(((t_contexto*)(list_get(pcb->contextoActual, posicionStack)))->vars, posMax)));
 			log_info(log,"Variable: %c\n", variable_nueva->etiqueta);
-			if(variable_nueva->etiqueta==identificador_variable){
+				if(variable_nueva->etiqueta==identificador_variable){
 				direccionRetorno = convertirDireccionAPuntero(((t_variable*)(list_get(((t_contexto*)(list_get(pcb->contextoActual, posicionStack)))->vars, posMax)))->direccion);
 				log_info(log,"Obtengo valor de %c: %d %d %d\n", variable_nueva->etiqueta, variable_nueva->direccion->pagina, variable_nueva->direccion->offset, variable_nueva->direccion->size);
-				return(direccionRetorno); //no queda claro en el enunciado que devuelve
-
-			}
+				return(direccionRetorno);
+				}
 			posMax--;
+			}
 		}
 		programaAbortado=1;
 		return -1;
@@ -93,7 +107,7 @@ t_valor_variable dereferenciar(t_puntero direccion_variable)
 	enviarDirecParaLeerUMC(leerUMC, direccion);
 	free(leerUMC);
 	free(direccion);
-	t_paquete *paquete=malloc(sizeof(t_paquete));
+	t_paquete *paquete; //=malloc(sizeof(t_paquete));
 	paquete = recibir(umc);
 	int valor;
 	memcpy(&valor, paquete->data, 4);
@@ -147,56 +161,78 @@ t_valor_variable asignarValorCompartida(t_nombre_compartida variable,t_valor_var
 void irAlLabel(t_nombre_etiqueta etiqueta)
 {	t_puntero_instruccion instruccion;
 	instruccion = metadata_buscar_etiqueta(etiqueta, pcb->indiceDeEtiquetas, 1);
-	int i;
+	log_info(log,"Ir a instruccion %d\n", instruccion);
+	/*int i;
 	int contador=0;
 	i=pcb->indiceDeCodigo[contador];
 	while(i!=instruccion){
 		contador+=2;
 		i=pcb->indiceDeCodigo[contador];
-	}
-	pcb->pc=(contador/2);
+	}*/
+	pcb->pc=instruccion-1; //(contador/2);
+	log_info(log,"Saliendo de label\n");
 	return;
 }
 
 void llamarConRetorno(t_nombre_etiqueta etiqueta, t_puntero donde_retornar)
 {
-	/*
-	int posicionStack = pcb->sizeContextoActual-1;
-	t_contexto *contexto_retorno;
-	contexto_retorno = (t_contexto *)(list_get(pcb->contextoActual, posicionStack));
-	enviar(umc, 2, sizeof(t_direccion), (t_direccion *)contexto_retorno->sizeVars);
-	t_paquete *paquete_recibido = recibir (umc);
-	memcpy(&donde_retornar, &paquete_recibido->data, sizeof(t_puntero));
-
-	pcb->pc ++;
-	pcb->sizeContextoActual = 0;
-	t_list *contexto_nuevo = list_create();
-	memcpy(pcb->contextoActual, contexto_nuevo, sizeof(t_list));
-
-	t_list *lista_variables = list_create();
-	list_add(contexto_nuevo, (t_list *)lista_variables);
-	t_list *lista_argumentos = list_create();
-	list_add(contexto_nuevo, (t_list *)lista_argumentos);
-
+	char* direccion_nueva= malloc(sizeof(t_direccion));
+	convertirPunteroADireccion(donde_retornar, direccion_nueva);
+	int posicionStack = pcb->sizeContextoActual;
+	log_info(log,"Tamanio contexto actual %d\n", pcb->sizeContextoActual);
+	t_contexto *contexto_nuevo=malloc(sizeof(t_contexto));
+	contexto_nuevo->pos=posicionStack;
+	contexto_nuevo->args=list_create();
+	contexto_nuevo->vars=list_create();
+	contexto_nuevo->sizeArgs=0;
+	contexto_nuevo->sizeVars=0;
+	memcpy(&contexto_nuevo->retPos, &pcb->pc, 4); //en este porque despues hace un pc ++ y memcpy porque va a cambiar el pc
+	memcpy(&contexto_nuevo->retVar, direccion_nueva, sizeof(t_direccion));
+	log_info(log,"Creo nuevo contexto con pos: %d que debe volver en la sentencia %d y retorno en la variable de pos %d %d\n", contexto_nuevo->pos, contexto_nuevo->retPos, contexto_nuevo->retVar.pagina, contexto_nuevo->retVar.offset);
+	list_add(pcb->contextoActual, contexto_nuevo);
+	pcb->sizeContextoActual++;
 	irAlLabel(etiqueta);
 
-	//free(contexto_nuevo); // se liberan las listas? list_create reserva memoria..
-	//free(lista_variable);
-	//free(lista_argumentos);
-	*/
 }
 
 void retornar(t_valor_variable retorno)
 {
+	log_info(log,"Posicion de retorno %d\n", retorno);
+	int posConextoActual= pcb->sizeContextoActual-1;
+	int direccion;
+	t_contexto *contexto_final= list_get(pcb->contextoActual, posConextoActual);
+	direccion=convertirDireccionAPuntero(&(contexto_final->retVar));
+	asignar(direccion,retorno);
+	pcb->pc=contexto_final->retPos;
+
+	//Destruyo Contexto de Funcion
+
 	/*
-	int posicionStack = pcb->sizeContextoActual-2;
-	t_contexto *contexto_anterior;
-	contexto_anterior = (t_contexto *)(list_get(pcb->contextoActual, posicionStack));
-	pcb->pc --;
-	retorno = contexto_anterior->retPos;
-	//finalizar();
-	//finalizar o programa abortado??
+	log_info(log,"Empiezo a destruir %d\n", list_size(contexto_final->vars));
+	while(contexto_final->sizeVars-1>=0){
+		free(((t_variable*)list_get(contexto_final->vars, contexto_final->sizeVars-1))->direccion);
+		free(list_get(contexto_final->vars, contexto_final->sizeVars-1));
+		contexto_final->sizeVars--;
+	}
+	list_destroy(contexto_final->vars);
+	log_info(log,"Destrui vars de funcion\n");
+	log_info(log,"Empiezo a destruir args de funcion %d\n",list_size(contexto_final->args));
+	while(contexto_final->sizeArgs-1>=0){
+			log_info(log,"Antes del free\n");
+			free(list_get(contexto_final->args, contexto_final->sizeArgs-1));
+			log_info(log,"Despues del free\n");
+			contexto_final->sizeArgs--;
+		}
+	log_info(log,"Destrui args de funcion\n");
+	list_destroy(contexto_final->args);
+	log_info(log,"Empiezo a destruir contexto de funcion\n");
+	free(list_get(pcb->contextoActual, pcb->sizeContextoActual-1));
+	log_info(log,"Libere contexto\n");
+	list_remove(pcb->contextoActual, pcb->sizeContextoActual-1);
+	log_info(log,"Contexto Destruido\n");
 	*/
+
+	pcb->sizeContextoActual--;
 
 }
 
@@ -209,10 +245,14 @@ void imprimir(t_valor_variable valor_mostrar)
 }
 
 void imprimirTexto(char*texto)
-{	char *texto_mostrar = malloc(sizeof(texto));
-	texto_mostrar = texto;
-	enviar(nucleo, 361, sizeof(texto_mostrar), texto_mostrar);
+{	char *texto_mostrar = malloc(strlen(texto)+1);
+	char* barra_cero="\0";
+	memcpy(texto_mostrar, texto, strlen(texto));
+	memcpy(texto_mostrar+strlen(texto), barra_cero, 1);
+	log_info(log,"Texto a Imprimir %s\n", texto_mostrar);
+	enviar(nucleo, 361, strlen(texto), texto_mostrar);
 	free(texto_mostrar);
+	log_info(log,"Saliendo de imprimir\n");
 	return;
 }
 
@@ -233,40 +273,55 @@ void entradaSalida(t_nombre_dispositivo dispositivo,int tiempo)
 }
 
 void finalizar(){
-	log_info(log,"Entre a finaizar\n");
+	//pthread_mutex_lock(&mutex_pcb);
+	log_info(log,"Entre a finalizar\n");
 	t_contexto *contexto_a_finalizar; //= malloc(sizeof(t_contexto));
 	contexto_a_finalizar= list_get(pcb->contextoActual, pcb->sizeContextoActual-1);
 	while(contexto_a_finalizar->sizeVars != 0){
-		free(((t_variable *)list_get(contexto_a_finalizar->vars, contexto_a_finalizar->sizeVars-1))->direccion);
-		free(((t_variable *)list_get(contexto_a_finalizar->vars, contexto_a_finalizar->sizeVars-1)));
+		free((t_direccion*)((t_variable *)list_get(contexto_a_finalizar->vars, contexto_a_finalizar->sizeVars-1))->direccion);
+		//free(((t_variable *)list_get(contexto_a_finalizar->vars, contexto_a_finalizar->sizeVars-1)));
 		list_remove(contexto_a_finalizar->vars, (contexto_a_finalizar->sizeVars)-1);
 		contexto_a_finalizar->sizeVars--;
 	}
 	list_destroy(contexto_a_finalizar->vars);
 	free((t_contexto *)list_get(pcb->contextoActual, pcb->sizeContextoActual-1));
+	log_info(log,"El programa finalizo\n");
 	programaFinalizado=1;
+
+	enviar(nucleo, 320, sizeof(int), &programaFinalizado);
+	destruirPCB(pcb);
 	return;
 
 
 }
 
 void wait_kernel(t_nombre_semaforo identificador_semaforo){
-	char* nombre_semaforo=malloc(sizeof(identificador_semaforo));
-	nombre_semaforo = identificador_semaforo;
-	enviar(nucleo, 341, sizeof(nombre_semaforo), nombre_semaforo);
-	t_paquete* paquete = malloc(sizeof(paquete));
+	log_info(log,"Tamanio semafaro %d", strlen(identificador_semaforo));
+	char* nombre_semaforo=malloc(strlen(identificador_semaforo)+1);
+	char* barra_cero="\0";
+	memcpy(nombre_semaforo, identificador_semaforo, strlen(identificador_semaforo));
+	memcpy(nombre_semaforo+strlen(identificador_semaforo), barra_cero, 1);
+	log_info(log,"Pedir semaforo %s\n", nombre_semaforo);
+	enviar(nucleo, 341, strlen(identificador_semaforo), nombre_semaforo);
+	t_paquete* paquete;
 	paquete = recibir(nucleo);//devuelve 0 si no se bloquea, 1 si se bloquea
-	memcpy(&programaBloqueado, &paquete->data, 4);
+	memcpy(&programaBloqueado, paquete->data, 4);
+	log_info(log,"programaBloqueado= %d\n", programaBloqueado);
 	free(nombre_semaforo);
-	free(paquete);
+	log_info(log,"Saliendo del wait\n");
 	return;
 }
 
 void signal_kernel(t_nombre_semaforo identificador_semaforo){
-	char* nombre_semaforo=malloc(sizeof(identificador_semaforo));
-	nombre_semaforo = identificador_semaforo;
-	enviar(nucleo, 342, sizeof(nombre_semaforo), nombre_semaforo);
+	log_info(log,"Tamanio semafaro %d", strlen(identificador_semaforo));
+	char* nombre_semaforo=malloc(strlen(identificador_semaforo)+1);
+	char* barra_cero="\0";
+	memcpy(nombre_semaforo, identificador_semaforo, strlen(identificador_semaforo));
+	memcpy(nombre_semaforo+strlen(identificador_semaforo), barra_cero, 1);
+	log_info(log,"Devolviendo semaforo %s\n", nombre_semaforo);
+	enviar(nucleo, 343, strlen(identificador_semaforo), nombre_semaforo);
 	free(nombre_semaforo);
+	log_info(log,"Saliendo del signal\n");
 	return;
 }
 
@@ -294,15 +349,25 @@ int primeraPagina(){
 
 void armarDirecccionDeFuncion(t_direccion *direccionReal){
 	//t_direccion direccion = malloc(sizeof(t_direccion));
-	if(((t_contexto*)list_get(pcb->contextoActual, pcb->sizeContextoActual-1))->sizeArgs == 0){
+	if(((t_contexto*)list_get(pcb->contextoActual, pcb->sizeContextoActual-1))->sizeArgs == 0 && ((t_contexto*)list_get(pcb->contextoActual, pcb->sizeContextoActual-1))->sizeVars == 0){
+		log_info(log,"Entrando a definir variable en contexto sin argumentos y sin vars\n");
 		int posicionStackAnterior = pcb->sizeContextoActual-2;
 		int posicionUltimaVariable = ((t_contexto*)(list_get(pcb->contextoActual, pcb->sizeContextoActual-2)))->sizeVars-1;
 		proximaDireccion(posicionStackAnterior, posicionUltimaVariable, direccionReal);
-	}else{
+	}else if(((t_contexto*)list_get(pcb->contextoActual, pcb->sizeContextoActual-1))->sizeArgs != 0 && ((t_contexto*)list_get(pcb->contextoActual, pcb->sizeContextoActual-1))->sizeVars == 0){
+
+		log_info(log,"Entrando a definir variable a partir del ultimo argumento\n");
 		int posicionStackActual = pcb->sizeContextoActual-1;
 		int posicionUltimoArgumento = ((t_contexto*)(list_get(pcb->contextoActual, pcb->sizeContextoActual-1)))->sizeArgs-1;
-		proximaDireccion(posicionStackActual, posicionUltimoArgumento, direccionReal);
-	}
+		proximaDireccionArg(posicionStackActual, posicionUltimoArgumento, direccionReal);
+		}else if(((t_contexto*)list_get(pcb->contextoActual, pcb->sizeContextoActual-1))->sizeVars != 0){
+
+			log_info(log,"Entrando a definir variable a partir de la ultima variable\n");
+			int posicionStackActual = pcb->sizeContextoActual-1;
+			int posicionUltimaVariable = ((t_contexto*)(list_get(pcb->contextoActual, pcb->sizeContextoActual-1)))->sizeVars-1;
+			proximaDireccion(posicionStackActual, posicionUltimaVariable, direccionReal);
+		}
+
 
 	return;
 }
@@ -325,6 +390,45 @@ void proximaDireccion(int posStack, int posUltVar, t_direccion* direccionReal){
 		}
 
 		return;
+}
+
+void proximaDireccionArg(int posStack, int posUltVar, t_direccion* direccionReal){
+	t_direccion *direccion = malloc(sizeof(t_direccion));
+	log_info(log,"Entre a proximadirecArg\n");
+	int offset = ((t_direccion*)(list_get(((t_contexto*)(list_get(pcb->contextoActual, posStack)))->args, posUltVar)))->offset + 4;
+	log_info(log,"Offset siguiente es %d\n", offset);
+		if(offset>=tamanioPag){
+			direccion->pagina = ((t_direccion*)(list_get(((t_contexto*)(list_get(pcb->contextoActual, posStack)))->args, posUltVar)))->pagina + 1;
+			direccion->offset = 0;
+			direccion->size=4;
+			memcpy(direccionReal, direccion , sizeof(t_direccion));
+			free(direccion);
+		}else{
+			direccion->pagina = ((t_direccion*)(list_get(((t_contexto*)(list_get(pcb->contextoActual, posStack)))->args, posUltVar)))->pagina;
+			direccion->offset = offset;
+			direccion->size=4;
+			memcpy(direccionReal, direccion , sizeof(t_direccion));
+			free(direccion);
+		}
+
+		return;
+}
+
+
+void armarDireccionDeArgumento(t_direccion *direccionReal){
+
+	if(((t_contexto*)list_get(pcb->contextoActual, pcb->sizeContextoActual-1))->sizeArgs == 0){
+	log_info(log,"No hay argumentos\n");
+	int posicionStackAnterior = pcb->sizeContextoActual-2;
+	int posicionUltimaVariable = ((t_contexto*)(list_get(pcb->contextoActual, pcb->sizeContextoActual-2)))->sizeVars-1;
+	proximaDireccion(posicionStackAnterior, posicionUltimaVariable, direccionReal);
+	}
+	else {
+	log_info(log,"Busco ultimo argumento\n");
+	int posicionStackActual = pcb->sizeContextoActual-1;
+	int posicionUltimoArgumento = ((t_contexto*)(list_get(pcb->contextoActual, pcb->sizeContextoActual-1)))->sizeArgs-1;
+	proximaDireccion(posicionStackActual, posicionUltimoArgumento, direccionReal);
+	}
 }
 
 int convertirDireccionAPuntero(t_direccion* direccion){
