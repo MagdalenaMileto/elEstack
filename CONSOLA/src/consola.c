@@ -13,14 +13,13 @@ int programa_finalizado=0;
 
 
 int main(int argc, char **argv) {
+
 	char* script;
 	FILE *archivo;
 	char nomArchivo[50];
 	signed int nucleo;
-	signed int estado;
 
-	archivoDeConfiguracion();
-
+	archivoDeConfiguracion(argv[0]);
 	strcpy(nomArchivo,argv[1]);
 	archivo = fopen(nomArchivo, "r");
 
@@ -30,18 +29,18 @@ int main(int argc, char **argv) {
 	}
 	else{
 			script = leerElArchivo(archivo);
-			printf("leo el archivo\n");
 			fclose(archivo);
-			printf("Exito en lectura de scrit.\n");
+			printf("Ejecutando programa ansisop:\n");
 			printf("El script: %s\n", script);
 	}
 
+	char* script_enviar= malloc(strlen(script));
+	memcpy(script_enviar, script, strlen(script));
 	nucleo= conectarConElNucleo();
-	estado= enviarInformacionAlNucleo(script, nucleo);
+	enviar(nucleo, 103, script_enviar, strlen(script_enviar));
+	free(script_enviar);
 
-	if(estado>0) printf("se envio script al nucleo.\n");
 
-free(script);
 t_paquete *paquete;
 char* info_cadena;
 int info_variable;
@@ -49,28 +48,27 @@ int codigo_op;
 
 while(!programa_finalizado){
 		paquete = recibir(nucleo);
-		codigo_op = paquete->codigo_operacion;
-		//memcpy(codigo_op, paquete->codigo_operacion, 4);
+		memcpy(&codigo_op, paquete->codigo_operacion, 4);
 
 
 		switch(codigo_op) {
-		case 101:
-				info_cadena = (char *)paquete->data;
-				 //memcpy(info_cadena, paquete->data, sizeof(paquete->data));
+		case 161:
+				 memcpy(info_cadena, paquete->data, paquete->tamanio);
 				 puts(info_cadena);
 				 break;
-		case 102:
-				info_variable = (int)paquete->data;
-				//memcpy(info_variable, paquete->data, 4);
+		case 160:
+				memcpy(&info_variable, paquete->data, 4);
 				printf("%d\n", info_variable);
 				break;
-		case 103:
+		case 162:
 				puts("Programa Finalizado\n");
 				programa_finalizado=1;
+				close(nucleo);
 				break;
 		}
 
 }
+
 
 liberar_paquete(paquete);
 printf("CONSOLA: Cierro\n");
@@ -83,12 +81,21 @@ return 0;
 //********************************************FUNCIONES********************************************
 
 
-void archivoDeConfiguracion() {
+void archivoDeConfiguracion(char * pathconf) {
 
-	t_config * archivo_configuracion = config_create("consola.confg");
+	char archi[15] = "/consola.confg";
+	char * archivo = malloc(15+ strlen(pathconf));
+
+	memcpy(archivo + strlen(pathconf),pathconf, strlen(pathconf));
+	memcpy(archivo, archi, 15);
+
+	printf("%s\n", pathconf);
+	t_config * archivo_configuracion = config_create(pathconf);
 
 	puerto_nucleo = config_get_string_value(archivo_configuracion, "PUERTO_NUCLEO");
 	ip_nucleo = config_get_string_value(archivo_configuracion, "IP_NUCLEO");
+
+	free(archivo);
 }
 
 
@@ -125,37 +132,6 @@ int conectarConElNucleo(){
 
 return nucleo;
 }
-
-
-int enviarInformacionAlNucleo(char * script, signed int nucleo){
-
-	t_paquete *paquete, *paqueteEnviar;
-
-
-	 while(1){
-
-	     	if(paquete->codigo_operacion==103){   //codigo operacion no oficial
-
-	     		paqueteEnviar->codigo_operacion = 205;  //codigo operacion no oficial
-	     		paqueteEnviar->data = script;
-	     		paqueteEnviar->tamanio = sizeof(int);
-
-	     		enviar(nucleo, 101, paqueteEnviar->tamanio, paqueteEnviar->data);
-	     	}
-
-	     	 if(paquete->codigo_operacion==108){ //no oficial codigo operacion
-
-	     	paquete =recibir(nucleo);
-
-	     	}
-
-	     	liberar_paquete(paquete);
-
-	 	 }
-
-return 0;
-}
-
 
 
 
