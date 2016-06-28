@@ -12,6 +12,8 @@
 #include "../../src/tabla_de_paginas/tabla_de_paginas.h"
 #include "../../src/tabla_de_paginas/marcos.h"
 
+#include "../globales.h"
+
 void escribir_una_pagina(int numero_pagina, int offset, int tamanio,
 		void * buffer);
 

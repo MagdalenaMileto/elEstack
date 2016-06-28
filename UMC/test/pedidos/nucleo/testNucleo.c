@@ -12,6 +12,10 @@ context( nucleo) {
 	describe("Funciones Nucleo")
 	{
 
+		before {
+			log = log_create(ARCHIVOLOG, "UMC", 0, LOG_LEVEL_INFO);
+		}end
+
 		describe("Inicializar") {
 
 			before {
