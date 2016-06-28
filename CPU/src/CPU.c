@@ -72,7 +72,7 @@ int main(int argc,char **argv){
 
 		int pid = pcb->pid;
 		enviar(umc, 3, sizeof(int), &pid);
-		log_info(log, "Envie pid a UMC\n");
+		log_info(log, "Envie pid %d a UMC\n",pcb->pid);
 
 
 		while((quantum_aux!=0) && !programaBloqueado && !programaFinalizado && !programaAbortado){
@@ -85,11 +85,15 @@ int main(int argc,char **argv){
 			log_info(log, "Pido instruccion\n");
 			t_paquete* instruccion=malloc(sizeof(t_paquete));
 			instruccion = recibir(umc);
-			log_info(log, "Recibi instruccion de UMC\n");
-
 			char* sentencia=malloc(datos_para_umc->size);
+
+			log_info(log, "Recibi instruccion de UMC con tamanio %d\n", datos_para_umc->size);
 			memcpy(sentencia, instruccion->data, datos_para_umc->size);
-			log_info(log,"Recibi sentencia: %s\n", depurarSentencia(strdup(sentencia)));
+			char* barra_cero="\0";
+			memcpy(sentencia+(datos_para_umc->size-1), barra_cero, 1);
+			log_info(log,"Tamanio sentencia: %d\n", strlen(sentencia));
+
+			log_info(log,"Recibi sentencia: %s\n", depurarSentencia(sentencia));
 			analizadorLinea(depurarSentencia(strdup(sentencia)), &primitivas, &primitivas_kernel);
 			liberar_paquete(instruccion);
 			free(lecturaUMC);
