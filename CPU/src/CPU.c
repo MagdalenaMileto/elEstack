@@ -66,7 +66,8 @@ int main(int argc,char **argv){
 		log_info(log,"Esperando Pcb\n");
 		pcb = malloc(sizeof(t_pcb));
 		t_paquete* paquete_recibido = recibir(nucleo);
-		sleep(5);
+		sleep(2);
+		log_info(log,"Deserializando PCB\n");
 		pcb = desserializarPCB(paquete_recibido->data);
 		log_info(log,"Recibi PCB del nucleo con el program counter en: %d y SizeContextoActual en %d\n", pcb->pc, pcb->sizeContextoActual);
 		liberar_paquete(paquete_recibido);
