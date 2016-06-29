@@ -117,7 +117,7 @@ int conectarConElNucleo(){
 		exit (EXIT_FAILURE);
 	}
 
-	printf("CONSOLA: Conectado con nucleo", nucleo);
+	printf("CONSOLA: Conectado con nucleo\n", nucleo);
 
 
 return nucleo;
