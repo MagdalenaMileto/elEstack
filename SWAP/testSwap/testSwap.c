@@ -5,8 +5,8 @@
  *      Author: utnso
  */
 
+/*
 #include <cspecs/cspec.h>
-#include "../src/control.h"
 #include <commons/collections/list.h>
 
 context(primera) {
@@ -209,3 +209,4 @@ context(primera) {
 				}end
 
 }
+ */
