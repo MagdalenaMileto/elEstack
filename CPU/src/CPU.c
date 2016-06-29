@@ -66,13 +66,14 @@ int main(int argc,char **argv){
 		log_info(log,"Esperando Pcb\n");
 		pcb = malloc(sizeof(t_pcb));
 		t_paquete* paquete_recibido = recibir(nucleo);
-		sleep(2);
+		sleep(4);
 		log_info(log,"Deserializando PCB\n");
 		pcb = desserializarPCB(paquete_recibido->data);
 		log_info(log,"Recibi PCB del nucleo con el program counter en: %d y SizeContextoActual en %d\n", pcb->pc, pcb->sizeContextoActual);
 		liberar_paquete(paquete_recibido);
 
 		int pid = pcb->pid;
+		log_info(log, "Enviando pid %d a UMC\n",pcb->pid);
 		enviar(umc, 3, sizeof(int), &pid);
 		log_info(log, "Envie pid %d a UMC\n",pcb->pid);
 

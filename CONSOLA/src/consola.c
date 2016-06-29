@@ -21,7 +21,6 @@ int main(int argc, char **argv) {
 
 
 	archivoDeConfiguracion(argv[0]);
-	printf("pase archivo de configuracion\n");
 	strcpy(nomArchivo,argv[1]);
 	archivo = fopen(nomArchivo, "r");
 
@@ -48,20 +47,15 @@ int info_variable;
 
 
 while(programa_finalizado){
-		printf("entro al while\n");
 		paquete = recibir(nucleo);
-		printf("recibi algo\n");
-
-		printf("tamanio:%d\n", paquete->tamanio);
-		printf("codigo de op:%d\n", paquete->codigo_operacion);
 
 		switch(paquete->codigo_operacion) {
 		case 161:
 				 memcpy(info_cadena, paquete->data, paquete->tamanio);
-				 printf("cadena: %s\n",info_cadena);
+				 printf("Cadena: %s\n",info_cadena);
 				 break;
 		case 160:
-				printf("%d\n", *(int*)paquete->data);
+				printf("Valor: %d\n", *(int*)paquete->data);
 				break;
 		case 162:
 				printf("Programa Finalizado\n");
@@ -74,7 +68,7 @@ while(programa_finalizado){
 
 
 liberar_paquete(paquete);
-printf("CONSOLA: Cierro\n");
+printf("Se cierra CONSOLA\n");
 
 return 0;
 }
@@ -116,7 +110,6 @@ char* leerElArchivo(FILE *archivo) {
 }
 
 int conectarConElNucleo(){
-	printf("ip: %s puerto: %s\n", ip_nucleo, puerto_nucleo);
 	nucleo= conectar_a(ip_nucleo, puerto_nucleo);
 
 	if(nucleo==0){
@@ -124,14 +117,8 @@ int conectarConElNucleo(){
 		exit (EXIT_FAILURE);
 	}
 
-	printf("CONSOLA: Conecta bien nucleo %d\n", nucleo);
+	printf("CONSOLA: Conectado con nucleo", nucleo);
 
-
-        /*if(realizar_handshake(nucleo)){
-            printf("CONSOLA:Handshake exitoso con nucleo\n");
-        }else{
-            printf("CONSOLA:Handshake invalido con nucleo\n");
-        }*/
 
 return nucleo;
 }
