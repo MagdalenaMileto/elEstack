@@ -301,8 +301,8 @@ void wait_kernel(t_nombre_semaforo identificador_semaforo){
 	char* barra_cero="\0";
 	memcpy(nombre_semaforo, identificador_semaforo, strlen(identificador_semaforo));
 	memcpy(nombre_semaforo+strlen(identificador_semaforo), barra_cero, 1);
-	log_info(log,"Pedir semaforo %s\n", nombre_semaforo);
-	enviar(nucleo, 341, strlen(identificador_semaforo), nombre_semaforo);
+	log_info(log,"Pedir semaforo %s de tamnio %d\n", nombre_semaforo, strlen(nombre_semaforo)+1);
+	enviar(nucleo, 341, strlen(nombre_semaforo)+1, nombre_semaforo);
 	t_paquete* paquete;
 	paquete = recibir(nucleo);//devuelve 0 si no se bloquea, 1 si se bloquea
 	memcpy(&programaBloqueado, paquete->data, 4);
@@ -319,7 +319,7 @@ void signal_kernel(t_nombre_semaforo identificador_semaforo){
 	memcpy(nombre_semaforo, identificador_semaforo, strlen(identificador_semaforo));
 	memcpy(nombre_semaforo+strlen(identificador_semaforo), barra_cero, 1);
 	log_info(log,"Devolviendo semaforo %s\n", nombre_semaforo);
-	enviar(nucleo, 343, strlen(identificador_semaforo), nombre_semaforo);
+	enviar(nucleo, 343, strlen(nombre_semaforo)+1, nombre_semaforo);
 	free(nombre_semaforo);
 	log_info(log,"Saliendo del signal\n");
 	return;
