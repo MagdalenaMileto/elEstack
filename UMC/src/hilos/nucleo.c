@@ -16,6 +16,9 @@ void atender_nucleo() {
 	while (1) {
 
 		paquete_nuevo = recibir(socket_nucleo);
+
+		pthread_mutex_lock(&semaforo_mutex_cpu);
+
 		switch (paquete_nuevo->codigo_operacion) {
 		case INICIALIZAR:
 
@@ -57,5 +60,7 @@ void atender_nucleo() {
 		}
 
 		liberar_paquete(paquete_nuevo);
+		pthread_mutex_unlock(&semaforo_mutex_cpu);
+
 	}
 }
