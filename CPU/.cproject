@@ -36,8 +36,8 @@
 								<option id="gnu.c.link.option.libs.1004484040" name="Libraries (-l)" superClass="gnu.c.link.option.libs" valueType="libs">
 									<listOptionValue builtIn="false" value="parser-ansisop"/>
 									<listOptionValue builtIn="false" value="theDebuggers"/>
-									<listOptionValue builtIn="false" value="COMUNES"/>
 									<listOptionValue builtIn="false" value="commons"/>
+									<listOptionValue builtIn="false" srcPrefixMapping="" srcRootPath="" value="COMUNES"/>
 								</option>
 								<option id="gnu.c.link.option.paths.967765353" name="Library search path (-L)" superClass="gnu.c.link.option.paths" valueType="libPaths">
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/COMUNES}&quot;"/>
