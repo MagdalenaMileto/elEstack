@@ -6,6 +6,7 @@
  */
 
 #include "control.h"
+#include <stdio.h>
 
 void finalizar_proceso(int pid) {
 	bool esElPid(void * elemento) {
@@ -59,6 +60,7 @@ void inicializarControlPaginas(int cantidad_paginas) {
 }
 
 void escribirPagina(int posicion, void * contenido) {
+	//printf("%s \n",(char*)contenido);
 	int desplazamiento = posicion * TAMANIO_PAGINA;
 	memcpy(discoParaleloNoVirtualMappeado + desplazamiento, contenido,
 			TAMANIO_PAGINA);
@@ -137,13 +139,13 @@ void compactacion(){
 			return pagina->libre == true;
 		}
 
-		bool primeraOcupada(void * elemento) {
-			t_controlPaginas * pagina = (t_controlPaginas *) elemento;
-			return pagina->libre == false;
-		}
+//		bool primeraOcupada(void * elemento) {
+//			t_controlPaginas * pagina = (t_controlPaginas *) elemento;
+//			return pagina->libre == false;
+//		}
 
 		t_controlPaginas * primerPaginaLibre = list_find(paginasSWAP, primeraLibre);
-		t_controlPaginas * primerPaginaOcupada = list_find(paginasSWAP, primeraOcupada);
+		//t_controlPaginas * primerPaginaOcupada = list_find(paginasSWAP, primeraOcupada);
 
 		t_controlPaginas * primerPaginaOcupadaLuegoDeUnaLibre = NULL;
 		void primerPaginaOcupadaLuegoDeLaLibre (void* elemento){
@@ -160,15 +162,15 @@ void compactacion(){
 		list_iterate(paginasSWAP, primerPaginaOcupadaLuegoDeLaLibre);
 
 		if (primerPaginaOcupadaLuegoDeUnaLibre != NULL){
-			t_controlPaginas * pagVacia = primerPaginaOcupada;
+			t_controlPaginas * pagVacia = primerPaginaOcupadaLuegoDeUnaLibre;
 			pagVacia->libre = true;
 			pagVacia->pid = -1;
 
-			escribirPagina(primerPaginaLibre->posicion, discoParaleloNoVirtualMappeado + primerPaginaOcupada->posicion);
-			list_replace(paginasSWAP, primerPaginaOcupada->posicion, pagVacia);
+			escribirPagina(primerPaginaLibre->posicion, discoParaleloNoVirtualMappeado + (primerPaginaOcupadaLuegoDeUnaLibre->posicion * TAMANIO_PAGINA));
+			list_replace(paginasSWAP, primerPaginaOcupadaLuegoDeUnaLibre->posicion, pagVacia);
 
-			primerPaginaOcupada->posicion = primerPaginaLibre->posicion;
-			list_replace(paginasSWAP, primerPaginaLibre->posicion, primerPaginaOcupada);
+			primerPaginaOcupadaLuegoDeUnaLibre->posicion = primerPaginaLibre->posicion;
+			list_replace(paginasSWAP, primerPaginaLibre->posicion, primerPaginaOcupadaLuegoDeUnaLibre);
 		}
 		else {
 			printf("Terminando compactacion...\n");
