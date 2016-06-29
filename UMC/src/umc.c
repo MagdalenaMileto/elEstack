@@ -2,6 +2,8 @@
 
 int main(int argc, char** argv) {
 
+
+	log2 = log_create("NICO", "UMC", 0, LOG_LEVEL_INFO);
 	log = log_create(ARCHIVOLOG, "UMC", 0, LOG_LEVEL_INFO);
 	log_info(log, "Iniciando UMC.\n");
 
@@ -9,6 +11,7 @@ int main(int argc, char** argv) {
 
 	inicializar_semaforos();
 	levantar_configuraciones();
+	inicializar_marcos();
 	solicitar_bloque_memoria();
 	comunicarse_con_el_swap();
 	esperar_al_nucleo();

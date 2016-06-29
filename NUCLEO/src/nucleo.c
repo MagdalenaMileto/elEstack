@@ -193,6 +193,7 @@ void mandarAEjecutar(t_proceso *proceso, int sock) {
 	//TODO:mutex
 	queue_push(cola_exec, proceso);
 	enviar(sock, 303, pcbSerializado->sizeTotal, (char*)pcbSerializado);
+	printf("E %d  MVIE%d\n",pcbSerializado->sizeTotal,sock);
 	free(pcbSerializado);
 }
 
@@ -237,7 +238,7 @@ int mandarCodigoAUmc(char* codigo, int size, t_proceso *proceso) {
 
 	//Creamos el indice de codigo
 	for (i = 0; i < metadata_program->instrucciones_size; i++) {
-		printf("Instruccion %.*s\n",metadata_program->instrucciones_serializado[i].offset,codigo+metadata_program->instrucciones_serializado[i].start);
+		printf("Instruccion inicio:%d offset:%d %.*s\n",metadata_program->instrucciones_serializado[i].start,metadata_program->instrucciones_serializado[i].offset,metadata_program->instrucciones_serializado[i].offset,codigo+metadata_program->instrucciones_serializado[i].start);
 		proceso->pcb->indiceDeCodigo[i * 2] = metadata_program->instrucciones_serializado[i].start;
 		proceso->pcb->indiceDeCodigo[i * 2 + 1] = metadata_program->instrucciones_serializado[i].offset;
 	}
@@ -257,13 +258,13 @@ int mandarCodigoAUmc(char* codigo, int size, t_proceso *proceso) {
 	
 	proceso->pcb->sizeContextoActual = 1;
 	proceso->pcb->pc = 0;
-	proceso->pcb->paginasDeMemoria=(int)ceil((double)config_nucleo->STACK_SIZE / (double)config_nucleo->TAMPAG);
+	(proceso->pcb)->paginasDeMemoria=(int)ceil((double)config_nucleo->STACK_SIZE / (double)config_nucleo->TAMPAG);
 	//TODO: REVISAR QUE HACA FREE DE METADATA Y TODO QUEDDE ASIGNADO
 	metadata_destruir(metadata_program);
 
 	char*paqueteUMC; paqueteUMC=malloc(size+3*sizeof(int));
 	int temp =proceso->pcb->paginasDeCodigo+proceso->pcb->paginasDeMemoria;
-	//printf("Cantidad de paingas %d\n",temp);
+	printf("Cantidad de paingas %d\n",temp);
 
 	memcpy(paqueteUMC,&(proceso->pcb->pid), sizeof(int));
 	memcpy(paqueteUMC+sizeof(int), &temp, sizeof(int));
@@ -471,7 +472,7 @@ void *hilo_CONEXION_CONSOLA(void *socket) {
 				//TODO:borrar proceso del sistema
 				free(socket);
 				free(paquete);
-				return;
+				return 0;
 			case 103:
 				estado = mandarCodigoAUmc(paquete->data, paquete->tamanio, proceso);
 

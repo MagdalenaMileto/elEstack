@@ -40,4 +40,6 @@ pthread_t hilo_nucleo, hilo_cpu;
 
 t_log * log;
 
+t_log * log2;
+
 #endif /* SRC_GLOBALES_H_ */
