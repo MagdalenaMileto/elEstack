@@ -40,7 +40,7 @@
 #include "../../Sockets Maggie/src/socketLibrary.c"
 #include "../../COMUNES/nsockets.h"
 //#include "../../COMUNES/nsockets.c"
-#include "../../COMUNES/estructurasControl.h"
+//#include "../../COMUNES/estructurasControl.h"
 #include "../../COMUNES/estructurasControl.c"
 
 

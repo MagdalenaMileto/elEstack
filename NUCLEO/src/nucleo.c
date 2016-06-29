@@ -6,7 +6,7 @@
  */
 
 #include "nucleo.h"
-#define CONFIG_NUCLEO "config" //Cambiar esto para eclipse
+#define CONFIG_NUCLEO "src/config" //Cambiar esto para eclipse
 #define CONFIG_NUCLEO_OLD "src/config"
 
 /* VARIABLES GLOBALES */
@@ -257,13 +257,13 @@ int mandarCodigoAUmc(char* codigo, int size, t_proceso *proceso) {
 	
 	proceso->pcb->sizeContextoActual = 1;
 	proceso->pcb->pc = 0;
-	proceso->pcb->paginasDeMemoria=(int)ceil((double)config_nucleo->STACK_SIZE / (double)config_nucleo->TAMPAG);
+	(proceso->pcb)->paginasDeMemoria=(int)ceil((double)config_nucleo->STACK_SIZE / (double)config_nucleo->TAMPAG);
 	//TODO: REVISAR QUE HACA FREE DE METADATA Y TODO QUEDDE ASIGNADO
 	metadata_destruir(metadata_program);
 
 	char*paqueteUMC; paqueteUMC=malloc(size+3*sizeof(int));
 	int temp =proceso->pcb->paginasDeCodigo+proceso->pcb->paginasDeMemoria;
-	//printf("Cantidad de paingas %d\n",temp);
+	printf("Cantidad de paingas %d\n",temp);
 
 	memcpy(paqueteUMC,&(proceso->pcb->pid), sizeof(int));
 	memcpy(paqueteUMC+sizeof(int), &temp, sizeof(int));
@@ -471,7 +471,7 @@ void *hilo_CONEXION_CONSOLA(void *socket) {
 				//TODO:borrar proceso del sistema
 				free(socket);
 				free(paquete);
-				return;
+				return 0;
 			case 103:
 				estado = mandarCodigoAUmc(paquete->data, paquete->tamanio, proceso);
 

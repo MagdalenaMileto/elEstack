@@ -63,4 +63,50 @@ context(primera) {
 
 	}end
 
+	describe("Inicializar") {
+
+			it("inicializa procesos") {
+
+				inicializarControlPaginas(5);
+
+				int pid = 1;
+				int pagina = 3;
+				void*codigo = "fansdfand faoisdjf sadsd faoisdjf asdfa asdf dioajdf faoisdjf asdfa asdf dioajdf faoisdjf asdfa asdf dioajdf faoisdjf asdfa asdf dioajdf asodijfa dioajdf";
+				inicializarProceso(pid, pagina, codigo);
+
+				int pid2 = 10;
+				int pagina2 = 1;
+				void*codigo2 = "sadsd faoisdjf asdfa asdf dioajdf";
+				inicializarProceso(pid2, pagina2, codigo2);
+
+
+
+				int pid3 = 5;
+				int pagina3 = 2000;
+				void*codigo3 = "asdf faoisdjf asdf asdf dioajdf";
+
+				inicializarProceso(pid3, pagina3, codigo3);
+
+
+
+				bool compararPid(t_controlPaginas * pagina, int pidd){
+					return pagina->pid == pidd;
+				}
+
+				should_bool(compararPid(list_get(paginasSWAP,0), 1)) be equal to (true);
+				should_bool(compararPid(list_get(paginasSWAP,1), 1)) be equal to (true);
+				should_bool(compararPid(list_get(paginasSWAP,2), 1)) be equal to (true);
+
+				should_bool(compararPid(list_get(paginasSWAP,3), 1)) be equal to (false);
+
+				should_bool(compararPid(list_get(paginasSWAP,3), 10)) be equal to (true);
+				should_bool(sePuedeInicializar(pagina3)) be equal to(false);
+
+
+			//	should_bool(compararPid(list_get(paginasSWAP, 0)) be equal to (true));
+
+
+			}end
+
+		}end
 }
