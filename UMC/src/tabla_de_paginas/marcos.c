@@ -9,11 +9,20 @@
 
 void marco_nuevo(t_entrada_tabla_de_paginas * entrada_que_necesita_marco) {
 
+	log_info(log,
+			"Ingreso en la funcion marco nuevo, procedo a chequear si estan asignados todos los marcos");
+
 	if (tiene_cantidad_maxima_marcos_asignados(
 			entrada_que_necesita_marco->pid)) {
 
+		log_info(log,
+				"Se llego a la capacidad maxima de marcos, se inicia el algoritmo de reemplazo.");
+
 		algoritmo_remplazo(entrada_que_necesita_marco,
 				entrada_que_necesita_marco->pid);
+
+		log_info(log,
+				"El marco se reemplaza correctamente, se procede a activar la presencia de la pagina.");
 
 		entrada_que_necesita_marco->presencia = true;
 
@@ -22,17 +31,25 @@ void marco_nuevo(t_entrada_tabla_de_paginas * entrada_que_necesita_marco) {
 
 	} else {
 
+		log_info(log,
+				"Hay marcos disponibles, por ende se le asigna a la pagina una nueva entrada.");
+
 		bool marco_disponible(void * entrada) {
 
 			t_control_marco * marco = (t_control_marco *) entrada;
 
 			return marco->disponible;
+
 		}
 
 		t_control_marco * marco_libre = list_find(control_de_marcos,
 				marco_disponible);
 
+		log_info(log, "Encuentro marco disponible %d", marco_libre);
+
 		marco_libre->disponible = false;
+
+		log_info(log, "El marco seleccionado ya no esta disponible");
 
 		entrada_que_necesita_marco->marco = marco_libre->numero;
 

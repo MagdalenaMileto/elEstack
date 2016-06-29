@@ -22,6 +22,9 @@ void atender_nucleo() {
 			memcpy(&pid, paquete_nuevo->data, sizeof(int));
 			memcpy(&paginas_requeridas, paquete_nuevo->data + sizeof(int),
 					sizeof(int));
+
+			log_info(log, "Las paginas requeridas son %d.", paginas_requeridas);
+
 			memcpy(&tamanio_codigo, paquete_nuevo->data + sizeof(int) * 2,
 					sizeof(int));
 
