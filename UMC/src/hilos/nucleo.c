@@ -16,12 +16,18 @@ void atender_nucleo() {
 	while (1) {
 
 		paquete_nuevo = recibir(socket_nucleo);
+
+		pthread_mutex_lock(&semaforo_mutex_cpu);
+
 		switch (paquete_nuevo->codigo_operacion) {
 		case INICIALIZAR:
 
 			memcpy(&pid, paquete_nuevo->data, sizeof(int));
 			memcpy(&paginas_requeridas, paquete_nuevo->data + sizeof(int),
 					sizeof(int));
+
+			log_info(log, "Las paginas requeridas son %d.", paginas_requeridas);
+
 			memcpy(&tamanio_codigo, paquete_nuevo->data + sizeof(int) * 2,
 					sizeof(int));
 
@@ -54,5 +60,7 @@ void atender_nucleo() {
 		}
 
 		liberar_paquete(paquete_nuevo);
+		pthread_mutex_unlock(&semaforo_mutex_cpu);
+
 	}
 }

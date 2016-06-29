@@ -5,7 +5,7 @@ int main(int argc, char** argv) {
 
 	log2 = log_create("NICO", "UMC", 0, LOG_LEVEL_INFO);
 	log = log_create(ARCHIVOLOG, "UMC", 0, LOG_LEVEL_INFO);
-	log_info(log, "Iniciando UMC");
+	log_info(log, "Iniciando UMC.\n");
 
 	setbuf(stdout, NULL);
 
@@ -24,7 +24,7 @@ int main(int argc, char** argv) {
 
 void inicializar_semaforos() {
 	pthread_mutex_init(&semaforo_mutex_cpu, NULL);
-	log_info(log, "Se inicializan los semaforos.");
+	log_info(log, "Se inicializan los semaforos.\n");
 }
 
 void levantar_configuraciones() {
@@ -41,7 +41,7 @@ void levantar_configuraciones() {
 	entradas_TLB = config_get_int_value(archivo_configuracion, "ENTRADAS_TLB");
 	retardo = config_get_int_value(archivo_configuracion, "RETARDO");
 
-	log_info(log, "Se levantan con exito las configuraciones.");
+	log_info(log, "Se levantan con exito las configuraciones.\n");
 
 }
 
@@ -56,7 +56,7 @@ void comunicarse_con_el_swap() {
 	 exit(EXIT_FAILURE);
 	 }*/
 
-	log_info(log, "Conexion con SWAP.");
+	log_info(log, "Conexion con SWAP.\n");
 
 }
 
@@ -75,7 +75,7 @@ void esperar_al_nucleo() {
 	//	exit(EXIT_FAILURE);
 //	}
 
-	log_info(log, "Conexion con Nucleo.");
+	log_info(log, "Conexion con Nucleo.\n");
 }
 
 void atender_conexiones() {
