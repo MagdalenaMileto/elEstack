@@ -8,7 +8,6 @@
 #ifndef SRC_GLOBALES_H_
 #define SRC_GLOBALES_H_
 
-
 #include <pthread.h>
 #include <commons/collections/list.h>
 #include <commons/log.h>
@@ -40,6 +39,6 @@ pthread_t hilo_nucleo, hilo_cpu;
 
 t_log * log;
 
-t_log * log2;
+char * algoritmo;
 
 #endif /* SRC_GLOBALES_H_ */

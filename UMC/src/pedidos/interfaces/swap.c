@@ -63,7 +63,8 @@ void * swap_leer(int pid, int numero_pagina) {
 
 	t_paquete * paquete = recibir(socket_swap);
 
-	log_info(log, "Se recibe paquete de SWAP exitosamente.");
+	log_info(log, "Se recibe paquete de SWAP exitosamente %s",
+			(char *) paquete->data);
 
 	return paquete->data;
 
