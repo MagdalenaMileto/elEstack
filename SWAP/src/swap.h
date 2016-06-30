@@ -51,8 +51,8 @@ typedef struct __attribute__((packed)){
 }proceso;
 
 int	abrirConfiguracion();
-int	crearArchivo();
-int mapearArchivo();
+void crearArchivo();
+void mapearArchivo();
 int asignarEspacio(int cantPagsAAsignar, int proceso, int inicio);
 int ultimaPagLibre();
 int compactacion();
@@ -70,7 +70,7 @@ int getPrimerPagProc(int idProceso);
 void escribirPaginaProceso(int idProceso, int nroPag, void*data);
 void escribirPagina(int nroPag, void*dataPagina);
 void leerPaginaProceso(int idProceso, int nroPag, void* paginaALeer);
-int inicializarEstructuraPaginas();
+void inicializarEstructuraPaginas();
 void llenarprocPags();
 void inicializarProceso(int pid, int pagina, char*codigo);
 void *hilo_mock(void *arg);

@@ -82,9 +82,10 @@ int main(int argc, char **argv) {
 				else
 				{
 					compactacion();
-					int pagAPartir = hayLugarParaNuevoProceso(pagina);
-					if(!pagAPartir ==-1){
-						reservarProceso(pid, pagina, paginaAPartir);
+					int pagAPartir;
+					pagAPartir = hayLugarParaNuevoProceso(pagina);
+					if(pagAPartir !=-1){
+						reservarProceso(pid, pagina, pagAPartir);
 						inicializarProceso(pid, pagina, codigo);
 						flagRespuesta = EXITO;
 					}
@@ -233,7 +234,7 @@ int abrirConfiguracion() {
 	}
 }
 
-int crearArchivo() {
+void crearArchivo() {
 	NOMBRE_SWAP = config_get_string_value(configuracion, "NOMBRE_SWAP");
 	printf("El archivo en disco se llama: %s \n", NOMBRE_SWAP);
 	FILE *arch = fopen(NOMBRE_SWAP, "w");
@@ -243,11 +244,10 @@ int crearArchivo() {
 	memset(archivo, '\0', tamanio_archivo);
 	fwrite(archivo, 1, tamanio_archivo, arch);
 	fclose(arch);
-	//inicializarEstructuraPaginas();
-	return 1;
+	inicializarEstructuraPaginas();
 }
 
-int mapearArchivo() {
+void mapearArchivo() {
 	int fd;
 	size_t length = tamanio_archivo;
 	//discoParaleloNoVirtualMappeado = malloc(tamanio_archivo);
@@ -267,7 +267,6 @@ int mapearArchivo() {
 		exit(EXIT_FAILURE);
 	}
 	printf("Mapeo perfecto  %s \n", NOMBRE_SWAP);
-	return 1;
 }
 
 void check(int test, const char * message, ...) {
@@ -513,7 +512,7 @@ void escribirPagina(int nroPag, void*dataPagina) {
 	memset(discoParaleloNoVirtualMappeado + inicioPag, '\0', TAMANIO_PAGINA);
 	///printf("codigo: %s \n", (char*)dataPagina);
 
-	printf("Pagina de Inicio en la que va a copiar:%d \n", inicioPag);
+	//printf("Pagina de Inicio en la que va a copiar:%d \n", inicioPag);
 	memcpy(discoParaleloNoVirtualMappeado + inicioPag, dataPagina,
 			TAMANIO_PAGINA);
 	printf("Pagina %d, copiada con exito! \n", nroPag);
@@ -529,16 +528,15 @@ void leerPaginaProceso(int idProceso, int nroPag, void* paginaALeer) {
 	inicio = obtenerlugarDeInicioDeLaPagina(posPag); //con esto determino los valores de inicio de lectura
 	memcpy(paginaALeer, discoParaleloNoVirtualMappeado + inicio, TAMANIO_PAGINA);
 
-	//printf("codigo: %s \n", (char*)paginaALeer);
+	printf("codigo: %s \n", (char*)paginaALeer);
 }
 
-int inicializarEstructuraPaginas() {
+void inicializarEstructuraPaginas() {
 	int i;
 	for (i = 0; i < CANTIDAD_PAGINAS; i++) {
 		paginasSWAP[i].idProcesoQueLoOcupa = -1;
 		paginasSWAP[i].ocupada = 0;
 	}
-	return 1;
 }
 
 /*
