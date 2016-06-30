@@ -1,3 +1,4 @@
 begin
+signal SEM1
 wait SEM1
 end

@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+
+
+cd SWAP
+./SWAP&
+pid[0]=$!
+cd -
+sleep 2
+cd UMC
+./UMC&
+pid[1]=$!
+sleep 2
+cd -
+cd NUCLEO/
+./NUCLEO&
+pid[2]=$!
+cd -
+sleep 4
+cd CPU
+./CPU &
+pid[3]=$!
+cd -
+sleep 1
+cd CONSOLA
+./CONSOLA codigo3&
+pid[4]=$!
+trap "kill ${pid[0]} ${pid[1]} ${pid[2]} ${pid[3]}; exit 1" EXIT
+wait

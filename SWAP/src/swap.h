@@ -51,8 +51,8 @@ typedef struct __attribute__((packed)){
 }proceso;
 
 int	abrirConfiguracion();
-int	crearArchivo();
-int mapearArchivo();
+void crearArchivo();
+void mapearArchivo();
 int asignarEspacio(int cantPagsAAsignar, int proceso, int inicio);
 int ultimaPagLibre();
 int compactacion();
@@ -62,17 +62,17 @@ int primerPagLibreAPartirDeUnaDada(int numeroPag);
 int reservarProceso(int pidProceso, int cantPags , int pagAPartir);
 void nuevoProc(int pid);
 int primerPaginaOcupadaLuegoDeUnaLibre();
-int leerPagina( int nroPag, long int*inicio, long int*fin);
+long int obtenerlugarDeInicioDeLaPagina(int nroPag);
 int hayPaginasOcupadasLuegoDeLaUltimaLibre();
 int updatearArchivoDisco();
 void liberarProceso(int idProc);
 int getPrimerPagProc(int idProceso);
-int getPosicionDelProceso(int idProc);
-int escribirPaginaProceso(int idProceso, int nroPag, void*data);
-int escribirPagina(int nroPag, void*dataPagina);
+void escribirPaginaProceso(int idProceso, int nroPag, void*data);
+void escribirPagina(int nroPag, void*dataPagina);
 void leerPaginaProceso(int idProceso, int nroPag, void* paginaALeer);
-int inicializarEstructuraPaginas();
+void inicializarEstructuraPaginas();
 void llenarprocPags();
+void inicializarProceso(int pid, int pagina, char*codigo);
 void *hilo_mock(void *arg);
 void check (int test, const char * message, ...);
 

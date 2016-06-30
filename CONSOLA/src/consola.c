@@ -18,6 +18,8 @@ int main(int argc, char **argv) {
 	char* script;
 	FILE *archivo;
 	char nomArchivo[50];
+	t_paquete *paquete;
+	char* info_cadena;
 
 
 	archivoDeConfiguracion(argv[0]);
@@ -41,29 +43,35 @@ int main(int argc, char **argv) {
 	free(script_enviar);
 
 
-t_paquete *paquete;
-char* info_cadena;
-int info_variable;
 
+	while(programa_finalizado){
+			paquete = recibir(nucleo);
 
-while(programa_finalizado){
-		paquete = recibir(nucleo);
+			switch(paquete->codigo_operacion) {
+			case 161:
+					memcpy(&info_cadena, &paquete->data, paquete->tamanio);
+					printf("Cadena: %s\n",info_cadena);
+					break;
+			case 160:
+					printf("Valor: %d\n", *(int*)paquete->data);
+					break;
+			case 162:
+					printf("Programa Finalizado\n");
+					programa_finalizado=0;
+					close(nucleo);
+					break;
 
-		switch(paquete->codigo_operacion) {
-		case 161:
-				 memcpy(info_cadena, paquete->data, paquete->tamanio);
-				 printf("Cadena: %s\n",info_cadena);
-				 break;
-		case 160:
-				printf("Valor: %d\n", *(int*)paquete->data);
+			case 163:
+					printf("Programa abortado por SWAP sin espacio\n");
+					programa_finalizado=0;
+					close(nucleo);
 				break;
-		case 162:
-				printf("Programa Finalizado\n");
-				programa_finalizado=0;
-				close(nucleo);
-				break;
-		}
-
+			case 164:
+					printf("Programa abortado por CPU\n");
+					programa_finalizado=0;
+					close(nucleo);
+					break;
+			}
 }
 
 
@@ -80,11 +88,11 @@ return 0;
 
 void archivoDeConfiguracion(char * pathconf) {
 
-	char archi[15] = "/consola.confg";
-	char * archivo = malloc(15+ strlen(pathconf)-7);
+	char archi[14] = "consola.confg";
+	char * archivo = malloc(14+ strlen(pathconf)-7);
 
 	memcpy(archivo ,pathconf, strlen(pathconf)-7);
-	memcpy(archivo+ strlen(pathconf)-7, archi, 15);
+	memcpy(archivo+ strlen(pathconf)-7, archi, 14);
 
 	printf("%s\n", archivo);
 	t_config * archivo_configuracion = config_create(archivo);
@@ -117,7 +125,7 @@ int conectarConElNucleo(){
 		exit (EXIT_FAILURE);
 	}
 
-	printf("CONSOLA: Conectado con nucleo\n", nucleo);
+	printf("CONSOLA: Conectado con nucleo\n");
 
 
 return nucleo;
