@@ -2,7 +2,6 @@
 
 int main(int argc, char** argv) {
 
-
 	log2 = log_create("NICO", "UMC", 0, LOG_LEVEL_INFO);
 	log = log_create(ARCHIVOLOG, "UMC", 0, LOG_LEVEL_INFO);
 	log_info(log, "Iniciando UMC.\n");
@@ -40,6 +39,7 @@ void levantar_configuraciones() {
 			"MARCO_X_PROD");
 	entradas_TLB = config_get_int_value(archivo_configuracion, "ENTRADAS_TLB");
 	retardo = config_get_int_value(archivo_configuracion, "RETARDO");
+	algoritmo = config_get_int_value(archivo_configuracion, "ALGORITMO");
 
 	log_info(log, "Se levantan con exito las configuraciones.\n");
 

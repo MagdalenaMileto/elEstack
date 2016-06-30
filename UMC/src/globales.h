@@ -8,7 +8,6 @@
 #ifndef SRC_GLOBALES_H_
 #define SRC_GLOBALES_H_
 
-
 #include <pthread.h>
 #include <commons/collections/list.h>
 #include <commons/log.h>
@@ -18,7 +17,7 @@
 char *puerto_umc, *ip_swap, *puerto_swap;
 
 int cantidad_marcos, tamanio_marco, cantidad_maxima_marcos, entradas_TLB,
-		retardo;
+		retardo, algoritmo;
 
 int socket_swap, socket_nucleo, socket_conexiones_nuevas;
 
