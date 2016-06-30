@@ -151,7 +151,7 @@ void algoritmo_remplazo(t_entrada_tabla_de_paginas * entrada_sin_marco, int pid)
 
 	}
 
-	if (STRCMP(algoritmo, "CLOCK-M")) {
+	else if (strcmp(algoritmo, "CLOCK-M")) {
 
 		log_info(log, "Inicio del algoritmo de reemplazo Clock Modificado");
 
