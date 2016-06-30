@@ -52,7 +52,8 @@ int main(int argc,char **argv){
 	quantum = ((t_datos_kernel*)(datos_kernel->data))->QUANTUM;
 	tamanioPag = ((t_datos_kernel*)(datos_kernel->data))->TAMPAG;
 	quantum_sleep = ((t_datos_kernel*)(datos_kernel->data))->QUANTUM_SLEEP;
-	log_info(log,"Quantum: %d TamPag: %d Quantum Sleep: %d\n", quantum, tamanioPag, quantum_sleep);
+	stack_size=	((t_datos_kernel*)(datos_kernel->data))->STACK_SIZE;
+	log_info(log,"Quantum: %d TamPag: %d Quantum Sleep: %d Stack size: %d Var Max: %d\n", quantum, tamanioPag, quantum_sleep, stack_size, var_max);
 
 	sigusr1_desactivado = 1;
 
@@ -69,7 +70,7 @@ int main(int argc,char **argv){
 		pcb = desserializarPCB(paquete_recibido->data);
 		log_info(log,"Recibi PCB del nucleo con el program counter en: %d y SizeContextoActual en %d\n", pcb->pc, pcb->sizeContextoActual);
 		liberar_paquete(paquete_recibido);
-
+		var_max=(tamanioPag*(stack_size+pcb->paginasDeCodigo))-1;
 		int pid = pcb->pid;
 		log_info(log, "Enviando pid %d a UMC\n",pcb->pid);
 		enviar(umc, 3, sizeof(int), &pid);

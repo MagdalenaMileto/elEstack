@@ -8,7 +8,8 @@
 #include "funcionesCPU.h"
 
 t_puntero definirVariable(t_nombre_variable identificador_variable)
-{	log_info(log,"Entre a definir variable %c\n", identificador_variable);
+{	if(!programaAbortado){
+	log_info(log,"Entre a definir variable %c\n", identificador_variable);
 	t_direccion *direccion_variable= malloc(sizeof(t_direccion));
 	t_variable *variable= malloc(sizeof(t_variable));
 	t_contexto *contexto = malloc(sizeof(t_contexto));
@@ -54,16 +55,19 @@ t_puntero definirVariable(t_nombre_variable identificador_variable)
 
 	char* escribirUMC= malloc(16);
 	int valor;
-	enviarDirecParaEscribirUMC(escribirUMC, direccion_variable, valor);
-	free(escribirUMC);
-
-	/*if(recibir(umc)->data=="Error"){ //hablar con umc sobre el error, usar stringcompare
-		programaAbortado=1;
-	}*/
-
 	int direccionRetorno = convertirDireccionAPuntero(direccion_variable);
-	log_info(log,"Devuelvo direccion: %d\n", direccionRetorno);
-	return (direccionRetorno);
+	if(direccionRetorno+3>var_max){
+		log_info(log,"No hay espacio para definir variable %c. Abortando programa\n", identificador_variable);
+		programaAbortado=1;
+		return 1;
+	}else{
+		enviarDirecParaEscribirUMC(escribirUMC, direccion_variable, valor);
+		free(escribirUMC);
+		log_info(log,"Devuelvo direccion: %d\n", direccionRetorno);
+		return (direccionRetorno);
+	}
+}
+return 1;
 
 }
 
@@ -275,7 +279,7 @@ void finalizar(){
 	log_info(log,"Entre a finalizar\n");
 	t_contexto *contexto_a_finalizar; //= malloc(sizeof(t_contexto));
 	contexto_a_finalizar= list_get(pcb->contextoActual, pcb->sizeContextoActual-1);
-
+/*
 	while(contexto_a_finalizar->sizeVars != 0){
 		t_variable * variable_borrar = (t_variable *)list_get(contexto_a_finalizar->vars, contexto_a_finalizar->sizeVars-1);
 		free(variable_borrar->direccion);
@@ -297,6 +301,7 @@ void finalizar(){
 	log_info(log,"Destrui la lista de args\n");
 	free(contexto_a_finalizar);
 	log_info(log,"El programa finalizo\n");
+	*/
 	programaFinalizado=1;
 
 	enviar(nucleo, 320, sizeof(int), &programaFinalizado);
