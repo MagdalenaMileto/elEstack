@@ -26,6 +26,7 @@
 #define NOHAYLUGAR -1
 
 t_config* configuracion;
+t_log * log;
 
 ////
 void *discoParaleloNoVirtualMappeado;
@@ -53,13 +54,12 @@ typedef struct __attribute__((packed)){
 int	abrirConfiguracion();
 void crearArchivo();
 void mapearArchivo();
-int asignarEspacio(int cantPagsAAsignar, int proceso, int inicio);
 int ultimaPagLibre();
-int compactacion();
+void compactacion();
 int hayLugarParaNuevoProceso(int cantPagsNecesita);
 int primerPaginaOcupadaLuegoDeUnaLibreDada(int nroPag);
 int primerPagLibreAPartirDeUnaDada(int numeroPag);
-int reservarProceso(int pidProceso, int cantPags , int pagAPartir);
+void reservarProceso(int pidProceso, int cantPags , int pagAPartir);
 void nuevoProc(int pid);
 int primerPaginaOcupadaLuegoDeUnaLibre();
 long int obtenerlugarDeInicioDeLaPagina(int nroPag);
