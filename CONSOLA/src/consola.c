@@ -62,7 +62,21 @@ while(programa_finalizado){
 				programa_finalizado=0;
 				close(nucleo);
 				break;
+
+
+		case 163:
+				printf("Programa abortado por SWAP sin espacio\n");
+				programa_finalizado=0;
+				close(nucleo);
+				break;
+		case 164:
+				printf("Programa abortado por CPU\n");
+				programa_finalizado=0;
+				close(nucleo);
+				break;
 		}
+
+
 
 }
 
