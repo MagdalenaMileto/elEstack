@@ -15,6 +15,7 @@ context(algoritmo_clock) {
 			log = log_create(ARCHIVOLOG, "UMC", 0, LOG_LEVEL_INFO);
 			tabla_de_paginas = list_create();
 			algoritmo = "CLOCK";
+
 		}end
 
 		void nueva_entrada(int pid, int pagina) {

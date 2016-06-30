@@ -17,7 +17,7 @@
 char *puerto_umc, *ip_swap, *puerto_swap;
 
 int cantidad_marcos, tamanio_marco, cantidad_maxima_marcos, entradas_TLB,
-		retardo, algoritmo;
+		retardo;
 
 int socket_swap, socket_nucleo, socket_conexiones_nuevas;
 
@@ -38,5 +38,7 @@ t_list * control_de_marcos;
 pthread_t hilo_nucleo, hilo_cpu;
 
 t_log * log;
+
+char * algoritmo;
 
 #endif /* SRC_GLOBALES_H_ */

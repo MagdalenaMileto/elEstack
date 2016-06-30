@@ -151,7 +151,7 @@ void algoritmo_remplazo(t_entrada_tabla_de_paginas * entrada_sin_marco, int pid)
 
 	}
 
-	if (strcmp(algoritmo, "CLOCK-M")) {
+	if (STRCMP(algoritmo, "CLOCK-M")) {
 
 		log_info(log, "Inicio del algoritmo de reemplazo Clock Modificado");
 
@@ -228,9 +228,7 @@ void algoritmo_remplazo(t_entrada_tabla_de_paginas * entrada_sin_marco, int pid)
 
 		avanzar_victima(lista_clock_modificado, entrada_sin_marco);
 
-	}
-
-	else {
+	} else {
 		error_show("No se ingreso el algoritmo correspondiente");
 		exit(1);
 	}

@@ -15,6 +15,7 @@ context(algoritmo_clock_modificado) {
 
 			log = log_create(ARCHIVOLOG, "UMC", 0, LOG_LEVEL_INFO);
 			tabla_de_paginas = list_create();
+			algoritmo = "CLOCK-M";
 
 		}end
 
@@ -33,6 +34,20 @@ context(algoritmo_clock_modificado) {
 			entrada_0->marco = 0;
 			entrada_0->presencia = true;
 			entrada_0->puntero = false;
+
+			t_entrada_tabla_de_paginas * entrada_1 = crear_nueva_entrada(1,1);
+			entrada_1->marco = 1;
+			entrada_1->presencia = true;
+			entrada_1->puntero = true;
+
+			t_entrada_tabla_de_paginas * entrada_2 = crear_nueva_entrada(1,2);
+			entrada_2->uso = false;
+
+			list_add(tabla_de_paginas,entrada_0);
+			list_add(tabla_de_paginas,entrada_1);
+			list_add(tabla_de_paginas,entrada_2);
+
+			algoritmo_remplazo(entrada_2,1);
 
 		}end
 
