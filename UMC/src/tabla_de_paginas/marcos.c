@@ -22,12 +22,11 @@ void marco_nuevo(t_entrada_tabla_de_paginas * entrada_que_necesita_marco) {
 				entrada_que_necesita_marco->pid);
 
 		log_info(log,
-				"El marco se reemplaza correctamente, se procede a activar la presencia de la pagina.");
+				"Se reemplaza exitosamente y se asigna la pagina %d al marco %d.",
+				entrada_que_necesita_marco->pagina,
+				entrada_que_necesita_marco->marco);
 
 		entrada_que_necesita_marco->presencia = true;
-
-		log_info(log,
-				"Se reemplaza exitosamente y se asigna la pagina al marco correspondiente.");
 
 	} else {
 
@@ -45,7 +44,7 @@ void marco_nuevo(t_entrada_tabla_de_paginas * entrada_que_necesita_marco) {
 		t_control_marco * marco_libre = list_find(control_de_marcos,
 				marco_disponible);
 
-		log_info(log, "Encuentro marco disponible %d", marco_libre);
+		log_info(log, "Encuentro marco disponible %d", marco_libre->numero);
 
 		marco_libre->disponible = false;
 

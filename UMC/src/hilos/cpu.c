@@ -63,6 +63,8 @@ void atender_cpu(void * parametro_hilo) {
 			memcpy(&pid_actual, paquete_nuevo->data, sizeof(int));
 			proceso_actual = pid_actual;
 
+			log_info(log, "Se cambio el proceso actual a %d.", proceso_actual);
+
 			break;
 
 		case CERRAR:
