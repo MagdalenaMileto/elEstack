@@ -7,7 +7,7 @@
 
 #include "nucleo.h"
 #define CONFIG_NUCLEO "config" //Cambiar esto para eclipse
-#define CONFIG_NUCLEO_OLD "src/config"
+//#define CONFIG_NUCLEO_OLD "src/config"
 
 /* VARIABLES GLOBALES */
 int * CONSTANTE;
@@ -124,7 +124,7 @@ int main() {
 					//CAMBIAR ESTO PARA ENTREGA FINAL
 					//Deberia hacer un free de todo lo otro
 
-						if (strcmp(event->name, CONFIG_NUCLEO_OLD) == 0){
+						if (strcmp(event->name, CONFIG_NUCLEO) == 0){
 							printf("NUCLEO: cambio el archivo config\n");
 							get_config_nucleo(config_nucleo);//Crea y setea el config del kernel
 						}
@@ -997,7 +997,7 @@ void *hilo_mock_cpu(void *arg) {
 void get_config_nucleo (CONF_NUCLEO *config_nucleo)
 {
 	//TODO:Mutex son generales, uso uno solo?
-	pthread_mutex_lock(&total);
+	pthread_mutex_lock(&mutex_config);
 	t_config *fnucleo = config_create(CONFIG_NUCLEO);
 	config_nucleo->PUERTO_PROG = config_get_string_value(fnucleo, "PUERTO_PROG");
 	config_nucleo->PUERTO_CPU = config_get_string_value(fnucleo, "PUERTO_CPU");
@@ -1044,7 +1044,7 @@ void get_config_nucleo (CONF_NUCLEO *config_nucleo)
 		colas_semaforos[i] = queue_create();
 	}
 
-	pthread_mutex_unlock(&total);
+	pthread_mutex_unlock(&mutex_config);
 
 	//config_destroy(fnucleo);//Ya no lo necesito
 	return;
