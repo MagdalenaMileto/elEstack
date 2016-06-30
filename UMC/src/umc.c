@@ -2,7 +2,6 @@
 
 int main(int argc, char** argv) {
 
-	log2 = log_create("NICO", "UMC", 0, LOG_LEVEL_INFO);
 	log = log_create(ARCHIVOLOG, "UMC", 0, LOG_LEVEL_INFO);
 	log_info(log, "Iniciando UMC.\n");
 
