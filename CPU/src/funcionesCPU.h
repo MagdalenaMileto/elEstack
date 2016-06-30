@@ -42,6 +42,7 @@ typedef struct {
 	 int QUANTUM;
 	 int QUANTUM_SLEEP;
 	 int TAMPAG;
+	 int STACK_SIZE;
 } t_datos_kernel;
 
 
@@ -58,9 +59,11 @@ t_pcb* pcb;
 int quantum;
 int tamanioPag;
 int quantum_sleep;
+int stack_size;
 int programaBloqueado;
 int programaFinalizado;
 int programaAbortado;
+int var_max;
 
 
 int conectarConUmc();
