@@ -33,8 +33,6 @@ AnSISOP_kernel primitivas_kernel = {
 };
 
 
-
-
 int main(int argc,char **argv){
 	//int sigusr1_desactivado=0;
 	log= log_create(ARCHIVOLOG, "CPU", 0, LOG_LEVEL_INFO);
@@ -54,7 +52,8 @@ int main(int argc,char **argv){
 	quantum = ((t_datos_kernel*)(datos_kernel->data))->QUANTUM;
 	tamanioPag = ((t_datos_kernel*)(datos_kernel->data))->TAMPAG;
 	quantum_sleep = ((t_datos_kernel*)(datos_kernel->data))->QUANTUM_SLEEP;
-	log_info(log,"Quantum: %d TamPag: %d Quantum Sleep: %d\n", quantum, tamanioPag, quantum_sleep);
+	stack_size=	((t_datos_kernel*)(datos_kernel->data))->STACK_SIZE;
+	log_info(log,"Quantum: %d TamPag: %d Quantum Sleep: %d Stack size: %d Var Max: %d\n", quantum, tamanioPag, quantum_sleep, stack_size, var_max);
 
 	sigusr1_desactivado = 1;
 
@@ -71,7 +70,7 @@ int main(int argc,char **argv){
 		pcb = desserializarPCB(paquete_recibido->data);
 		log_info(log,"Recibi PCB del nucleo con el program counter en: %d y SizeContextoActual en %d\n", pcb->pc, pcb->sizeContextoActual);
 		liberar_paquete(paquete_recibido);
-
+		var_max=(tamanioPag*(stack_size+pcb->paginasDeCodigo))-1;
 		int pid = pcb->pid;
 		log_info(log, "Enviando pid %d a UMC\n",pcb->pid);
 		enviar(umc, 3, sizeof(int), &pid);
@@ -82,24 +81,22 @@ int main(int argc,char **argv){
 
 			t_direccion* datos_para_umc = malloc(12);
 			crearEstructuraParaUMC(pcb, tamanioPag, datos_para_umc);
-			char * lecturaUMC= malloc(12);
 			log_info(log, "Direccion= Pag:%d Offset:%d Size:%d\n", datos_para_umc->pagina, datos_para_umc->offset, datos_para_umc->size);
-			enviarDirecParaLeerUMC(lecturaUMC, datos_para_umc);
-			log_info(log, "Pido instruccion\n");
-			t_paquete* instruccion=malloc(sizeof(t_paquete));
-			instruccion = recibir(umc);
-			char* sentencia=malloc(datos_para_umc->size);
 
-			log_info(log, "Recibi instruccion de UMC con tamanio %d\n", datos_para_umc->size);
-			memcpy(sentencia, instruccion->data, datos_para_umc->size);
+
+
+			log_info(log, "Pido instruccion\n");
+			char* sentencia=leer(datos_para_umc->pagina,datos_para_umc->offset, datos_para_umc->size);
+			log_info(log, "Recibi instruccion de UMC con tamanio %d\n",  datos_para_umc->size);
 			char* barra_cero="\0";
-			memcpy(sentencia+(datos_para_umc->size-1), barra_cero, 1);
+			memcpy(sentencia+( datos_para_umc->size-1), barra_cero, 1);
+
 			log_info(log,"Tamanio sentencia: %d\n", strlen(sentencia));
 
 			log_info(log,"Recibi sentencia: %s\n", depurarSentencia(sentencia));
 			analizadorLinea(depurarSentencia(strdup(sentencia)), &primitivas, &primitivas_kernel);
-			liberar_paquete(instruccion);
-			free(lecturaUMC);
+			//liberar_paquete(instruccion);
+			//free(lecturaUMC);
 			free(datos_para_umc);
 			free(sentencia);
 
@@ -145,6 +142,45 @@ return 0;
 }
 
 //*******************************************FUNCIONES**********************************************************
+char* leer(int pagina,int offset, int tamanio)
+{
+	if((tamanio+offset)<=tamanioPag){
+
+					char * lecturaUMC2= malloc(12);
+
+					t_direccion *datos_para_umc2=malloc(sizeof(t_direccion));
+
+					datos_para_umc2->offset=offset;
+
+					datos_para_umc2->pagina=pagina;
+
+					datos_para_umc2->size=tamanio;
+
+					enviarDirecParaLeerUMC(lecturaUMC2, datos_para_umc2);
+
+					t_paquete* instruccion2=malloc(sizeof(t_paquete));
+
+					instruccion2 = recibir(umc);
+
+					char* sentencia2=malloc(datos_para_umc2->size);
+					memcpy(sentencia2, instruccion2->data, datos_para_umc2->size);
+					free(lecturaUMC2);
+					liberar_paquete(instruccion2);
+					return sentencia2;
+
+	}else{
+
+		char* lectura1 = leer(pagina,offset,(tamanioPag-offset));
+		char* lectura2 = leer(pagina+1,0,tamanio-(tamanioPag-offset));
+		char* nuevo =malloc((tamanioPag-offset)+tamanio-(tamanioPag-offset));
+		memcpy(nuevo,lectura1,(tamanioPag-offset));
+		memcpy(nuevo+(tamanioPag-offset),lectura2,tamanio-(tamanioPag-offset));
+		free(lectura1);
+		free(lectura2);
+		return nuevo;
+	}
+}
+
 
 int conectarConUmc(){
 		int umc = conectar_a(config_cpu.IP_UMC, config_cpu.PUERTO_UMC);
@@ -190,7 +226,7 @@ void crearEstructuraParaUMC (t_pcb* pcb, int tamPag, t_direccion* informacion){
 	log_info(log,"Program counter: %d", pcb->pc);
 	log_info(log,"Voy a leer en la posicion de indice de codigo:%d\n",pcb->indiceDeCodigo [(pcb->pc)*2]);
 	info->pagina=pcb->indiceDeCodigo [(pcb->pc)*2]/ tamPag;
-	info->offset=pcb->indiceDeCodigo [((pcb->pc)*2)];
+	info->offset=pcb->indiceDeCodigo [((pcb->pc)*2)]%tamPag;
 	info->size=pcb->indiceDeCodigo [((pcb->pc)*2)+1];
 	memcpy(informacion, info, 12);
 	free(info);

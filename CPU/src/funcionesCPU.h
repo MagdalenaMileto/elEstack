@@ -42,6 +42,7 @@ typedef struct {
 	 int QUANTUM;
 	 int QUANTUM_SLEEP;
 	 int TAMPAG;
+	 int STACK_SIZE;
 } t_datos_kernel;
 
 
@@ -58,9 +59,11 @@ t_pcb* pcb;
 int quantum;
 int tamanioPag;
 int quantum_sleep;
+int stack_size;
 int programaBloqueado;
 int programaFinalizado;
 int programaAbortado;
+int var_max;
 
 
 int conectarConUmc();
@@ -69,6 +72,7 @@ void crearEstructuraParaUMC (t_pcb* pcb, int tamPag, t_direccion* informacion);
 void levantar_configuraciones();
 char* depurarSentencia(char* sentencia);
 void sig_handler(int signo);
+char* leer(int pagina,int offset, int tamanio);
 
 /* Emi para tener un machete de los codigos de operacion y no confundirnos:
  *
