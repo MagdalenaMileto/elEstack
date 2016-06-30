@@ -39,7 +39,7 @@ void levantar_configuraciones() {
 			"MARCO_X_PROD");
 	entradas_TLB = config_get_int_value(archivo_configuracion, "ENTRADAS_TLB");
 	retardo = config_get_int_value(archivo_configuracion, "RETARDO");
-	algoritmo = config_get_int_value(archivo_configuracion, "ALGORITMO");
+	algoritmo = config_get_string_value(archivo_configuracion, "ALGORITMO");
 
 	log_info(log, "Se levantan con exito las configuraciones.\n");
 

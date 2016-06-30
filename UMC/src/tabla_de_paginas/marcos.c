@@ -102,7 +102,7 @@ void inicializar_marcos() {
 
 void algoritmo_remplazo(t_entrada_tabla_de_paginas * entrada_sin_marco, int pid) {
 
-	if (retardo == 1) {
+	if (strcmp(algoritmo, "CLOCK")) {
 
 		log_info(log, "Inicio del algoritmo de reemplazo Clock");
 
@@ -151,7 +151,7 @@ void algoritmo_remplazo(t_entrada_tabla_de_paginas * entrada_sin_marco, int pid)
 
 	}
 
-	else {
+	if (strcmp(algoritmo, "CLOCK-M")) {
 
 		log_info(log, "Inicio del algoritmo de reemplazo Clock Modificado");
 
@@ -173,92 +173,151 @@ void algoritmo_remplazo(t_entrada_tabla_de_paginas * entrada_sin_marco, int pid)
 			}
 
 		}
-	}
 
-	t_list * lista_circular_clock(t_list * lista, int pid) {
-
-		bool coincide_pid_y_presencia(void * elemento) {
+		bool buscar_victima_y_modificar_uso_2(void * elemento) {
 
 			t_entrada_tabla_de_paginas * entrada =
 					(t_entrada_tabla_de_paginas *) elemento;
 
-			return entrada->pid == pid && entrada->presencia;
-		}
+			if (!entrada->uso && entrada->modificado) {
 
-		t_list * entradas_presentes_proceso = list_filter(lista,
-				coincide_pid_y_presencia);
+				return true;
 
-		bool orden_menor_marco_primero(void * elem1, void * elem2) {
+			} else {
 
-			t_entrada_tabla_de_paginas * entrada1 =
-					(t_entrada_tabla_de_paginas *) elem1;
-
-			t_entrada_tabla_de_paginas * entrada2 =
-					(t_entrada_tabla_de_paginas *) elem2;
-
-			return entrada1->marco < entrada2->marco;
-
-		}
-
-		if (list_is_empty(entradas_presentes_proceso)) {
-
-			return entradas_presentes_proceso;
-
-		} else {
-
-			list_sort(entradas_presentes_proceso, orden_menor_marco_primero);
-
-			bool es_puntero(void * elemento) {
-
-				t_entrada_tabla_de_paginas * entrada =
-						(t_entrada_tabla_de_paginas *) elemento;
-
-				return entrada->puntero;
+				entrada->uso = false;
+				return false;
 			}
 
-			t_entrada_tabla_de_paginas * puntero = list_find(
-					entradas_presentes_proceso, es_puntero);
-
-			return circular_list_starting_with(entradas_presentes_proceso,
-					puntero);
 		}
-	}
 
-	void avanzar_victima(t_list * lista_clock,
-			t_entrada_tabla_de_paginas * entrada_con_marco_nuevo) {
+		t_entrada_tabla_de_paginas * victima = list_find(lista_clock_modificado,
+				buscar_victima_sin_modificar_uso);
 
-		t_entrada_tabla_de_paginas * puntero_viejo = head(lista_clock);
+		if (victima == NULL) {
 
-		if (de_una_entrada(lista_clock)) {
+			log_info(log,
+					"No encontro victima buscando (0,0), empieza a buscar (0,1) y a poner el bit de uso en 0 de ser necesario.");
 
-			entrada_con_marco_nuevo->puntero = true;
+			victima = list_find(lista_clock_modificado,
+					buscar_victima_y_modificar_uso_2);
 
-		} else {
+			if (victima == NULL) {
 
-			t_entrada_tabla_de_paginas * nuevo_puntero = list_get(lista_clock,
-					1);
+				log_info(log,
+						"No encontro victima buscando (0,1), vuelve a buscar (0,0).");
 
-			nuevo_puntero->puntero = true;
+				victima = list_find(lista_clock_modificado,
+						buscar_victima_sin_modificar_uso);
+			}
 
 		}
 
-		puntero_viejo->puntero = false;
+		if (victima->modificado) {
+
+			swap_escribir(victima);
+			victima->modificado = false;
+		}
+
+		entrada_sin_marco->marco = victima->marco;
+
+		entrada_sin_marco->uso = true;
+
+		entrada_sin_marco->presencia = true;
+		victima->presencia = false;
+
+		avanzar_victima(lista_clock_modificado, entrada_sin_marco);
 
 	}
 
-	bool de_una_entrada(t_list * lista) {
+	else {
+		error_show("No se ingreso el algoritmo correspondiente");
+		exit(1);
+	}
+}
 
-		return list_size(lista) == 1;
+t_list * lista_circular_clock(t_list * lista, int pid) {
+
+	bool coincide_pid_y_presencia(void * elemento) {
+
+		t_entrada_tabla_de_paginas * entrada =
+				(t_entrada_tabla_de_paginas *) elemento;
+
+		return entrada->pid == pid && entrada->presencia;
+	}
+
+	t_list * entradas_presentes_proceso = list_filter(lista,
+			coincide_pid_y_presencia);
+
+	bool orden_menor_marco_primero(void * elem1, void * elem2) {
+
+		t_entrada_tabla_de_paginas * entrada1 =
+				(t_entrada_tabla_de_paginas *) elem1;
+
+		t_entrada_tabla_de_paginas * entrada2 =
+				(t_entrada_tabla_de_paginas *) elem2;
+
+		return entrada1->marco < entrada2->marco;
 
 	}
 
-	void escribir_marco(int marco, int offset, int tamanio, void * contenido) {
+	if (list_is_empty(entradas_presentes_proceso)) {
 
-		int desplazamiento = marco * tamanio_marco;
+		return entradas_presentes_proceso;
 
-		memcpy(memoria + desplazamiento + offset, contenido, tamanio);
+	} else {
 
-		log_info(log, "El marco se escribe con exito.");
+		list_sort(entradas_presentes_proceso, orden_menor_marco_primero);
+
+		bool es_puntero(void * elemento) {
+
+			t_entrada_tabla_de_paginas * entrada =
+					(t_entrada_tabla_de_paginas *) elemento;
+
+			return entrada->puntero;
+		}
+
+		t_entrada_tabla_de_paginas * puntero = list_find(
+				entradas_presentes_proceso, es_puntero);
+
+		return circular_list_starting_with(entradas_presentes_proceso, puntero);
+	}
+}
+
+void avanzar_victima(t_list * lista_clock,
+		t_entrada_tabla_de_paginas * entrada_con_marco_nuevo) {
+
+	t_entrada_tabla_de_paginas * puntero_viejo = head(lista_clock);
+
+	if (de_una_entrada(lista_clock)) {
+
+		entrada_con_marco_nuevo->puntero = true;
+
+	} else {
+
+		t_entrada_tabla_de_paginas * nuevo_puntero = list_get(lista_clock, 1);
+
+		nuevo_puntero->puntero = true;
 
 	}
+
+	puntero_viejo->puntero = false;
+
+}
+
+bool de_una_entrada(t_list * lista) {
+
+	return list_size(lista) == 1;
+
+}
+
+void escribir_marco(int marco, int offset, int tamanio, void * contenido) {
+
+	int desplazamiento = marco * tamanio_marco;
+
+	memcpy(memoria + desplazamiento + offset, contenido, tamanio);
+
+	log_info(log, "El marco se escribe con exito.");
+
+}
 
