@@ -71,8 +71,10 @@ int main(int argc, char **argv) {
 
 				int flagRespuesta;
 
-				int paginaAPartir = hayLugarParaNuevoProceso(pagina);
-				if(!paginaAPartir ==-1)
+				int paginaAPartir;
+
+				paginaAPartir = hayLugarParaNuevoProceso(pagina);
+				if(paginaAPartir !=-1)
 				{
 					reservarProceso(pid, pagina, paginaAPartir);
 					inicializarProceso(pid, pagina, codigo);
