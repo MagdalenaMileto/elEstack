@@ -17,7 +17,7 @@
 #include <stdlib.h>
 #include <ctype.h>
 
-pagina paginasSWAP[2000];
+pagina *paginasSWAP;
 
 int main(int argc, char **argv) {
 	int sock_lst;
@@ -532,6 +532,8 @@ void leerPaginaProceso(int idProceso, int nroPag, void* paginaALeer) {
 }
 
 void inicializarEstructuraPaginas() {
+	//paginasSWAP = malloc(sizeof(pagina * CANTIDAD_PAGINAS));
+	paginasSWAP = calloc(CANTIDAD_PAGINAS, sizeof(pagina));
 	int i;
 	for (i = 0; i < CANTIDAD_PAGINAS; i++) {
 		paginasSWAP[i].idProcesoQueLoOcupa = -1;
