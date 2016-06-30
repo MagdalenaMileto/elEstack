@@ -11,7 +11,7 @@ t_puntero definirVariable(t_nombre_variable identificador_variable)
 {	log_info(log,"Entre a definir variable %c\n", identificador_variable);
 	t_direccion *direccion_variable= malloc(sizeof(t_direccion));
 	t_variable *variable= malloc(sizeof(t_variable));
-	t_contexto *contexto; //= malloc(sizeof(t_contexto));
+	t_contexto *contexto = malloc(sizeof(t_contexto));
 	//int posicionStack = pcb->sizeContextoActual-1;
 	contexto= (t_contexto*)(list_get(pcb->contextoActual, pcb->sizeContextoActual-1));
 
@@ -207,35 +207,30 @@ void retornar(t_valor_variable retorno)
 
 	//Destruyo Contexto de Funcion
 
-	/*
-	log_info(log,"Empiezo a destruir %d\n", list_size(contexto_final->vars));
-	while(contexto_final->sizeVars-1>=0){
+	//log_info(log,"Empiezo a destruir %d\n", list_size(contexto_final->vars));
+	while(contexto_final->sizeVars-1!=0){
 		free(((t_variable*)list_get(contexto_final->vars, contexto_final->sizeVars-1))->direccion);
-		free(list_get(contexto_final->vars, contexto_final->sizeVars-1));
+		//free(list_get(contexto_final->vars, contexto_final->sizeVars-1));
 		contexto_final->sizeVars--;
 	}
 	list_destroy(contexto_final->vars);
 	log_info(log,"Destrui vars de funcion\n");
-	log_info(log,"Empiezo a destruir args de funcion %d\n",list_size(contexto_final->args));
-	while(contexto_final->sizeArgs-1>=0){
+
+	//log_info(log,"Empiezo a destruir args de funcion %d\n",list_size(contexto_final->args));
+	while(contexto_final->sizeArgs-1!=0){
 			log_info(log,"Antes del free\n");
-			free(list_get(contexto_final->args, contexto_final->sizeArgs-1));
+			free((t_direccion*)list_get(contexto_final->args, contexto_final->sizeArgs-1));
 			log_info(log,"Despues del free\n");
 			contexto_final->sizeArgs--;
 		}
-	log_info(log,"Destrui args de funcion\n");
 	list_destroy(contexto_final->args);
-	log_info(log,"Empiezo a destruir contexto de funcion\n");
+	log_info(log,"Destrui args de funcion\n");
+
+
 	free(list_get(pcb->contextoActual, pcb->sizeContextoActual-1));
-	log_info(log,"Libere contexto\n");
 	list_remove(pcb->contextoActual, pcb->sizeContextoActual-1);
 	log_info(log,"Contexto Destruido\n");
-	*/
-
-	finalizar(); //si funcionase bien finalizar deberia destruir  lo que contiene el contexto pero no destruye el contexto
-	list_remove(pcb->contextoActual, pcb->sizeContextoActual-1); //por ende nos quedaria solo elimiar el contexto
 	pcb->sizeContextoActual--;
-
 
 }
 
@@ -280,30 +275,32 @@ void finalizar(){
 	log_info(log,"Entre a finalizar\n");
 	t_contexto *contexto_a_finalizar; //= malloc(sizeof(t_contexto));
 	contexto_a_finalizar= list_get(pcb->contextoActual, pcb->sizeContextoActual-1);
+
 	while(contexto_a_finalizar->sizeVars != 0){
-		free((t_direccion*)((t_variable *)list_get(contexto_a_finalizar->vars, contexto_a_finalizar->sizeVars-1))->direccion);
+		t_variable * variable_borrar = (t_variable *)list_get(contexto_a_finalizar->vars, contexto_a_finalizar->sizeVars-1);
+		free(variable_borrar->direccion);
+		//free(variable_borrar); //FALTA LA MIERDA DE ESTE FREE :)
 		list_remove(contexto_a_finalizar->vars, (contexto_a_finalizar->sizeVars)-1);
 		contexto_a_finalizar->sizeVars--;
 	}
 	list_destroy(contexto_a_finalizar->vars);
 	log_info(log,"Destrui la lista de vars\n");
+
 	while(contexto_a_finalizar->sizeArgs-1>0){
 				log_info(log,"Antes del free\n");
 				free((t_direccion*)list_get(contexto_a_finalizar->args, contexto_a_finalizar->sizeArgs-1));
 				list_remove(contexto_a_finalizar->args, (contexto_a_finalizar->sizeArgs)-1);
-				//free(list_get(contexto_a_finalizar->args, contexto_a_finalizar->sizeArgs-1));
 				log_info(log,"Despues del free\n");
 				contexto_a_finalizar->sizeArgs--;
 			}
 	list_destroy(contexto_a_finalizar->args);
 	log_info(log,"Destrui la lista de args\n");
-	free(contexto_a_finalizar); //nucleo cuando crea el contexto hace un malloc
+	free(contexto_a_finalizar);
 	log_info(log,"El programa finalizo\n");
 	programaFinalizado=1;
 
 	enviar(nucleo, 320, sizeof(int), &programaFinalizado);
 	destruirPCB(pcb);
-	return;
 
 
 }
