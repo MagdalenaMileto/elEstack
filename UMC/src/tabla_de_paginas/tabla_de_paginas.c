@@ -39,17 +39,26 @@ t_entrada_tabla_de_paginas * crear_nueva_entrada(int pid, int pagina) {
 
 void eliminar_proceso_tabla_de_paginas(int pid) {
 
-	bool lambda_coincide_pid(void * elemento) {
+	bool lambda_coincide_pid_y_libera_el_marco_en_control(void * elemento) {
 
 		t_entrada_tabla_de_paginas * entrada =
 				(t_entrada_tabla_de_paginas*) elemento;
 
-		return entrada->pid == pid;
+		bool es_para_eliminar = entrada->pid == pid;
+
+		if (es_para_eliminar && entrada->presencia) {
+			t_control_marco * control = list_get(control_de_marcos,
+					entrada->marco);
+
+			control->disponible = true;
+		}
+
+		return es_para_eliminar;
 
 	}
 
-	remove_and_destroy_all_such_that(tabla_de_paginas, lambda_coincide_pid,
-			free);
+	remove_and_destroy_all_such_that(tabla_de_paginas,
+			lambda_coincide_pid_y_libera_el_marco_en_control, free);
 
 	log_info(log,
 			"Se eliminan todas las referencias al proceso %d de la memoria",
