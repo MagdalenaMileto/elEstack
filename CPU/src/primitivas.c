@@ -247,12 +247,12 @@ void imprimir(t_valor_variable valor_mostrar)
 }
 
 void imprimirTexto(char*texto)
-{	char *texto_mostrar = malloc(strlen(texto)+1);
+{	char *texto_mostrar = malloc(strlen(texto));
 	char* barra_cero="\0";
 	memcpy(texto_mostrar, texto, strlen(texto));
 	memcpy(texto_mostrar+strlen(texto), barra_cero, 1);
 	log_info(log,"Texto a Imprimir %s\n", texto_mostrar);
-	enviar(nucleo, 361, strlen(texto), texto_mostrar);
+	enviar(nucleo, 361, strlen(texto)+1, texto_mostrar);
 	free(texto_mostrar);
 	log_info(log,"Saliendo de imprimir\n");
 	return;

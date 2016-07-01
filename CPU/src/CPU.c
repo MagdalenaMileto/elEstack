@@ -72,8 +72,9 @@ int main(int argc,char **argv){
 		pcb = desserializarPCB(paquete_recibido->data);
 		log_info(log,"Recibi PCB del nucleo con el program counter en: %d y SizeContextoActual en %d\n", pcb->pc, pcb->sizeContextoActual);
 		liberar_paquete(paquete_recibido);
-		var_max=(tamanioPag*(stack_size+pcb->paginasDeCodigo))-1;
+		log_info(log,"Pcb pid: %d\n",pcb->pid); //ver
 		int pid = pcb->pid;
+		var_max=(tamanioPag*(stack_size+pcb->paginasDeCodigo))-1;
 		log_info(log, "Enviando pid %d a UMC\n",pcb->pid);
 		enviar(umc, 3, sizeof(int), &pid);
 		log_info(log, "Envie pid %d a UMC\n",pcb->pid);
@@ -89,6 +90,11 @@ int main(int argc,char **argv){
 
 			log_info(log, "Pido instruccion\n");
 			char* sentencia=leer(datos_para_umc->pagina,datos_para_umc->offset, datos_para_umc->size);
+			if(sentencia==NULL){
+				programaAbortado=1;
+				log_info(log,"Cambiando flag programaAbortado a %d\n", programaAbortado);
+				//break;
+			}else{
 			log_info(log, "Recibi instruccion de UMC con tamanio %d\n",  datos_para_umc->size);
 			char* barra_cero="\0";
 			memcpy(sentencia+( datos_para_umc->size-1), barra_cero, 1);
@@ -105,7 +111,7 @@ int main(int argc,char **argv){
 			pcb->pc++;
 			quantum_aux--;
 			usleep(quantum_sleep*1000);
-
+			}
 			if (programaBloqueado){
 				log_info(log, "El programa salió por bloqueo\n");
 				log_info(log, "PC= %d\n", pcb->pc);
@@ -116,6 +122,7 @@ int main(int argc,char **argv){
 
 			if (programaAbortado){
 				log_info(log, "El programa aborto\n");
+				log_info(log, "El pcb que sale por aborto tiene pid %d\n",pcb->pid);
 				serializado = serializarPCB(pcb);
 				enviar(nucleo, 370, ((t_pcb*)serializado)->sizeTotal, serializado);
 				destruirPCB(pcb);
@@ -170,6 +177,8 @@ char* leer(int pagina,int offset, int tamanio)
 					t_paquete* instruccion2=malloc(sizeof(t_paquete));
 
 					instruccion2 = recibir(umc);
+					log_info(log,"Codigo de operacion recibido: %d\n", instruccion2->codigo_operacion);
+					if(instruccion2->codigo_operacion==7) return NULL;
 
 					char* sentencia2=malloc(datos_para_umc2->size);
 					memcpy(sentencia2, instruccion2->data, datos_para_umc2->size);
@@ -180,7 +189,10 @@ char* leer(int pagina,int offset, int tamanio)
 	}else{
 
 		char* lectura1 = leer(pagina,offset,(tamanioPag-offset));
+		if(lectura1==NULL) return NULL;
 		char* lectura2 = leer(pagina+1,0,tamanio-(tamanioPag-offset));
+		if(lectura2==NULL) return NULL;
+
 		char* nuevo =malloc((tamanioPag-offset)+tamanio-(tamanioPag-offset));
 		memcpy(nuevo,lectura1,(tamanioPag-offset));
 		memcpy(nuevo+(tamanioPag-offset),lectura2,tamanio-(tamanioPag-offset));
