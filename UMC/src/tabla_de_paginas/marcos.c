@@ -162,7 +162,7 @@ void algoritmo_remplazo(t_entrada_tabla_de_paginas * entrada_sin_marco, int pid)
 
 	}
 
-	else if (strcmp(algoritmo, "CLOCK-M")) {
+	else if (strcmp(algoritmo, "MODIFICADO")) {
 
 		log_info(log, "Inicio del algoritmo de reemplazo Clock Modificado");
 
@@ -328,5 +328,21 @@ void escribir_marco(int marco, int offset, int tamanio, void * contenido) {
 
 	log_info(log, "El marco se escribe con exito.");
 
+}
+
+bool hay_marcos_disponibles() {
+
+	bool marco_disponible(void * entrada) {
+
+		t_control_marco * marco = (t_control_marco *) entrada;
+
+		return marco->disponible;
+
+	}
+
+	int cantidad_disponible = list_count_satisfying(control_de_marcos,
+			marco_disponible);
+
+	return cantidad_disponible = !0;
 }
 

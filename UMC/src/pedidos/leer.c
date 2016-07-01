@@ -10,8 +10,17 @@ void * leer_una_pagina(int numero_pagina, int offset, int tamanio) {
 
 	if (!pagina_encontrada->presencia) {
 
-		char * contenido_faltante = swap_leer(proceso_actual, numero_pagina);
+		if (no_tiene_ni_hay_marcos(proceso_actual)) {
 
+			log_info(log,
+					"Se finaliza el proceso %d por no haber marcos libres ni el tener uno",
+					proceso_actual);
+
+			return string_from_format("No hay lugar disponible!");;
+
+		}
+
+		char * contenido_faltante = swap_leer(proceso_actual, numero_pagina);
 		marco_nuevo(pagina_encontrada);
 
 		escribir_marco(pagina_encontrada->marco, 0, tamanio_marco,
@@ -32,6 +41,23 @@ void * leer_una_pagina(int numero_pagina, int offset, int tamanio) {
 	log_info(log, "Se leyo con exito la pagina %d.", numero_pagina);
 
 	return contenido;
+
+}
+
+bool no_tiene_ni_hay_marcos(int pid) {
+
+	bool coincide_pid_y_esta_presente(void * elemento) {
+
+		t_entrada_tabla_de_paginas * entrada =
+				(t_entrada_tabla_de_paginas *) elemento;
+
+		return entrada->pid == pid && entrada->presencia;
+	}
+
+	bool tiene_alguno = list_any_satisfy(tabla_de_paginas,
+			coincide_pid_y_esta_presente);
+
+	return !tiene_alguno && !hay_marcos_disponibles();
 
 }
 

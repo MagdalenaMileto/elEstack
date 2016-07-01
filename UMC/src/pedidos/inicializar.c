@@ -6,7 +6,8 @@ bool puede_iniciar_proceso(int pid, int cantidad_paginas, char * codigo) {
 			"El nucleo envia la peticion para nuevo proceso cuya id es: %d y la cantidad de paginas son %d",
 			pid, cantidad_paginas);
 
-	return swap_inicializar_proceso(pid, cantidad_paginas, codigo);
+	return swap_inicializar_proceso(pid, cantidad_paginas, codigo)
+			&& hay_marcos_disponibles();
 
 }
 

@@ -12,6 +12,8 @@
 
 //TODO: Preguntarle a fede
 //#include "interfaces/swap.h"
+
+//#include "../tabla_de_paginas/marcos.h"
 #include "../globales.h"
 #include "../tabla_de_paginas/estructuras.h"
 #include "../tabla_de_paginas/tabla_de_paginas.h"
