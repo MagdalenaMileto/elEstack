@@ -84,6 +84,7 @@ typedef struct {
     int QUANTUM;
    int QUANTUM_SLEEP;
   int TAMPAG;
+  int STACK_SIZE;
  } t_datos_kernel;
  
 

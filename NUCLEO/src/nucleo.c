@@ -188,6 +188,7 @@ void mandarAEjecutar(t_proceso *proceso, int sock) {
 	//TODO:mutex
 	queue_push(cola_exec, proceso);
 	enviar(sock, 303, pcbSerializado->sizeTotal, (char*)pcbSerializado);
+//	printf("NUCLEO:mande a ejecutar PID%d\n",pcbSerializado->pid);
 	free(pcbSerializado);
 }
 
@@ -253,7 +254,7 @@ int mandarCodigoAUmc(char* codigo, int size, t_proceso *proceso) {
 	
 	proceso->pcb->sizeContextoActual = 1;
 	proceso->pcb->pc = 0;
-	(proceso->pcb)->paginasDeMemoria=(int)ceil((double)config_nucleo->STACK_SIZE / (double)config_nucleo->TAMPAG);
+	(proceso->pcb)->paginasDeMemoria=(int)ceil((double)config_nucleo->STACK_SIZE );
 	//TODO: REVISAR QUE HACA FREE DE METADATA Y TODO QUEDDE ASIGNADO
 	metadata_destruir(metadata_program);
 
@@ -301,7 +302,6 @@ int *pideVariable(char *variable, int tamanio) {
 		//TODO:aca esta funcando con el \n OJO
 		//TODO: mutex confignucleo
 		if (strcmp((char*)config_nucleo->SHARED_VARS[i], variable) == 0) {
-			printf("voy aretornar\n");
 			return &config_nucleo->VALOR_SHARED_VARS[i];
 		}
 	}
@@ -338,7 +338,7 @@ void liberaSemaforo(char *semaforo, int semaforoSize) {
 			config_nucleo->VALOR_SEM[i]++;
 			printf("VALRO SEM %d\n",config_nucleo->VALOR_SEM[i]);
 			if (proceso = queue_pop(colas_semaforos[i])) {
-				config_nucleo->VALOR_SEM[i]--;
+				//config_nucleo->VALOR_SEM[i]--;
 				queue_push(cola_ready, proceso);
 				sem_post(&sem_ready);
 			}
@@ -531,10 +531,11 @@ void *hilo_CONEXION_CPU(void *socket) {
 
 	//Handshake
 	t_datos_kernel datos_kernel;
-	//TODO remover esto que ya lo voy a hacer en otro lado
+	//TODO remover esto que ya lo hacer en otro lado
 	datos_kernel.QUANTUM = config_nucleo->QUANTUM;
 	datos_kernel.QUANTUM_SLEEP = config_nucleo->QUANTUM_SLEEP;
 	datos_kernel.TAMPAG = config_nucleo->TAMPAG;
+	datos_kernel.STACK_SIZE = config_nucleo->STACK_SIZE;
 
 	//O que no me envie nada? timeouts?
 
@@ -556,7 +557,7 @@ void *hilo_CONEXION_CPU(void *socket) {
 	while (1) {
 
 		elPaquete = recibir(*(int*)socket);
-		//printf("CRASH2 %d %d\n", elPaquete->codigo_operacion, *(int*)socket);
+		printf("CRASH2 %d %d\n", elPaquete->codigo_operacion, *(int*)socket);
 
 
 
@@ -569,6 +570,23 @@ void *hilo_CONEXION_CPU(void *socket) {
 
 
 		switch (elPaquete->codigo_operacion) {
+
+		case -1:
+			//TODO:
+			printf("NUCLEO: ABORTO CPU, TERMINAR\n");
+
+			int a = 0;int w;
+			while (w = list_get(cola_CPU_libres->elements, a)) {
+				if (w == *(int*)socket) {list_remove(cola_CPU_libres->elements, a);
+				printf("NUCLEO: ABORTO CPU, SACO COLA CPU READY\n");
+				}
+
+				a++;
+			}
+
+
+			return 0;
+			break;
 		case 304:
 			proceso = dameProceso(cola_exec,*(int*)socket);
 
@@ -597,6 +615,19 @@ void *hilo_CONEXION_CPU(void *socket) {
 			enviar(umc, 6, sizeof(int), &proceso->pcb->pid);
 			//TODO fijarte de que me detect que cierra.
 			enviar(proceso->socket_CONSOLA,162,sizeof(int),&proceso->pcb->pid);
+			break;
+
+		case 370: //
+			proceso = dameProceso(cola_exec, *(int*)socket);
+			printf("\x1b[3%dmNUCLEO: Recibi proceso %d por abortado, encolando en cola exit\x1b[0m\n", ((proceso->pcb->pid)%6+1),proceso->pcb->pid);
+			queue_push(cola_exit, proceso);
+			queue_push(cola_CPU_libres, (void*)*(int*)socket);
+			sem_post(&sem_cpu);
+			//162
+
+			enviar(umc, 6, sizeof(int), &proceso->pcb->pid);
+			//TODO fijarte de que me detect que cierra.
+			enviar(proceso->socket_CONSOLA,164,sizeof(int),&proceso->pcb->pid);
 			break;
 
 		case 380:
@@ -640,17 +671,19 @@ void *hilo_CONEXION_CPU(void *socket) {
 			break;
 */
 		case 341: //Pide semaforo
+
 			proceso = dameProceso(cola_exec, *(int*)socket);
+			pthread_mutex_lock(&mutex_config);
 			int * valorSemaforo = pideSemaforo(elPaquete->data, elPaquete->tamanio);
 			int mandar;
 			if(*valorSemaforo==-1){
 				mandar =1;
-				printf("\x1b[3%dmNUCLEO: Recibi proceso %d mando a bloquear por semaforo %s\x1b[0m\n", ((proceso->pcb->pid)%6+1),proceso->pcb->pid);
+				printf("\x1b[3%dmNUCLEO: Recibi proceso %d mando a bloquear por semaforo %s\x1b[0m\n", ((proceso->pcb->pid)%6+1),proceso->pcb->pid,elPaquete->data);
 
 				enviar(*(int*)socket, 342, sizeof(int), &mandar);// 1 si se bloquea 0 si no
 			}else{
 				mandar=0;
-				printf("dejo a circular\n");
+
 				enviar(*(int*)socket, 342, sizeof(int), &mandar);//
 			}
 			if(*valorSemaforo == -1){
@@ -666,7 +699,7 @@ void *hilo_CONEXION_CPU(void *socket) {
 			}else{
 				queue_push(cola_exec, proceso);
 			}
-
+			pthread_mutex_unlock(&mutex_config);
 			break;
 
 		case 343: //Libera semaforo

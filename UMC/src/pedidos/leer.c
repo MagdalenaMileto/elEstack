@@ -45,7 +45,7 @@ void * leer_una_pagina(int numero_pagina, int offset, int tamanio) {
 }
 
 bool no_tiene_ni_hay_marcos(int pid) {
-
+	printf("HOLAAAA\n");
 	bool coincide_pid_y_esta_presente(void * elemento) {
 
 		t_entrada_tabla_de_paginas * entrada =
@@ -56,7 +56,7 @@ bool no_tiene_ni_hay_marcos(int pid) {
 
 	bool tiene_alguno = list_any_satisfy(tabla_de_paginas,
 			coincide_pid_y_esta_presente);
-
+	printf("CACACAAA NENE SE HACE CACA %d %d",tiene_alguno,hay_marcos_disponibles());
 	return !tiene_alguno && !hay_marcos_disponibles();
 
 }

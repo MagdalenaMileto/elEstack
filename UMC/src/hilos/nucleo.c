@@ -42,7 +42,7 @@ void atender_nucleo() {
 
 				enviar(socket_nucleo, EXITO, sizeof(int), &pid);
 			} else {
-
+				log_info(log, "NO SE PUEDE.");
 				enviar(socket_nucleo, FRACASO, sizeof(int), &pid);
 			}
 
