@@ -90,7 +90,8 @@ bool tiene_cantidad_maxima_marcos_asignados(int pid) {
 	t_control_marco * marco_libre = list_find(control_de_marcos,
 			marco_disponible);
 
-	return (marcos_utilizados == cantidad_maxima_marcos) || (marco_libre == NULL);
+	return (marcos_utilizados == cantidad_maxima_marcos)
+			|| (marco_libre == NULL);
 }
 
 void inicializar_marcos() {
