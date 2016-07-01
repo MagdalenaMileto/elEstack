@@ -107,7 +107,8 @@ void atender_conexiones() {
 void solicitar_bloque_memoria() {
 
 	memoria = malloc(tamanio_marco * cantidad_marcos);
-
+	tabla_de_paginas = list_create();
+	tlb = list_create();
 	if (memoria == NULL) {
 		error_show("No se pudo otorgar la memoria solicitada");
 		exit(EXIT_FAILURE);

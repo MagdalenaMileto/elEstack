@@ -17,7 +17,7 @@
 #include <stdlib.h>
 #include <ctype.h>
 
-pagina paginasSWAP[2000];
+pagina *paginasSWAP;
 
 int main(int argc, char **argv) {
 	int sock_lst;
@@ -25,6 +25,8 @@ int main(int argc, char **argv) {
 	void *codigo;
 	int pid, pagina;
 
+	log = log_create("SWAP.log", "SWAP", 0, LOG_LEVEL_INFO);
+	log_info(log, "Iniciando SWAP.\n");
 
 	//pthread_t mock;
 	//pthread_create(&mock, NULL, hilo_mock, NULL);
@@ -49,7 +51,7 @@ int main(int argc, char **argv) {
 			mensaje = recibir(socket_umc);
 
 			//printf("*a\n");
-			printf("Codigo operacion %d\n", mensaje->codigo_operacion);
+			log_info(log, "Llego un mensaje, Codigo operacion %d\n", mensaje->codigo_operacion);
 
 			switch (mensaje->codigo_operacion) {
 			case INICIALIZAR: 	//Nuevo proceso
@@ -66,7 +68,7 @@ int main(int argc, char **argv) {
 
 				//printf("UMC: %s, %d %d \n",(char*)paquetin, pid, pagina);
 
-				printf( "Se creara un nuevo proceso de %d paginas y con PID: %d \n", pagina, pid);
+				log_info(log, "Se creara un nuevo proceso de %d paginas y con PID: %d \n", pagina, pid);
 				usleep(RETARDO_ACCESO * 1000);
 
 				int flagRespuesta;
@@ -101,7 +103,7 @@ int main(int argc, char **argv) {
 			case FINALIZAR: { //caso de Sacar proceso
 				//Deserializar Mensaje
 				memcpy(&pid, mensaje->data, sizeof(int));
-				printf("Se liberara el proceso %d \n", pid);
+				log_info(log, "Se liberara el proceso %d \n", pid);
 				usleep(RETARDO_ACCESO * 1000);
 				liberarProceso(pid);
 				break;
@@ -116,7 +118,7 @@ int main(int argc, char **argv) {
 				memcpy(codigo, mensaje->data + sizeof(int) * 2,
 						TAMANIO_PAGINA * pagina);
 
-				printf("Se escribira para el proceso %d \n", pid);
+				log_info(log, "Se escribira para el proceso %d, la pagina %d \n", pid, pagina);
 				usleep(RETARDO_ACCESO * 1000);
 
 				escribirPaginaProceso(pid, pagina, codigo);
@@ -133,7 +135,7 @@ int main(int argc, char **argv) {
 				memcpy(&pid, mensaje->data, sizeof(int));
 				memcpy(&pagina, mensaje->data + sizeof(int), sizeof(int));
 
-				printf("Se leera la pagina: %d, del proceso %d \n", pagina, pid);
+				log_info(log, "Se leera la pagina: %d, del proceso %d \n", pagina, pid);
 				usleep(RETARDO_ACCESO * 1000);
 
 				leerPaginaProceso(pid, pagina, paginaALeer);
@@ -143,7 +145,7 @@ int main(int argc, char **argv) {
 				break;
 			}
 			default:
-				printf("Pedido incorrecto");
+				printf("Pedido incorrecto, me cierro");
 				exit(0);
 			}
 			liberar_paquete(mensaje);
@@ -378,36 +380,19 @@ int ultimaPagLibre() {
 	return -1;
 }
 
-int reservarProceso(int pidProceso, int cantPags, int pagAPartir) {
-	int error;
-	error = asignarEspacio(cantPags, pidProceso, pagAPartir);
-	if (error == -1) {
-		printf("Hubo error al asignar el proceso %d \n", pidProceso);
-		return -1;
-	}
-	printf("Se reservo el espacio para el proceso con PID: %d de %d paginas \n",
-			pidProceso, cantPags);
-	return EXITO;
-}
-
-int asignarEspacio(int cantPagsAAsignar, int proceso, int inicio) {
-	int primerPaginaLibre = inicio;
+void reservarProceso(int pidProceso, int cantPags, int pagAPartir) {
+	int primerPaginaLibre = pagAPartir;
 	int i;
-	if (inicio + cantPagsAAsignar > CANTIDAD_PAGINAS) {
-		return -1;
-	}
-	for (i = 0; i < cantPagsAAsignar; i++) {
-		printf("Se asignara la pagina %d al proceso %d \n", primerPaginaLibre + i, proceso);
+	for (i = 0; i < cantPags; i++) {
+		log_info(log, "Se asignara la pagina %d al proceso %d \n", primerPaginaLibre + i, pidProceso);
 		paginasSWAP[primerPaginaLibre + i].ocupada = 1;
-		paginasSWAP[primerPaginaLibre + i].idProcesoQueLoOcupa = proceso;
+		paginasSWAP[primerPaginaLibre + i].idProcesoQueLoOcupa = pidProceso;
 	}
-	return 1;
 }
 
-int compactacion() { //Flag: 1 salio bien, 2 hubo error
-	printf("SE INVOCO AL MODULO DE COMPACTACION... \n");
-	printf("INICIANDO COMPACTACION \n");
-	int resultado = -1;
+void compactacion() { //Flag: 1 salio bien, 2 hubo error
+	log_info(log, "INICIANDO COMPACTACION \n");
+	usleep(RETARDO_COMPACTACION * 1000);
 	long int inicioOcupada;
 	long int inicioLibre;
 	int primerPaginaOcupada;
@@ -416,24 +401,19 @@ int compactacion() { //Flag: 1 salio bien, 2 hubo error
 		primerPaginaLibre = ultimaPagLibre();
 		primerPaginaOcupada = primerPaginaOcupadaLuegoDeUnaLibre();
 		if (primerPaginaOcupada == -1) {
-			printf(
-					"No hay mas paginas que compactar, finalizando correctamente. \n");
+			log_info(log, "No hay mas paginas que compactar, finalizando correctamente. \n");
 			break;
 		}
 		inicioOcupada = obtenerlugarDeInicioDeLaPagina(primerPaginaOcupada);
 		inicioLibre = obtenerlugarDeInicioDeLaPagina(primerPaginaLibre);
-		printf("La pagina ocupada %d pasara a la pagina %d libre \n", primerPaginaOcupada, primerPaginaLibre);
+		log_info(log, "La pagina ocupada %d pasara a la pagina %d libre \n", primerPaginaOcupada, primerPaginaLibre);
 		memcpy(discoParaleloNoVirtualMappeado + inicioLibre, discoParaleloNoVirtualMappeado + inicioOcupada, TAMANIO_PAGINA);
 		paginasSWAP[primerPaginaOcupada].ocupada = 0;
 		paginasSWAP[primerPaginaLibre].idProcesoQueLoOcupa = paginasSWAP[primerPaginaOcupada].idProcesoQueLoOcupa;
 		paginasSWAP[primerPaginaOcupada].idProcesoQueLoOcupa = -1;
 		paginasSWAP[primerPaginaLibre].ocupada = 1;
 	} while (hayPaginasOcupadasLuegoDeLaUltimaLibre());
-	///updatearArchivoDisco();
-	resultado = 1;
-	printf("Terminando compactacion...\n");
-	usleep(RETARDO_COMPACTACION * 1000);
-	return resultado;
+	log_info(log, "Termino compactacion\n");
 }
 
 int primerPaginaOcupadaLuegoDeUnaLibre() {
@@ -471,17 +451,16 @@ void liberarProceso(int idProc) {
 	int primerPaginaDelProceso;
 	primerPaginaDelProceso = getPrimerPagProc(idProc);
 	int i;
-	printf("Liberando el proceso %d \n", idProc);
 	for (i = 0; i < CANTIDAD_PAGINAS; i++) {
 		if (paginasSWAP[i].idProcesoQueLoOcupa == idProc){
-			printf("Borrando pagina %d ocupada por %d \n", primerPaginaDelProceso,idProc);
+			log_info(log, "Borrando pagina %d ocupada por %d \n", primerPaginaDelProceso,idProc);
 
 			paginasSWAP[primerPaginaDelProceso].ocupada = 0;
 			paginasSWAP[primerPaginaDelProceso].idProcesoQueLoOcupa = -1;
-			primerPaginaDelProceso++; //aumento en 1
+			primerPaginaDelProceso++;
 		}
 	}
-	printf("Se libero el proceso %d \n", idProc);
+	log_info(log,"Se libero el proceso %d \n", idProc);
 }
 
 int getPrimerPagProc(int idProceso) {
@@ -499,14 +478,13 @@ void escribirPaginaProceso(int idProceso, int nroPag, void*data) {
 	int primeraPagProceso = getPrimerPagProc(idProceso);
 	int paginaAEscribir = nroPag + primeraPagProceso;
 
-	printf("Se escribira la pagina %d del proceso: %d, cuya asociada es %d \n", nroPag, idProceso, paginaAEscribir);
+	log_info(log, "Se escribira la pagina %d del proceso: %d, cuya asociada es paginasSwap es %d \n", nroPag, idProceso, paginaAEscribir);
 	escribirPagina(paginaAEscribir, data);
 }
 
 void escribirPagina(int nroPag, void*dataPagina) {
 	long int inicioPag;
 
-	printf("Se escribira la pagina %d \n", nroPag);
 	int numero = nroPag;
 	inicioPag = obtenerlugarDeInicioDeLaPagina(numero); //con esto determino los valores de inicio de escritura
 	memset(discoParaleloNoVirtualMappeado + inicioPag, '\0', TAMANIO_PAGINA);
@@ -515,7 +493,7 @@ void escribirPagina(int nroPag, void*dataPagina) {
 	//printf("Pagina de Inicio en la que va a copiar:%d \n", inicioPag);
 	memcpy(discoParaleloNoVirtualMappeado + inicioPag, dataPagina,
 			TAMANIO_PAGINA);
-	printf("Pagina %d, copiada con exito! \n", nroPag);
+	log_info(log, "Pagina %d, copiada con exito! \n", nroPag);
 }
 
 void leerPaginaProceso(int idProceso, int nroPag, void* paginaALeer) {
@@ -528,10 +506,12 @@ void leerPaginaProceso(int idProceso, int nroPag, void* paginaALeer) {
 	inicio = obtenerlugarDeInicioDeLaPagina(posPag); //con esto determino los valores de inicio de lectura
 	memcpy(paginaALeer, discoParaleloNoVirtualMappeado + inicio, TAMANIO_PAGINA);
 
-	printf("codigo: %s \n", (char*)paginaALeer);
+	log_info(log,"codigo: %s \n", (char*)paginaALeer);
 }
 
 void inicializarEstructuraPaginas() {
+	//paginasSWAP = malloc(sizeof(pagina * CANTIDAD_PAGINAS));
+	paginasSWAP = calloc(CANTIDAD_PAGINAS, sizeof(pagina));
 	int i;
 	for (i = 0; i < CANTIDAD_PAGINAS; i++) {
 		paginasSWAP[i].idProcesoQueLoOcupa = -1;
