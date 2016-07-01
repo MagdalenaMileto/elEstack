@@ -34,7 +34,8 @@ AnSISOP_kernel primitivas_kernel = {
 
 
 int main(int argc,char **argv){
-	//int sigusr1_desactivado=0;
+	int sigusr1_desactivado=1;
+	signal(SIGUSR1, sig_handler);
 	log= log_create(ARCHIVOLOG, "CPU", 0, LOG_LEVEL_INFO);
 	log_info(log,"Iniciando CPU\n");
 	char* serializado;
@@ -55,9 +56,10 @@ int main(int argc,char **argv){
 	stack_size=	((t_datos_kernel*)(datos_kernel->data))->STACK_SIZE;
 	log_info(log,"Quantum: %d TamPag: %d Quantum Sleep: %d Stack size: %d Var Max: %d\n", quantum, tamanioPag, quantum_sleep, stack_size, var_max);
 
-	sigusr1_desactivado = 1;
+
 
 	while(sigusr1_desactivado){
+		log_info(log,"sigusr1: %d", sigusr1_desactivado);
 		programaBloqueado = 0;
 		programaFinalizado = 0;
 		programaAbortado = 0;
@@ -65,7 +67,7 @@ int main(int argc,char **argv){
 		log_info(log,"Esperando Pcb\n");
 		pcb = malloc(sizeof(t_pcb));
 		t_paquete* paquete_recibido = recibir(nucleo);
-		sleep(4);
+		//sleep(4);
 		log_info(log,"Deserializando PCB\n");
 		pcb = desserializarPCB(paquete_recibido->data);
 		log_info(log,"Recibi PCB del nucleo con el program counter en: %d y SizeContextoActual en %d\n", pcb->pc, pcb->sizeContextoActual);
@@ -137,11 +139,18 @@ liberar_paquete(datos_kernel);
 free(pcb);
 close(nucleo);
 close(umc);
-return 0;
+exit(EXIT_SUCCESS);
 
 }
 
 //*******************************************FUNCIONES**********************************************************
+
+void sig_handler(int signo) {
+	sigusr1_desactivado = 0;
+	log_info(log,"Se detecto señal SIGUSR1, la CPU se cerrara al finalizar\n");
+	return;
+}
+
 char* leer(int pagina,int offset, int tamanio)
 {
 	if((tamanio+offset)<=tamanioPag){
@@ -255,9 +264,3 @@ char* depurarSentencia(char* sentencia){
 
 }
 
-void sig_handler(int signo) {
-	if (signo == SIGUSR1) {
-		sigusr1_desactivado = 0;
-		log_info(log, "Se recibió la señal SIGUSR_1, la CPU se cerrara al finalizar la ejecucion actual");
-	}
-}
