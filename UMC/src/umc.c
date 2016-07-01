@@ -2,9 +2,11 @@
 
 int main(int argc, char** argv) {
 
+	remove("UMC.log");
 	log = log_create(ARCHIVOLOG, "UMC", 0, LOG_LEVEL_INFO);
 	log_info(log, "Iniciando UMC.\n");
 
+	remove("memory.dump");
 	setbuf(stdout, NULL);
 
 	inicializar_semaforos();
@@ -107,8 +109,13 @@ void atender_conexiones() {
 void solicitar_bloque_memoria() {
 
 	memoria = malloc(tamanio_marco * cantidad_marcos);
+
 	tabla_de_paginas = list_create();
+
+
 	tlb = list_create();
+
+
 	if (memoria == NULL) {
 		error_show("No se pudo otorgar la memoria solicitada");
 		exit(EXIT_FAILURE);

@@ -6,7 +6,14 @@ void * leer_una_pagina(int numero_pagina, int offset, int tamanio) {
 			"Llega una peticion de lectura por parte de una CPUs, cuyo proceso es %d, la pagina deseada es %d con el offset %d",
 			proceso_actual, numero_pagina, offset);
 
-	t_entrada_tabla_de_paginas * pagina_encontrada = buscar_tlb(numero_pagina);
+	t_entrada_tabla_de_paginas * pagina_encontrada;
+
+	if (tlb_habilitada()) {
+		pagina_encontrada = buscar_tlb(numero_pagina);
+	} else {
+		log_info(log, "La TLB esta apagada, se busca en la tabla de paginas");
+		pagina_encontrada = buscar_pagina_tabla_de_paginas(numero_pagina);
+	}
 
 	if (!pagina_encontrada->presencia) {
 
@@ -45,7 +52,7 @@ void * leer_una_pagina(int numero_pagina, int offset, int tamanio) {
 }
 
 bool no_tiene_ni_hay_marcos(int pid) {
-	printf("HOLAAAA\n");
+
 	bool coincide_pid_y_esta_presente(void * elemento) {
 
 		t_entrada_tabla_de_paginas * entrada =
@@ -56,7 +63,7 @@ bool no_tiene_ni_hay_marcos(int pid) {
 
 	bool tiene_alguno = list_any_satisfy(tabla_de_paginas,
 			coincide_pid_y_esta_presente);
-	printf("CACACAAA NENE SE HACE CACA %d %d",tiene_alguno,hay_marcos_disponibles());
+
 	return !tiene_alguno && !hay_marcos_disponibles();
 
 }

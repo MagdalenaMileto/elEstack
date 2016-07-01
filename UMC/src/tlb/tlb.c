@@ -27,6 +27,7 @@ t_entrada_tabla_de_paginas * buscar_tlb(int numero_pagina) {
 
 	} else {
 
+		log_info(log, "No se encuentra en la tlb.");
 		resultado = buscar_pagina_tabla_de_paginas(numero_pagina);
 
 		agregar_entrada_tlb(resultado);
@@ -115,4 +116,8 @@ void eliminar_proceso_tlb( pid) {
 
 	log_info(log, "Se eliminaron las entradas de la tlb del proceso %d", pid);
 
+}
+
+bool tlb_habilitada() {
+	return entradas_TLB != 0;
 }

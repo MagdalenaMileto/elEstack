@@ -35,6 +35,10 @@ t_list * tlb;
 
 t_list * control_de_marcos;
 
+t_list * aciertos_tlb;
+
+t_list * aciertos_tlb;
+
 pthread_t hilo_nucleo, hilo_cpu;
 
 t_log * log;

@@ -15,7 +15,7 @@ context(algoritmo_clock_modificado) {
 
 			log = log_create(ARCHIVOLOG, "UMC", 0, LOG_LEVEL_INFO);
 			tabla_de_paginas = list_create();
-			algoritmo = "CLOCK-M";
+			algoritmo = "MODIFICADO";
 
 		}end
 

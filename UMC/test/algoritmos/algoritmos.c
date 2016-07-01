@@ -9,7 +9,6 @@
 
 context(algoritmos) {
 
-
 	describe("funciones en comun para los algoritmos") {
 
 		t_list * lista;
@@ -103,7 +102,7 @@ context(algoritmos) {
 
 				t_list * lista_clock = lista_circular_clock(lista,1);
 
-				avanzar_victima(lista_clock,puntero_nuevo);
+				avanzar_victima(lista_clock,puntero_nuevo,puntero_viejo);
 
 				should_bool(puntero_nuevo->puntero) be equal to(true);
 				should_bool(puntero_viejo->puntero) be equal to(false);
@@ -124,7 +123,7 @@ context(algoritmos) {
 
 				t_list * lista_clock = lista_circular_clock(lista,1);
 
-				avanzar_victima(lista_clock,puntero_viejo,entrada_nueva);
+				avanzar_victima(lista_clock,entrada_nueva,puntero_viejo);
 
 				should_bool(puntero_nuevo->puntero) be equal to(true);
 				should_bool(puntero_viejo->puntero) be equal to(false);
@@ -145,7 +144,7 @@ context(algoritmos) {
 
 				t_list * lista_clock = lista_circular_clock(lista,1);
 
-				avanzar_victima(lista_clock,entrada_nueva);
+				avanzar_victima(lista_clock,entrada_nueva,puntero_viejo);
 
 				should_bool(puntero_nuevo->puntero) be equal to(true);
 				should_bool(puntero_viejo->puntero) be equal to(false);
