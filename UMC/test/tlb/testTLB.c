@@ -74,5 +74,40 @@ context(tlb) {
 			}end
 		}end
 
+		describe("Eliminar Entradas") {
+
+			before {
+				tlb = list_create();
+				entradas_TLB = 15;
+				numero_operacion_actual = 0;
+			}end
+
+			t_entrada_tabla_de_paginas * entrada_proceso;
+
+			it(
+					"Se elimina solamente la entrada de la tlb y no se libera") {
+
+				//En realidad son entradas a la TLB. Si, la expresividad se fue a la mierda.
+
+				entrada_proceso = crear_nueva_entrada(2,0);
+
+				agregar_entrada_tlb(crear_nueva_entrada(1,0));
+				agregar_entrada_tlb(crear_nueva_entrada(1,1));
+				agregar_entrada_tlb(crear_nueva_entrada(1,2));
+				agregar_entrada_tlb(entrada_proceso);
+
+				should_int(
+						list_size(tlb))be equal to(4);
+
+				eliminar_proceso_tlb(2);
+
+				should_ptr(entrada_proceso) not be null;
+
+				should_int(
+						list_size(tlb))be equal to(3);
+
+			}end
+		}end
 	}end
+
 }

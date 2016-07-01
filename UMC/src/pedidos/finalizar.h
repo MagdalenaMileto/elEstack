@@ -12,6 +12,7 @@
 #include "interfaces/swap.h"
 
 #include "../tabla_de_paginas/tabla_de_paginas.h"
+#include "../tlb/tlb.h"
 
 void finalizar_proceso(int pid);
 

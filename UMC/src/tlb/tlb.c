@@ -19,7 +19,6 @@ t_entrada_tabla_de_paginas * buscar_tlb(int numero_pagina) {
 	t_entrada_tabla_de_paginas * resultado = list_find(tlb,
 			filtrar_por_proceso_y_pagina);
 
-
 	if (resultado) {
 
 		log_info(log, "Acierto en la TLB.");
@@ -97,3 +96,23 @@ int numero_operacion() {
 
 }
 
+void eliminar_proceso_tlb( pid) {
+
+	bool lambda_coincide_pid(void * elemento) {
+
+		t_entrada_tabla_de_paginas * entrada =
+				(t_entrada_tabla_de_paginas*) elemento;
+
+		return entrada->pid == pid;
+
+	}
+
+	void no_hacer_nada(void * elemento) {
+
+	}
+
+	remove_and_destroy_all_such_that(tlb, lambda_coincide_pid, no_hacer_nada);
+
+	log_info(log, "Se eliminaron las entradas de la tlb del proceso %d", pid);
+
+}

@@ -1,5 +1,6 @@
 UMC
 *.log
 /Debug/
-.cproject
-.project
+.proj*
+.cproj*
+*.dump
