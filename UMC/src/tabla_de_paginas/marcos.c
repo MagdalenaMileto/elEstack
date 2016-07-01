@@ -72,14 +72,25 @@ bool tiene_cantidad_maxima_marcos_asignados(int pid) {
 		t_entrada_tabla_de_paginas * entrada =
 				(t_entrada_tabla_de_paginas *) elemento;
 
-		return entrada->pid == pid && entrada->presencia;
+		return (entrada->pid == pid && entrada->presencia);
+
+	}
+
+	bool marco_disponible(void * entrada) {
+
+		t_control_marco * marco = (t_control_marco *) entrada;
+
+		return marco->disponible;
 
 	}
 
 	int marcos_utilizados = list_count_satisfying(tabla_de_paginas,
 			coincide_pid_y_esta_presente);
 
-	return marcos_utilizados == cantidad_maxima_marcos;
+	t_control_marco * marco_libre = list_find(control_de_marcos,
+			marco_disponible);
+
+	return (marcos_utilizados == cantidad_maxima_marcos) || (marco_libre == NULL);
 }
 
 void inicializar_marcos() {

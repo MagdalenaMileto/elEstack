@@ -67,6 +67,8 @@ context(algoritmo_clock_modificado) {
 			should_bool(entrada_2->presencia) be equal to(true);
 			should_bool(entrada_2->puntero) be equal to(false);
 
+
+
 		}end
 
 	}end
