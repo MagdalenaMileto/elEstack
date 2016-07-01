@@ -35,9 +35,22 @@ void atender_cpu(void * parametro_hilo) {
 
 			void * contenido = leer_una_pagina(numero_pagina, offset, tamanio);
 
-			enviar(socket_cpu, 6, tamanio, contenido);
+			char * texto_falla = string_from_format("No hay lugar disponible!");
+			int tamanio_mensaje_falla = string_length(texto_falla) + 1;
 
-			log_info(log, "Se envia con exito a la CPU.");
+			if (string_equals_ignore_case(contenido, texto_falla)) {
+
+				enviar(socket_cpu, 7, tamanio_mensaje_falla, contenido);
+
+				log_info(log, "Se envia sin exito a la CPU.");
+
+				finalizar_proceso(pid_actual);
+			} else {
+
+				enviar(socket_cpu, 6, tamanio, contenido);
+
+				log_info(log, "Se envia con exito a la CPU.");
+			}
 
 			break;
 
@@ -63,7 +76,6 @@ void atender_cpu(void * parametro_hilo) {
 			log_info(log, "Entro a cambiar proceso");
 
 			memcpy(&pid_actual, paquete_nuevo->data, sizeof(int));
-			proceso_actual = pid_actual;
 
 			log_info(log, "Se cambio el proceso actual a %d.", proceso_actual);
 

@@ -25,5 +25,6 @@ void avanzar_victima(t_list * lista_clock,
 		t_entrada_tabla_de_paginas * entrada_con_marco_nuevo);
 bool de_una_entrada(t_list * lista);
 void escribir_marco(int marco, int offset, int tamanio, void * contenido);
+bool hay_marcos_disponibles();
 
 #endif /* TABLA_DE_PAGINAS_MARCOS_H_ */

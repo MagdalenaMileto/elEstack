@@ -18,7 +18,6 @@
 #include "../pedidos/interfaces/swap.h"
 
 void * leer_una_pagina(int numero_pagina, int offset, int tamanio);
-t_entrada_tabla_de_paginas * buscar_pagina_tabla_de_paginas(int numero_pagina);
-t_entrada_tabla_de_paginas * buscar_tlb(int numero_pagina);
+bool no_tiene_ni_hay_marcos(int proceso_actual);
 
 #endif /* SRC_PEDIDOS_LEER_H_ */

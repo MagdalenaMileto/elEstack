@@ -72,14 +72,26 @@ bool tiene_cantidad_maxima_marcos_asignados(int pid) {
 		t_entrada_tabla_de_paginas * entrada =
 				(t_entrada_tabla_de_paginas *) elemento;
 
-		return entrada->pid == pid && entrada->presencia;
+		return (entrada->pid == pid && entrada->presencia);
+
+	}
+
+	bool marco_disponible(void * entrada) {
+
+		t_control_marco * marco = (t_control_marco *) entrada;
+
+		return marco->disponible;
 
 	}
 
 	int marcos_utilizados = list_count_satisfying(tabla_de_paginas,
 			coincide_pid_y_esta_presente);
 
-	return marcos_utilizados == cantidad_maxima_marcos;
+	t_control_marco * marco_libre = list_find(control_de_marcos,
+			marco_disponible);
+
+	return (marcos_utilizados == cantidad_maxima_marcos)
+			|| (marco_libre == NULL);
 }
 
 void inicializar_marcos() {
@@ -150,7 +162,7 @@ void algoritmo_remplazo(t_entrada_tabla_de_paginas * entrada_sin_marco, int pid)
 
 	}
 
-	else if (strcmp(algoritmo, "CLOCK-M")) {
+	else if (strcmp(algoritmo, "MODIFICADO")) {
 
 		log_info(log, "Inicio del algoritmo de reemplazo Clock Modificado");
 
@@ -316,5 +328,21 @@ void escribir_marco(int marco, int offset, int tamanio, void * contenido) {
 
 	log_info(log, "El marco se escribe con exito.");
 
+}
+
+bool hay_marcos_disponibles() {
+
+	bool marco_disponible(void * entrada) {
+
+		t_control_marco * marco = (t_control_marco *) entrada;
+
+		return marco->disponible;
+
+	}
+
+	int cantidad_disponible = list_count_satisfying(control_de_marcos,
+			marco_disponible);
+
+	return cantidad_disponible = !0;
 }
 

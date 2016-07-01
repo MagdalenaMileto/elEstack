@@ -73,6 +73,7 @@ void levantar_configuraciones();
 char* depurarSentencia(char* sentencia);
 void sig_handler(int signo);
 char* leer(int pagina,int offset, int tamanio);
+void sig_handler(int signo);
 
 /* Emi para tener un machete de los codigos de operacion y no confundirnos:
  *

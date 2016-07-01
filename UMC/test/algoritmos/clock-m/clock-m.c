@@ -67,6 +67,26 @@ context(algoritmo_clock_modificado) {
 			should_bool(entrada_2->presencia) be equal to(true);
 			should_bool(entrada_2->puntero) be equal to(false);
 
+			algoritmo_remplazo(entrada_1,1);
+
+			should_int(entrada_0->marco) be equal to(0);
+			should_bool(entrada_0->uso) be equal to(false);
+			should_bool(entrada_0->modificado) be equal to(false);
+			should_bool(entrada_0->presencia) be equal to(false);
+			should_bool(entrada_0->puntero) be equal to(false);
+
+			should_int(entrada_1->marco) be equal to(0);
+			should_bool(entrada_1->uso) be equal to(true);
+			should_bool(entrada_1->modificado) be equal to(false);
+			should_bool(entrada_1->presencia) be equal to(true);
+			should_bool(entrada_1->puntero) be equal to(false);
+
+			should_int(entrada_2->marco) be equal to(1);
+			should_bool(entrada_2->uso) be equal to(true);
+			should_bool(entrada_2->modificado) be equal to(false);
+			should_bool(entrada_2->presencia) be equal to(true);
+			should_bool(entrada_2->puntero) be equal to(true);
+
 		}end
 
 	}end

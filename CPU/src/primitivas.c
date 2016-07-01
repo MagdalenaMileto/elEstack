@@ -55,6 +55,7 @@ t_puntero definirVariable(t_nombre_variable identificador_variable)
 
 	char* escribirUMC= malloc(16);
 	int valor;
+	log_info(log,"Basura: %d", valor);
 	int direccionRetorno = convertirDireccionAPuntero(direccion_variable);
 	if(direccionRetorno+3>var_max){
 		log_info(log,"No hay espacio para definir variable %c. Abortando programa\n", identificador_variable);
@@ -137,16 +138,15 @@ t_valor_variable obtenerValorCompartida(t_nombre_compartida variable)
 	log_info(log,"Tamanio de variable global %d\n", strlen(variable));
 	char* barra_cero="\0";
 	memcpy(variable_compartida, variable, strlen(variable));
-	memcpy(variable_compartida+(strlen(variable)+1), barra_cero, 1);
+	memcpy(variable_compartida+(strlen(variable)), barra_cero, 1);
 	log_info(log,"Obteniendo variable compartida %s\n", variable_compartida);
 	t_paquete* paquete_nuevo;
 	int valor;
-	enviar(nucleo, 351, strlen(variable), variable_compartida); // agregar +1 en el size si se agrega el barra_cero
+	enviar(nucleo, 351, strlen(variable)+1, variable_compartida); // agregar +1 en el size si se agrega el barra_cero
 	paquete_nuevo = recibir(nucleo);
 	memcpy(&valor, paquete_nuevo->data, 4);
 	log_info(log,"%s vale %d\n", variable_compartida, valor);
 	free(variable_compartida);
-	log_info(log,"Saliendo para imprimir %d\n", valor);
 	return valor;
 }
 
