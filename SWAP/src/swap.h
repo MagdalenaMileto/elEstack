@@ -13,8 +13,6 @@
 #include<commons/txt.h>
 #include<sys/mman.h>
 #include <theDebuggers/socketLibrary.h>
-//#include "global.h"
-//#include "control.h"
 #include <unistd.h>
 
 #define INICIALIZAR 1
@@ -28,7 +26,6 @@
 t_config* configuracion;
 t_log * log;
 
-////
 void *discoParaleloNoVirtualMappeado;
 char* NOMBRE_SWAP;
 char* PUERTO_SWAP;
@@ -38,7 +35,6 @@ int RETARDO_COMPACTACION;
 int RETARDO_ACCESO;
 
 long int tamanio_archivo;
-
 
 
 typedef struct __attribute__((packed)){
@@ -74,7 +70,5 @@ void inicializarEstructuraPaginas();
 void llenarprocPags();
 void inicializarProceso(int pid, int pagina, char*codigo);
 void *hilo_mock(void *arg);
-void check (int test, const char * message, ...);
-
 
 #endif /* SWAP_H_ */

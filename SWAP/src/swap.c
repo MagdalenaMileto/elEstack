@@ -112,8 +112,7 @@ int main(int argc, char **argv) {
 				//Deserializar Mensaje
 				memcpy(&pid, mensaje->data, sizeof(int));
 				memcpy(&pagina, mensaje->data + sizeof(int), sizeof(int));
-				memcpy(&tamanio_codigo, mensaje->data + sizeof(int) * 2,
-						sizeof(int));
+				memcpy(&tamanio_codigo, mensaje->data + sizeof(int) * 2, sizeof(int));
 				codigo = malloc(pagina * TAMANIO_PAGINA);
 				memcpy(codigo, mensaje->data + sizeof(int) * 2,
 						TAMANIO_PAGINA * pagina);
@@ -141,7 +140,7 @@ int main(int argc, char **argv) {
 				leerPaginaProceso(pid, pagina, paginaALeer);
 
 				enviar(socket_umc, 1, TAMANIO_PAGINA, paginaALeer);
-
+				free(paginaALeer);
 				break;
 			}
 			default:
@@ -246,6 +245,7 @@ void crearArchivo() {
 	memset(archivo, '\0', tamanio_archivo);
 	fwrite(archivo, 1, tamanio_archivo, arch);
 	fclose(arch);
+	free(archivo);
 	inicializarEstructuraPaginas();
 }
 
@@ -259,9 +259,7 @@ void mapearArchivo() {
 		printf("Error abriendo %s para su lectura", NOMBRE_SWAP);
 		exit(EXIT_FAILURE);
 	}
-	discoParaleloNoVirtualMappeado = mmap(0, length, PROT_READ | PROT_WRITE,
-	MAP_SHARED, fd, 0);
-	//check(discoParaleloNoVirtualMappeado == MAP_FAILED, "mmap %s failed: %s", NOMBRE_SWAP, strerror (errno));
+	discoParaleloNoVirtualMappeado = mmap(0, length, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
 
 	if (discoParaleloNoVirtualMappeado == MAP_FAILED) {
 		close(fd);
@@ -269,17 +267,6 @@ void mapearArchivo() {
 		exit(EXIT_FAILURE);
 	}
 	printf("Mapeo perfecto  %s \n", NOMBRE_SWAP);
-}
-
-void check(int test, const char * message, ...) {
-	if (test) {
-		va_list args;
-		va_start(args, message);
-		vfprintf(stderr, message, args);
-		va_end(args);
-		fprintf(stderr, "\n");
-		exit(EXIT_FAILURE);
-	}
 }
 
 int hayLugarParaNuevoProceso(int cantPagsNecesita) {
@@ -309,40 +296,6 @@ int hayLugarParaNuevoProceso(int cantPagsNecesita) {
 	else{
 		return -1;
 	}
-
-
-//
-//	//en caso de no encontrar lugar, me devuelve -1 y paso a hacer la compactacion
-//	//en otro caso, me devuelve el numero de pag a partir de la cual escribo
-//	int flagPuede = -1;
-//	int j = ultimaPagLibre();
-//	int i = j;
-//	int totalLibres = 0;
-//	while (1) {
-//		if (j == -1) {
-//			//no hay paginas libres
-//			break;
-//		}
-//		int primerOcupada = primerPaginaOcupadaLuegoDeUnaLibreDada(j);
-//		if ((primerOcupada - j) >= cantPagsNecesita || primerOcupada == -1) {
-//			return j;
-//		} else {
-//			totalLibres = totalLibres + primerOcupada - j;
-//			i = j;
-//
-//			if (i == CANTIDAD_PAGINAS - 1) {
-//				return -1;
-//			}
-//
-//			//Hay que compactar para que pueda entrar el proceso
-//			if (totalLibres >= cantPagsNecesita) {
-//				return -2;
-//			}
-//			int k = j;
-//			j = primerPagLibreAPartirDeUnaDada(k);
-//		}
-//	}
-//	return flagPuede;
 }
 
 int primerPaginaOcupadaLuegoDeUnaLibreDada(int nroPag) {
@@ -390,7 +343,7 @@ void reservarProceso(int pidProceso, int cantPags, int pagAPartir) {
 	}
 }
 
-void compactacion() { //Flag: 1 salio bien, 2 hubo error
+void compactacion() {
 	log_info(log, "INICIANDO COMPACTACION \n");
 	usleep(RETARDO_COMPACTACION * 1000);
 	long int inicioOcupada;
@@ -491,8 +444,7 @@ void escribirPagina(int nroPag, void*dataPagina) {
 	///printf("codigo: %s \n", (char*)dataPagina);
 
 	//printf("Pagina de Inicio en la que va a copiar:%d \n", inicioPag);
-	memcpy(discoParaleloNoVirtualMappeado + inicioPag, dataPagina,
-			TAMANIO_PAGINA);
+	memcpy(discoParaleloNoVirtualMappeado + inicioPag, dataPagina, TAMANIO_PAGINA);
 	log_info(log, "Pagina %d, copiada con exito! \n", nroPag);
 }
 
