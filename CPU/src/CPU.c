@@ -66,6 +66,22 @@ int main(int argc,char **argv){
 		programaAbortado = 0;
 		int quantum_aux=quantum;
 		log_info(log,"Esperando Pcb\n");
+
+
+		//Recibo quantum
+
+
+		t_paquete* datos_kernel=recibir(nucleo);
+
+		quantum = ((t_datos_kernel*)(datos_kernel->data))->QUANTUM;
+		tamanioPag = ((t_datos_kernel*)(datos_kernel->data))->TAMPAG;
+		quantum_sleep = ((t_datos_kernel*)(datos_kernel->data))->QUANTUM_SLEEP;
+		stack_size=	((t_datos_kernel*)(datos_kernel->data))->STACK_SIZE;
+
+		liberar_paquete(datos_kernel);
+
+
+
 		paquete_recibido = recibir(nucleo);
 		//sleep(4);
 		log_info(log,"Deserializando PCB\n");
