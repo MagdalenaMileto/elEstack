@@ -1,22 +1,31 @@
 #include "estructurasControl.h"
 
 void destruirPCB(t_pcb *pcb) {
-	/*
-	int i, y;
-	for (i = 0; i < pcb->sizeContextoActual; i++) {
-		for (y = 0; y < pcb->contextoActual[i]->sizeArgs; y++) {
-			free(pcb->contextoActual[i]->args[y]);
-		}
-		for (y = 0; y < pcb->contextoActual[i]->sizeVars; y++) {
-			free(pcb->contextoActual[i]->vars[y]);
-		}
-		free(pcb->contextoActual[i]);
+	t_contexto *contexto_a_finalizar;
+	while(pcb->sizeContextoActual != 0){
+		contexto_a_finalizar= list_get(pcb->contextoActual, pcb->sizeContextoActual-1);
+		while(contexto_a_finalizar->sizeVars != 0){
+				free((t_direccion *)((t_variable *)list_get(contexto_a_finalizar->vars, contexto_a_finalizar->sizeVars-1))->direccion);
+				contexto_a_finalizar->sizeVars--;
+			}
+		while(contexto_a_finalizar->sizeArgs != 0){
+					free((t_direccion*)list_get(contexto_a_finalizar->args, contexto_a_finalizar->sizeArgs-1));
+					contexto_a_finalizar->sizeArgs--;
+					}
+		free(list_get(pcb->contextoActual, pcb->sizeContextoActual-1));
+		printf("libere algo\n");
+		pcb->sizeContextoActual--;
 	}
-	free(pcb->contextoActual);
+	printf("estoy por eliminar la lista\n");
+	//list_destroy(pcb->contextoActual);
+	printf("elimine lista\n");
 	free(pcb->indiceDeCodigo);
+	printf("free indice de codigo\n");
 	free(pcb->indiceDeEtiquetas);
+	printf("free etiqute\n");
 	free(pcb);
-	*/
+	printf("funco\n");
+
 }
 
 t_pcb *desserializarPCB(char *serializado) {
