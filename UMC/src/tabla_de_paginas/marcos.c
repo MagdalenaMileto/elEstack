@@ -99,7 +99,6 @@ bool tiene_cantidad_maxima_marcos_asignados(int pid) {
 		return marco->disponible;
 
 	}
-
 	int marcos_utilizados = list_count_satisfying(tabla_de_paginas,
 			coincide_pid_y_esta_presente);
 
@@ -168,7 +167,8 @@ void algoritmo_remplazo(t_entrada_tabla_de_paginas * entrada_sin_marco, int pid)
 
 		if (victima->modificado) {
 
-			log_info(log, "La victima esta modificada, se escribe en el swap.\n");
+			log_info(log,
+					"La victima esta modificada, se escribe en el swap.\n");
 
 			swap_escribir(victima);
 			victima->modificado = false;

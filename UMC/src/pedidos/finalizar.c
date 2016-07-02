@@ -14,7 +14,7 @@ void finalizar_proceso(int pid) {
 
 		int * proceso = (int *) elemento;
 
-		return *proceso == proceso_actual;
+		return *proceso == pid;
 	}
 
 	int cantidad_aciertos, cantidad_fallas, cantidad_lecturas,

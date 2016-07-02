@@ -23,8 +23,6 @@ void esperar_comando(void * parametros) {
 				comando_a_realizar = "\0";
 			}
 
-			pthread_mutex_lock(&semaforo_mutex_cpu);
-
 			char * posible_retardo = string_substring_until(comando_a_realizar,
 					8);
 			char * posible_dump_parcial = string_substring_until(
@@ -90,7 +88,6 @@ void esperar_comando(void * parametros) {
 			}
 
 		}
-		pthread_mutex_unlock(&semaforo_mutex_cpu);
 	}
 
 }
@@ -104,10 +101,14 @@ void cambiar_retardo(int retardo_numerico) {
 
 void flush_tlb() {
 
+	pthread_mutex_lock(&semaforo_mutex_tlb);
+
 	log_info(log, "La TLB tiene %d entradas\n", list_size(tlb));
 	log_info(log, "Se flushea la TLB\n");
 	list_clean(tlb);
 	log_info(log, "La TLB paso a tener %d entradas\n", list_size(tlb));
+
+	pthread_mutex_unlock(&semaforo_mutex_tlb);
 
 }
 
@@ -121,6 +122,8 @@ void flush_memory(int proceso) {
 		return entrada_tabla_paginas->pid == proceso;
 
 	}
+
+	pthread_mutex_lock(&semaforo_mutex_marcos);
 
 	t_list * lista_filtrada_por_proceso = list_filter(tabla_de_paginas,
 			filtrar_por_proceso);
@@ -141,9 +144,12 @@ void flush_memory(int proceso) {
 	list_iterate(lista_filtrada_por_proceso, cambiar_bit);
 	log_info(log, "===== FIN FLUSH =====\n", proceso);
 
+	pthread_mutex_lock(&semaforo_mutex_marcos);
 }
 
 void dump_total() {
+
+	pthread_mutex_lock(&semaforo_mutex_marcos);
 
 	char * texto = string_new();
 	string_append(&texto, "\n===== INICIO DUMP =====\n");
@@ -160,6 +166,7 @@ void dump_total() {
 	escribir_a_dump(string_from_format("\n===== FIN DUMP =====\n"));
 
 	free(texto);
+	pthread_mutex_unlock(&semaforo_mutex_marcos);
 }
 
 void dump_proceso(int pid) {
@@ -172,6 +179,8 @@ void dump_proceso(int pid) {
 		return entrada_tabla_paginas->pid == pid;
 
 	}
+
+	pthread_mutex_lock(&semaforo_mutex_marcos);
 
 	t_list * tabla_filtrada = list_filter(tabla_de_paginas,
 			filtrar_por_proceso_dump);
@@ -190,6 +199,8 @@ void dump_proceso(int pid) {
 	escribir_a_dump(texto);
 
 	free(texto);
+
+	pthread_mutex_unlock(&semaforo_mutex_marcos);
 
 }
 

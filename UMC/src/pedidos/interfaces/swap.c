@@ -8,6 +8,8 @@
 
 bool swap_inicializar_proceso(int pid, int cantidad_paginas, char * codigo) {
 
+	pthread_mutex_lock(&semaforo_mutex_swap);
+
 	int tamanio_codigo = string_length(codigo);
 	int tamanio_paquete = (sizeof(int) * 2) + tamanio_codigo;
 	void * data = malloc(tamanio_paquete);
@@ -32,20 +34,28 @@ bool swap_inicializar_proceso(int pid, int cantidad_paginas, char * codigo) {
 
 	log_info(log, "Se liberan las estructuras.\n");
 
+	pthread_mutex_unlock(&semaforo_mutex_swap);
+
 	return resultado;
 
 }
 
 void swap_finalizar_proceso(int pid) {
 
+	pthread_mutex_lock(&semaforo_mutex_swap);
+
 	enviar(socket_swap, SWAP_FINALIZAR, sizeof(int), (void *) &pid);
 
 	log_info(log,
 			"Se envia exitosamente la peticion de finalizacion del proceso %d al swap\n",
 			pid);
+
+	pthread_mutex_unlock(&semaforo_mutex_swap);
 }
 
 void * swap_leer(int pid, int numero_pagina) {
+
+	pthread_mutex_lock(&semaforo_mutex_swap);
 
 	int * pid_proceso = malloc(sizeof(int));
 	*pid_proceso = pid;
@@ -67,11 +77,15 @@ void * swap_leer(int pid, int numero_pagina) {
 
 	log_info(log, "El contenido de la pagina es %s\n", (char *) paquete->data);
 
+	pthread_mutex_unlock(&semaforo_mutex_swap);
+
 	return paquete->data;
 
 }
 
 void swap_escribir(t_entrada_tabla_de_paginas * entrada) {
+
+	pthread_mutex_lock(&semaforo_mutex_swap);
 
 	int * pid_proceso = malloc(sizeof(int));
 	*pid_proceso = entrada->pid;
@@ -93,6 +107,8 @@ void swap_escribir(t_entrada_tabla_de_paginas * entrada) {
 			entrada->pagina, entrada->pid);
 
 	enviar(socket_swap, SWAP_ESCRIBIR, tamanio, data);
+
+	pthread_mutex_unlock(&semaforo_mutex_swap);
 
 	free(data);
 

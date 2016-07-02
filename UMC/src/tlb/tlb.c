@@ -6,14 +6,13 @@
  */
 #include "tlb.h"
 
-t_entrada_tabla_de_paginas * buscar_tlb(int numero_pagina) {
+t_entrada_tabla_de_paginas * buscar_tlb(int pid, int numero_pagina) {
 
 	bool filtrar_por_proceso_y_pagina(void * elemento_de_la_lista) {
 
 		t_entrada_tabla_de_paginas * entrada = elemento_de_la_lista;
 
-		return entrada->pagina == numero_pagina
-				&& entrada->pid == proceso_actual;
+		return entrada->pagina == numero_pagina && entrada->pid == pid;
 	}
 
 	t_entrada_tabla_de_paginas * resultado = list_find(tlb,
@@ -21,7 +20,7 @@ t_entrada_tabla_de_paginas * buscar_tlb(int numero_pagina) {
 
 	int * pid_pedido = malloc(sizeof(int));
 
-	*pid_pedido = proceso_actual;
+	memcpy(pid_pedido, &pid, sizeof(int));
 
 	if (resultado) {
 
@@ -29,7 +28,11 @@ t_entrada_tabla_de_paginas * buscar_tlb(int numero_pagina) {
 
 		list_add(aciertos_tlb, pid_pedido);
 
+		pthread_mutex_lock(&semaforo_mutex_tlb);
+
 		resultado->ultima_vez_usado = numero_operacion();
+
+		pthread_mutex_unlock(&semaforo_mutex_tlb);
 
 	} else {
 
@@ -37,10 +40,13 @@ t_entrada_tabla_de_paginas * buscar_tlb(int numero_pagina) {
 
 		list_add(fallos_tlb, pid_pedido);
 
-		resultado = buscar_pagina_tabla_de_paginas(numero_pagina);
+		resultado = buscar_pagina_tabla_de_paginas(pid, numero_pagina);
+
+		pthread_mutex_lock(&semaforo_mutex_tlb);
 
 		agregar_entrada_tlb(resultado);
 
+		pthread_mutex_unlock(&semaforo_mutex_tlb);
 	}
 
 	return resultado;
@@ -121,10 +127,14 @@ void eliminar_proceso_tlb( pid) {
 
 	}
 
+	pthread_mutex_lock(&semaforo_mutex_tlb);
+
 	remove_and_destroy_all_such_that(tlb, lambda_coincide_pid, no_hacer_nada);
 
 	log_info(log, "Se eliminaron las entradas de la tlb del proceso %d.\n",
 			pid);
+
+	pthread_mutex_unlock(&semaforo_mutex_tlb);
 
 }
 

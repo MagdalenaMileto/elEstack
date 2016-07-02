@@ -17,8 +17,6 @@ void atender_nucleo() {
 
 		paquete_nuevo = recibir(socket_nucleo);
 
-		pthread_mutex_lock(&semaforo_mutex_cpu);
-
 		switch (paquete_nuevo->codigo_operacion) {
 		case INICIALIZAR:
 
@@ -26,7 +24,8 @@ void atender_nucleo() {
 			memcpy(&paginas_requeridas, paquete_nuevo->data + sizeof(int),
 					sizeof(int));
 
-			log_info(log, "Las paginas requeridas son %d.\n", paginas_requeridas);
+			log_info(log, "Las paginas requeridas son %d.\n",
+					paginas_requeridas);
 
 			memcpy(&tamanio_codigo, paquete_nuevo->data + sizeof(int) * 2,
 					sizeof(int));
@@ -35,6 +34,8 @@ void atender_nucleo() {
 
 			memcpy(codigo, paquete_nuevo->data + sizeof(int) * 3,
 					tamanio_codigo);
+
+			pthread_mutex_lock(&semaforo_mutex_marcos);
 
 			if (puede_iniciar_proceso(pid, paginas_requeridas, codigo)) {
 
@@ -51,6 +52,8 @@ void atender_nucleo() {
 				enviar(socket_nucleo, FRACASO, sizeof(int), &pid);
 			}
 
+			pthread_mutex_unlock(&semaforo_mutex_marcos);
+
 			free(codigo);
 
 			break;
@@ -58,14 +61,18 @@ void atender_nucleo() {
 		case FINALIZAR:
 
 			pid = *(int *) paquete_nuevo->data;
+
+			pthread_mutex_lock(&semaforo_mutex_marcos);
+
 			finalizar_proceso(pid);
+
+			pthread_mutex_unlock(&semaforo_mutex_marcos);
 
 			break;
 
 		}
 
 		liberar_paquete(paquete_nuevo);
-		pthread_mutex_unlock(&semaforo_mutex_cpu);
 
 	}
 }

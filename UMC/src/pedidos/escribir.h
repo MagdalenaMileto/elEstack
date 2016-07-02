@@ -14,7 +14,7 @@
 
 #include "../globales.h"
 
-void escribir_una_pagina(int numero_pagina, int offset, int tamanio,
+void escribir_una_pagina(int pid, int numero_pagina, int offset, int tamanio,
 		void * buffer);
 
 #endif /* SRC_PEDIDOS_ESCRIBIR_H_ */

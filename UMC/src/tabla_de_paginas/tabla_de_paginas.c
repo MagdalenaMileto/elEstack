@@ -1,6 +1,7 @@
 #include "tabla_de_paginas.h"
 
-t_entrada_tabla_de_paginas * buscar_pagina_tabla_de_paginas(int numero_pagina) {
+t_entrada_tabla_de_paginas * buscar_pagina_tabla_de_paginas(int pid,
+		int numero_pagina) {
 
 	log_info(log, "Retardo de %d milisegundos.\n", retardo);
 
@@ -12,8 +13,7 @@ t_entrada_tabla_de_paginas * buscar_pagina_tabla_de_paginas(int numero_pagina) {
 
 		t_entrada_tabla_de_paginas * entrada = elemento_de_la_lista;
 
-		return entrada->pagina == numero_pagina
-				&& entrada->pid == proceso_actual;
+		return entrada->pagina == numero_pagina && entrada->pid == pid;
 	}
 
 	t_entrada_tabla_de_paginas * pagina_encontrada = list_find(tabla_de_paginas,
@@ -59,11 +59,14 @@ void eliminar_proceso_tabla_de_paginas(int pid) {
 
 	}
 
+
 	remove_and_destroy_all_such_that(tabla_de_paginas,
 			lambda_coincide_pid_y_libera_el_marco_en_control, free);
 
 	log_info(log,
 			"Se eliminan todas las referencias al proceso %d de la memoria.\n",
 			pid);
+
+
 
 }

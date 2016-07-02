@@ -17,7 +17,7 @@
 
 #include "../pedidos/interfaces/swap.h"
 
-void * leer_una_pagina(int numero_pagina, int offset, int tamanio);
+void * leer_una_pagina(int pid,int numero_pagina, int offset, int tamanio);
 bool no_tiene_ni_hay_marcos(int proceso_actual);
 
 #endif /* SRC_PEDIDOS_LEER_H_ */

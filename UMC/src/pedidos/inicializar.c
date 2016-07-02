@@ -24,4 +24,5 @@ void inicializar_programa(int pid, int paginas_requeridas) {
 	}
 
 	log_info(log, "Se inicializa con exito el proceso %d en memoria\n", pid);
+
 }

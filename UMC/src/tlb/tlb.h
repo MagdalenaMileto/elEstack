@@ -15,7 +15,7 @@
 
 #include <stdbool.h>
 
-t_entrada_tabla_de_paginas * buscar_tlb(int numero_pagina);
+t_entrada_tabla_de_paginas * buscar_tlb(int pid, int numero_pagina);
 void agregar_entrada_tlb(t_entrada_tabla_de_paginas * entrada);
 bool hay_entradas_tlb_disponibles();
 void remplazo_lru(t_entrada_tabla_de_paginas * entrada);

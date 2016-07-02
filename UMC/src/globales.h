@@ -21,11 +21,14 @@ int cantidad_marcos, tamanio_marco, cantidad_maxima_marcos, entradas_TLB,
 
 int socket_swap, socket_nucleo, socket_conexiones_nuevas;
 
-int proceso_actual;
-
 int numero_operacion_actual;
 
-pthread_mutex_t semaforo_mutex_cpu;
+pthread_mutex_t semaforo_mutex_swap;
+
+pthread_mutex_t semaforo_mutex_marcos;
+
+pthread_mutex_t semaforo_mutex_tlb;
+
 
 void * memoria;
 

@@ -20,10 +20,6 @@ void atender_cpu(void * parametro_hilo) {
 	while (!cerrar) {
 		paquete_nuevo = recibir(socket_cpu);
 
-		pthread_mutex_lock(&semaforo_mutex_cpu);
-
-		proceso_actual = pid_actual;
-
 		switch (paquete_nuevo->codigo_operacion) {
 
 		case LEER:
@@ -33,7 +29,8 @@ void atender_cpu(void * parametro_hilo) {
 			memcpy(&tamanio, paquete_nuevo->data + sizeof(int) * 2,
 					sizeof(int));
 
-			void * contenido = leer_una_pagina(numero_pagina, offset, tamanio);
+			void * contenido = leer_una_pagina(pid_actual, numero_pagina,
+					offset, tamanio);
 
 			char * texto_falla = string_from_format("No hay lugar disponible!");
 			int tamanio_mensaje_falla = string_length(texto_falla) + 1;
@@ -42,15 +39,18 @@ void atender_cpu(void * parametro_hilo) {
 
 				enviar(socket_cpu, 7, tamanio_mensaje_falla, contenido);
 
-				log_info(log, "Se envia sin exito a la CPU.\n");
+				log_info(log, "Se envia sin exito a la CPU el proceso %d.\n",
+						pid_actual);
 
-				finalizar_proceso(pid_actual);
 			} else {
 
 				enviar(socket_cpu, 6, tamanio, contenido);
 
-				log_info(log, "Se envia con exito a la CPU.\n");
+				log_info(log, "Se envia con exito a la CPU el proceso %d.\n",
+						pid_actual);
+
 			}
+
 			free(texto_falla);
 			break;
 
@@ -65,7 +65,8 @@ void atender_cpu(void * parametro_hilo) {
 
 			memcpy(buffer, paquete_nuevo->data + sizeof(int) * 3, tamanio);
 
-			escribir_una_pagina(numero_pagina, offset, tamanio, buffer);
+			escribir_una_pagina(pid_actual, numero_pagina, offset, tamanio,
+					buffer);
 
 			free(buffer);
 
@@ -77,7 +78,7 @@ void atender_cpu(void * parametro_hilo) {
 
 			memcpy(&pid_actual, paquete_nuevo->data, sizeof(int));
 
-			log_info(log, "Se cambio el proceso actual a %d.\n", proceso_actual);
+			log_info(log, "Se cambio el proceso actual a %d.\n", pid_actual);
 
 			break;
 
@@ -89,8 +90,7 @@ void atender_cpu(void * parametro_hilo) {
 
 		}
 
-		liberar_paquete(paquete_nuevo);
-		pthread_mutex_unlock(&semaforo_mutex_cpu);
+		//liberar_paquete(paquete_nuevo);
 	}
 
 	close(socket_cpu);

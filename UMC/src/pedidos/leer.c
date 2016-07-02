@@ -1,39 +1,51 @@
 #include "leer.h"
 
-void * leer_una_pagina(int numero_pagina, int offset, int tamanio) {
+void * leer_una_pagina(int pid, int numero_pagina, int offset, int tamanio) {
 
 	log_info(log,
 			"Llega una peticion de lectura por parte de una CPUs, cuyo proceso es %d, la pagina deseada es %d con el offset %d.\n",
-			proceso_actual, numero_pagina, offset);
+			pid, numero_pagina, offset);
 
 	t_entrada_tabla_de_paginas * pagina_encontrada;
 
 	if (tlb_habilitada()) {
-		pagina_encontrada = buscar_tlb(numero_pagina);
+
+		pagina_encontrada = buscar_tlb(pid, numero_pagina);
+
 	} else {
-		log_info(log, "La TLB esta apagada, se busca en la tabla de paginas.\n");
-		pagina_encontrada = buscar_pagina_tabla_de_paginas(numero_pagina);
+
+		log_info(log,
+				"La TLB esta apagada, se busca en la tabla de paginas.\n");
+
+		pagina_encontrada = buscar_pagina_tabla_de_paginas(pid, numero_pagina);
 	}
 
 	if (!pagina_encontrada->presencia) {
 
-		if (no_tiene_ni_hay_marcos(proceso_actual)) {
+		pthread_mutex_lock(&semaforo_mutex_marcos);
+
+		if (no_tiene_ni_hay_marcos(pid)) {
 
 			log_info(log,
 					"Se finaliza el proceso %d por no haber marcos libres ni el tener uno.\n",
-					proceso_actual);
+					pid);
 
-			return string_from_format("No hay lugar disponible!");;
+			pthread_mutex_unlock(&semaforo_mutex_marcos);
+
+			return string_from_format("No hay lugar disponible!");
 
 		}
 
-		char * contenido_faltante = swap_leer(proceso_actual, numero_pagina);
+		char * contenido_faltante = swap_leer(pid, numero_pagina);
+
 		marco_nuevo(pagina_encontrada);
 
 		escribir_marco(pagina_encontrada->marco, 0, tamanio_marco,
 				contenido_faltante);
 
 		pagina_encontrada->presencia = true;
+
+		pthread_mutex_unlock(&semaforo_mutex_marcos);
 
 	}
 

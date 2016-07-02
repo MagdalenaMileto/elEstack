@@ -4,6 +4,8 @@ int main(int argc, char** argv) {
 
 	setbuf(stdout, NULL);
 
+	arrancar_umc();
+
 	borrar_archivos_existentes();
 	crear_log();
 
@@ -23,7 +25,10 @@ int main(int argc, char** argv) {
 }
 
 void inicializar_semaforos() {
-	pthread_mutex_init(&semaforo_mutex_cpu, NULL);
+
+	pthread_mutex_init(&semaforo_mutex_marcos, NULL);
+	pthread_mutex_init(&semaforo_mutex_tlb, NULL);
+	pthread_mutex_init(&semaforo_mutex_swap, NULL);
 	log_info(log, "Se inicializan los semaforos.\n");
 }
 
@@ -173,4 +178,9 @@ void registrar_senial_cierre() {
 	}
 
 	signal(SIGINT, cerrar_umc);
+}
+
+void arrancar_umc() {
+
+	printf("%s", "\n\n====== INICIO ======\n\n");
 }
