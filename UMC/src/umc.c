@@ -15,8 +15,8 @@ int main(int argc, char** argv) {
 	solicitar_bloque_memoria();
 	comunicarse_con_el_swap();
 	esperar_al_nucleo();
-	atender_conexiones();
 	atender_hilo_consola();
+	atender_conexiones();
 	close(socket_conexiones_nuevas);
 	close(socket_swap);
 	return EXIT_SUCCESS;
@@ -49,13 +49,9 @@ void levantar_configuraciones() {
 void comunicarse_con_el_swap() {
 
 	socket_swap = conectar_a(ip_swap, puerto_swap);
-	/*
-	 bool resultado = realizar_handshake(socket_swap);
 
-	 if (!resultado) {
-	 error_show("No se autenticó la conexión con el swap");
-	 exit(EXIT_FAILURE);
-	 }*/
+	escrituras_swap = list_create();
+	lecturas_swap = list_create();
 
 	log_info(log, "Conexion con SWAP.\n");
 
@@ -83,6 +79,7 @@ void atender_conexiones() {
 
 	int * nuevo_socket_cpu;
 	pthread_t * nuevo_hilo_cpu;
+
 
 	while (1) {
 
@@ -112,9 +109,11 @@ void solicitar_bloque_memoria() {
 
 	tabla_de_paginas = list_create();
 
-
 	tlb = list_create();
 
+	aciertos_tlb = list_create();
+
+	fallos_tlb = list_create();
 
 	if (memoria == NULL) {
 		error_show("No se pudo otorgar la memoria solicitada");

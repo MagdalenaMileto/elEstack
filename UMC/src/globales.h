@@ -37,7 +37,11 @@ t_list * control_de_marcos;
 
 t_list * aciertos_tlb;
 
-t_list * aciertos_tlb;
+t_list * fallos_tlb;
+
+t_list * escrituras_swap;
+
+t_list * lecturas_swap;
 
 pthread_t hilo_nucleo, hilo_cpu;
 

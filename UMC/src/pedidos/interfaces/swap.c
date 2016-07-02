@@ -47,8 +47,13 @@ void swap_finalizar_proceso(int pid) {
 
 void * swap_leer(int pid, int numero_pagina) {
 
+	int * pid_proceso = malloc(sizeof(int));
+	*pid_proceso = pid;
+
+	list_add(lecturas_swap,pid_proceso);
+
 	log_info(log,
-			"Comienzo de peticion de lectura al proceso SWAP con el proceso %d y el numero de pagina %d.",
+			"Comienzo de peticion de lectura al pid_proceso SWAP con el pid_proceso %d y el numero de pagina %d.",
 			pid, numero_pagina);
 
 	int tamanio_paquete = sizeof(int) * 2;
@@ -71,6 +76,11 @@ void * swap_leer(int pid, int numero_pagina) {
 }
 
 void swap_escribir(t_entrada_tabla_de_paginas * entrada) {
+
+	int * pid_proceso = malloc(sizeof(int));
+	*pid_proceso = entrada->pid;
+
+	list_add(escrituras_swap,pid_proceso);
 
 	int tamanio = tamanio_marco + sizeof(int) * 2;
 

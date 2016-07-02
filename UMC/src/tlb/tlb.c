@@ -19,15 +19,24 @@ t_entrada_tabla_de_paginas * buscar_tlb(int numero_pagina) {
 	t_entrada_tabla_de_paginas * resultado = list_find(tlb,
 			filtrar_por_proceso_y_pagina);
 
+	int * pid_pedido = malloc(sizeof(int));
+
+	*pid_pedido = proceso_actual;
+
 	if (resultado) {
 
 		log_info(log, "Acierto en la TLB.");
+
+		list_add(aciertos_tlb,pid_pedido);
 
 		resultado->ultima_vez_usado = numero_operacion();
 
 	} else {
 
 		log_info(log, "No se encuentra en la tlb.");
+
+		list_add(fallos_tlb,pid_pedido);
+
 		resultado = buscar_pagina_tabla_de_paginas(numero_pagina);
 
 		agregar_entrada_tlb(resultado);
