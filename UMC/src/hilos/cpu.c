@@ -42,16 +42,16 @@ void atender_cpu(void * parametro_hilo) {
 
 				enviar(socket_cpu, 7, tamanio_mensaje_falla, contenido);
 
-				log_info(log, "Se envia sin exito a la CPU.");
+				log_info(log, "Se envia sin exito a la CPU.\n");
 
 				finalizar_proceso(pid_actual);
 			} else {
 
 				enviar(socket_cpu, 6, tamanio, contenido);
 
-				log_info(log, "Se envia con exito a la CPU.");
+				log_info(log, "Se envia con exito a la CPU.\n");
 			}
-
+			free(texto_falla);
 			break;
 
 		case ESCRIBIR:
@@ -73,11 +73,11 @@ void atender_cpu(void * parametro_hilo) {
 
 		case CAMBIAR_PROCESO:
 
-			log_info(log, "Entro a cambiar proceso");
+			log_info(log, "Entro a cambiar proceso.\n");
 
 			memcpy(&pid_actual, paquete_nuevo->data, sizeof(int));
 
-			log_info(log, "Se cambio el proceso actual a %d.", proceso_actual);
+			log_info(log, "Se cambio el proceso actual a %d.\n", proceso_actual);
 
 			break;
 

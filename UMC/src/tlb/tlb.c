@@ -19,13 +19,23 @@ t_entrada_tabla_de_paginas * buscar_tlb(int numero_pagina) {
 	t_entrada_tabla_de_paginas * resultado = list_find(tlb,
 			filtrar_por_proceso_y_pagina);
 
+	int * pid_pedido = malloc(sizeof(int));
+
+	*pid_pedido = proceso_actual;
+
 	if (resultado) {
 
-		log_info(log, "Acierto en la TLB.");
+		log_info(log, "Acierto en la TLB.\n");
+
+		list_add(aciertos_tlb, pid_pedido);
 
 		resultado->ultima_vez_usado = numero_operacion();
 
 	} else {
+
+		log_info(log, "No se encuentra en la TLB.\n");
+
+		list_add(fallos_tlb, pid_pedido);
 
 		resultado = buscar_pagina_tabla_de_paginas(numero_pagina);
 
@@ -46,7 +56,7 @@ void agregar_entrada_tlb(t_entrada_tabla_de_paginas * entrada) {
 		list_add(tlb, entrada);
 
 		log_info(log,
-				"Se agrega entrada en la TLB sin necesidad del algoritmo de reemplazo");
+				"Se agrega entrada en la TLB sin necesidad del algoritmo de reemplazo.\n");
 	} else {
 
 		remplazo_lru(entrada);
@@ -79,12 +89,12 @@ void remplazo_lru(t_entrada_tabla_de_paginas * entrada) {
 	list_remove(tlb, 0);
 
 	log_info(log,
-			"Se remueve de su marco el proceso con la referencia mas vieja");
+			"Se remueve de su marco el proceso con la referencia mas vieja.\n");
 
 	list_add(tlb, entrada);
 
 	log_info(log,
-			"Se agrega en su respectivo marco el nuevo proceso en la TLB");
+			"Se agrega en su respectivo marco el nuevo proceso en la TLB.\n");
 
 }
 
@@ -113,6 +123,11 @@ void eliminar_proceso_tlb( pid) {
 
 	remove_and_destroy_all_such_that(tlb, lambda_coincide_pid, no_hacer_nada);
 
-	log_info(log, "Se eliminaron las entradas de la tlb del proceso %d", pid);
+	log_info(log, "Se eliminaron las entradas de la tlb del proceso %d.\n",
+			pid);
 
+}
+
+bool tlb_habilitada() {
+	return entradas_TLB != 0;
 }

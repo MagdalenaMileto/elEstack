@@ -17,7 +17,7 @@
 char *puerto_umc, *ip_swap, *puerto_swap;
 
 int cantidad_marcos, tamanio_marco, cantidad_maxima_marcos, entradas_TLB,
-		retardo;
+		retardo,intervalo_info;
 
 int socket_swap, socket_nucleo, socket_conexiones_nuevas;
 
@@ -34,6 +34,14 @@ t_list * tabla_de_paginas;
 t_list * tlb;
 
 t_list * control_de_marcos;
+
+t_list * aciertos_tlb;
+
+t_list * fallos_tlb;
+
+t_list * escrituras_swap;
+
+t_list * lecturas_swap;
 
 pthread_t hilo_nucleo, hilo_cpu;
 

@@ -2,6 +2,10 @@
 
 t_entrada_tabla_de_paginas * buscar_pagina_tabla_de_paginas(int numero_pagina) {
 
+	log_info(log, "Retardo de %d milisegundos.\n", retardo);
+
+	log_info(log, "Zzzzz\n", retardo);
+
 	usleep(retardo * 1000);
 
 	bool filtrar_por_proceso_y_pagina(void * elemento_de_la_lista) {
@@ -14,8 +18,6 @@ t_entrada_tabla_de_paginas * buscar_pagina_tabla_de_paginas(int numero_pagina) {
 
 	t_entrada_tabla_de_paginas * pagina_encontrada = list_find(tabla_de_paginas,
 			filtrar_por_proceso_y_pagina);
-
-	log_info(log, "Acierto en la tabla de paginas.");
 
 	return pagina_encontrada;
 
@@ -61,7 +63,7 @@ void eliminar_proceso_tabla_de_paginas(int pid) {
 			lambda_coincide_pid_y_libera_el_marco_en_control, free);
 
 	log_info(log,
-			"Se eliminan todas las referencias al proceso %d de la memoria",
+			"Se eliminan todas las referencias al proceso %d de la memoria.\n",
 			pid);
 
 }

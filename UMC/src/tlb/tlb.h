@@ -21,5 +21,6 @@ bool hay_entradas_tlb_disponibles();
 void remplazo_lru(t_entrada_tabla_de_paginas * entrada);
 int numero_operacion();
 void eliminar_proceso_tlb(int pid);
+bool tlb_habilitada();
 
 #endif /* SRC_TLB_TLB_H_ */

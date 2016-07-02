@@ -12,7 +12,7 @@ void atender_nucleo() {
 
 	int pid, paginas_requeridas, tamanio_codigo;
 	char * codigo;
-	printf("NUCLEO\n");
+
 	while (1) {
 
 		paquete_nuevo = recibir(socket_nucleo);
@@ -26,7 +26,7 @@ void atender_nucleo() {
 			memcpy(&paginas_requeridas, paquete_nuevo->data + sizeof(int),
 					sizeof(int));
 
-			log_info(log, "Las paginas requeridas son %d.", paginas_requeridas);
+			log_info(log, "Las paginas requeridas son %d.\n", paginas_requeridas);
 
 			memcpy(&tamanio_codigo, paquete_nuevo->data + sizeof(int) * 2,
 					sizeof(int));
@@ -40,9 +40,14 @@ void atender_nucleo() {
 
 				inicializar_programa(pid, paginas_requeridas);
 
+				log_info(log, "Se pudo inicializar el proceso.\n");
+
 				enviar(socket_nucleo, EXITO, sizeof(int), &pid);
+
 			} else {
-				log_info(log, "NO SE PUEDE.");
+
+				log_info(log, "No se pudo inicializar el proceso.\n");
+
 				enviar(socket_nucleo, FRACASO, sizeof(int), &pid);
 			}
 

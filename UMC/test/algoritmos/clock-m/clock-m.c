@@ -15,7 +15,13 @@ context(algoritmo_clock_modificado) {
 
 			log = log_create(ARCHIVOLOG, "UMC", 0, LOG_LEVEL_INFO);
 			tabla_de_paginas = list_create();
-			algoritmo = "CLOCK-M";
+			algoritmo = "MODIFICADO";
+
+		}end
+
+		after {
+			log_destroy(log);
+			list_destroy(tabla_de_paginas);
 
 		}end
 
@@ -86,6 +92,10 @@ context(algoritmo_clock_modificado) {
 			should_bool(entrada_2->modificado) be equal to(false);
 			should_bool(entrada_2->presencia) be equal to(true);
 			should_bool(entrada_2->puntero) be equal to(true);
+
+			free(entrada_0);
+			free(entrada_1);
+			free(entrada_2);
 
 		}end
 

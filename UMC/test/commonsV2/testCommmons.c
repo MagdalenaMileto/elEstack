@@ -18,6 +18,11 @@ context(commons) {
 			lista = list_create();
 		}end
 
+		after {
+			log_destroy(log);
+			list_destroy(lista);
+		}end
+
 		describe("Remover y destruir") {
 
 			bool pid_es_dos(void *elemento) {
