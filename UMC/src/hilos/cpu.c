@@ -51,7 +51,7 @@ void atender_cpu(void * parametro_hilo) {
 
 				log_info(log, "Se envia con exito a la CPU.\n");
 			}
-
+			free(texto_falla);
 			break;
 
 		case ESCRIBIR:

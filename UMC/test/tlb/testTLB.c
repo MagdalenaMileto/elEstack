@@ -14,6 +14,10 @@ context(tlb) {
 			log = log_create(ARCHIVOLOG, "UMC", 0, LOG_LEVEL_INFO);
 		}end
 
+		after {
+			log_destroy(log);
+		}end
+
 		describe("Agregar Entradas") {
 
 			before {
@@ -22,6 +26,10 @@ context(tlb) {
 				entradas_TLB = 15;
 				cantidad_maxima_marcos = 4;
 				numero_operacion_actual = 0;
+			}end
+
+			after {
+				list_destroy(tlb);
 			}end
 
 			t_entrada_tabla_de_paginas * entrada_proceso;
@@ -80,6 +88,10 @@ context(tlb) {
 				tlb = list_create();
 				entradas_TLB = 15;
 				numero_operacion_actual = 0;
+			}end
+
+			after {
+				list_destroy(tlb);
 			}end
 
 			t_entrada_tabla_de_paginas * entrada_proceso;

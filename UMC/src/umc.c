@@ -3,15 +3,16 @@
 int main(int argc, char** argv) {
 
 	setbuf(stdout, NULL);
-	system("clear");
 
 	borrar_archivos_existentes();
 	crear_log();
+
 	inicializar_semaforos();
 	levantar_configuraciones();
 	inicializar_marcos();
 	mostrar_informacion_interna();
 	solicitar_bloque_memoria();
+	registrar_senial_cierre();
 	comunicarse_con_el_swap();
 	esperar_al_nucleo();
 	atender_hilo_consola();
@@ -143,4 +144,33 @@ void crear_log() {
 	log = log_create(ARCHIVOLOG, "UMC", 0, LOG_LEVEL_INFO);
 	log_info(log, "Iniciando UMC.\n");
 
+}
+
+void registrar_senial_cierre() {
+
+	log_info(log, "Se registra la senial de interrupcion.\n");
+
+	void cerrar_umc(int senal) {
+
+		log_info(log, "Se cierra la UMC.\n");
+
+		free(memoria);
+
+		list_destroy(tlb);
+		list_destroy(tabla_de_paginas);
+		list_destroy(control_de_marcos);
+
+		list_destroy(aciertos_tlb);
+		list_destroy(fallos_tlb);
+
+		list_destroy(escrituras_swap);
+		list_destroy(lecturas_swap);
+
+		log_destroy(log);
+
+		exit(EXIT_FAILURE);
+
+	}
+
+	signal(SIGINT, cerrar_umc);
 }

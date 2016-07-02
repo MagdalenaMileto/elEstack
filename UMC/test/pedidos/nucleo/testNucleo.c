@@ -15,10 +15,18 @@ context( nucleo) {
 			log = log_create(ARCHIVOLOG, "UMC", 0, LOG_LEVEL_INFO);
 		}end
 
+		after {
+			log_destroy(log);
+		}end
+
 		describe("Inicializar") {
 
 			before {
 				tabla_de_paginas = list_create();
+			}end
+
+			after {
+				list_destroy(tabla_de_paginas);
 			}end
 
 			it(
@@ -37,6 +45,10 @@ context( nucleo) {
 
 			before {
 				tabla_de_paginas = list_create();
+			}end
+
+			after {
+				list_destroy(tabla_de_paginas);
 			}end
 
 			it(
@@ -65,6 +77,11 @@ context( nucleo) {
 
 				cantidad_marcos = 2;
 				inicializar_marcos();
+			}end
+
+			after {
+				list_destroy(tabla_de_paginas);
+				list_destroy(control_de_marcos);
 			}end
 
 			void mock_finalizar_swap(int pid) {

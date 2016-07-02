@@ -18,6 +18,11 @@ context(algoritmos) {
 			lista = list_create();
 		}end
 
+		after {
+			list_destroy(lista);
+			log_destroy(log);
+		}end
+
 		t_entrada_tabla_de_paginas * nueva_entrada(int pid, int pagina) {
 
 			t_entrada_tabla_de_paginas * entrada = crear_nueva_entrada(pid,pagina);
@@ -61,6 +66,8 @@ context(algoritmos) {
 
 				should_bool(list_is_empty(lista_clock)) be equal to(true);
 
+				list_destroy(lista_clock);
+
 			}end
 
 			it("solo incluye a las paginas presentes del proceso indicado") {
@@ -86,6 +93,8 @@ context(algoritmos) {
 				should_int(pagina_en_la_posicion(lista_clock,0)) be equal to(1);
 				should_int(pagina_en_la_posicion(lista_clock,1)) be equal to(2);
 
+				list_destroy(lista_clock);
+
 			}end
 
 		}end
@@ -106,6 +115,10 @@ context(algoritmos) {
 
 				should_bool(puntero_nuevo->puntero) be equal to(true);
 				should_bool(puntero_viejo->puntero) be equal to(false);
+
+				free(puntero_nuevo);
+				free(puntero_viejo);
+				list_destroy(lista_clock);
 
 			}end
 
@@ -128,6 +141,11 @@ context(algoritmos) {
 				should_bool(puntero_nuevo->puntero) be equal to(true);
 				should_bool(puntero_viejo->puntero) be equal to(false);
 
+				free(puntero_nuevo);
+				free(entrada_nueva);
+				free(puntero_viejo);
+				list_destroy(lista_clock);
+
 			}end
 
 			it("Si es el ultimo pasa a ser el primero") {
@@ -148,6 +166,11 @@ context(algoritmos) {
 
 				should_bool(puntero_nuevo->puntero) be equal to(true);
 				should_bool(puntero_viejo->puntero) be equal to(false);
+
+				free(puntero_nuevo);
+				free(entrada_nueva);
+				free(puntero_viejo);
+				list_destroy(lista_clock);
 
 			}end
 

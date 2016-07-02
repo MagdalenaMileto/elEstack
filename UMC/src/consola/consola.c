@@ -145,12 +145,21 @@ void flush_memory(int proceso) {
 
 void dump_total() {
 
-	escribir_a_dump(string_from_format("\n===== INICIO DUMP =====\n"));
+	char * texto = string_new();
+	string_append(&texto, "\n===== INICIO DUMP =====\n");
+
+	escribir_a_dump(texto);
+
+	free(texto);
 
 	list_iterate(tabla_de_paginas, dump_proceso_iterate);
 
+	texto = string_new();
+	string_append(&texto, "\n===== FIN DUMP =====\n");
+
 	escribir_a_dump(string_from_format("\n===== FIN DUMP =====\n"));
 
+	free(texto);
 }
 
 void dump_proceso(int pid) {
@@ -167,13 +176,20 @@ void dump_proceso(int pid) {
 	t_list * tabla_filtrada = list_filter(tabla_de_paginas,
 			filtrar_por_proceso_dump);
 
-	escribir_a_dump(
-			string_from_format("\n===== INICIO DUMP PROCESO %d =====\n", pid));
+	char * texto = string_from_format("\n===== INICIO DUMP PROCESO %d =====\n",
+			pid);
+
+	escribir_a_dump(texto);
+
+	free(texto);
 
 	list_iterate(tabla_filtrada, dump_proceso_iterate);
 
-	escribir_a_dump(
-			string_from_format("\n===== FIN DUMP PROCESO %d =====\n", pid));
+	texto = string_from_format("\n===== FIN DUMP PROCESO %d =====\n", pid);
+
+	escribir_a_dump(texto);
+
+	free(texto);
 
 }
 
@@ -223,7 +239,7 @@ void dump_entrada(t_entrada_tabla_de_paginas * entrada) {
 	}
 	printf("%s", linea);
 	escribir_a_dump(linea);
-
+	free(linea);
 }
 
 void dump_proceso_iterate(void * elemento) {
@@ -254,7 +270,11 @@ bool isNumber(char * palabra) {
 		return isdigit(letra);
 	}
 
-	return list_all_satisfy(lista_chars, es_digito);
+	bool resultado = list_all_satisfy(lista_chars, es_digito);
+
+	free(lista_chars);
+
+	return resultado;
 
 }
 

@@ -17,6 +17,11 @@ context(consola) {
 			remove("./memory.dump");
 		}end
 
+		after {
+			log_destroy(log);
+			list_destroy(tabla_de_paginas);
+		}end
+
 		describe("dump total") {
 
 			void escribir(int pid, int pagina, int tamanio, void * contenido) {

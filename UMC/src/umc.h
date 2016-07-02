@@ -13,6 +13,7 @@
 #include <pthread.h>
 #include <stddef.h>
 #include <stdlib.h>
+#include <signal.h>
 
 #include <theDebuggers/socketLibrary.h>
 #include <commons/config.h>
@@ -33,5 +34,6 @@ void atender_hilo_consola();
 void mostrar_informacion_interna();
 void borrar_archivos_existentes();
 void crear_log();
+void registrar_senial_cierre();
 
 #endif /* SRC_UMC_H_ */
