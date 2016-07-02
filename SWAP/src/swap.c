@@ -76,6 +76,8 @@ int main(int argc, char **argv) {
 				int paginaAPartir;
 
 				paginaAPartir = hayLugarParaNuevoProceso(pagina);
+				printf("pag a partir %d \n", paginaAPartir);
+				log_info(log, "pag a partir %d \n", paginaAPartir);
 				if(paginaAPartir !=-1)
 				{
 					reservarProceso(pid, pagina, paginaAPartir);
@@ -86,6 +88,9 @@ int main(int argc, char **argv) {
 					compactacion();
 					int pagAPartir;
 					pagAPartir = hayLugarParaNuevoProceso(pagina);
+					printf("pag a partir despues de compactar %d \n", pagAPartir);
+					log_info(log, "pag a partir despues de compactar %d \n", pagAPartir);
+
 					if(pagAPartir !=-1){
 						reservarProceso(pid, pagina, pagAPartir);
 						inicializarProceso(pid, pagina, codigo);
@@ -391,7 +396,7 @@ long int obtenerlugarDeInicioDeLaPagina(int nroPag) {
 
 int hayPaginasOcupadasLuegoDeLaUltimaLibre() {
 	int i;
-	int flagExistencia;
+	int flagExistencia = -1;
 	for (i = ultimaPagLibre(); i < CANTIDAD_PAGINAS; i++) {
 		if (paginasSWAP[i].ocupada == 1) {
 			flagExistencia = 1;
