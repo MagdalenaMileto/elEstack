@@ -94,14 +94,16 @@ typedef struct {
   int socket_CPU;
   int socket_CONSOLA;
   t_pcb *pcb;
-  int unidadesBloqueado;
+  int unidadesBloqueado; //Borrar estos?
   char semaforoBloqueado;
+  bool abortado;
 
 
 } t_proceso;
-
+void abortar(t_proceso*proceso);
 void escribeVariable(char *variable,int tamanio);
 int *pideVariable(char *variable,int tamanio);
+void * nalloc(int tamanio);
 
 void liberaSemaforo(char *semaforo,int semaforoSize);
 int *pideSemaforo(char *semaforo,int semaforoSize);
@@ -115,7 +117,7 @@ int *convertirConfig0(char **ana1);
 //long long *punteroConCero(char **ana1);
 int *convertirConfigInt(char **ana1, char **ana2);
 
-void get_config_nucleo (CONF_NUCLEO *config_nucleo);
+void get_config_nucleo ();
 
 void intHandler(int dummy);
 

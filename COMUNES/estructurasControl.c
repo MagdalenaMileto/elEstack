@@ -1,15 +1,18 @@
 #include "estructurasControl.h"
 
 void destruirPCB(t_pcb *pcb) {
+	/*
 	t_contexto *contexto_a_finalizar;
 	while(pcb->sizeContextoActual != 0){
 		contexto_a_finalizar= list_get(pcb->contextoActual, pcb->sizeContextoActual-1);
 		while(contexto_a_finalizar->sizeVars != 0){
-				free((t_direccion *)((t_variable *)list_get(contexto_a_finalizar->vars, contexto_a_finalizar->sizeVars-1))->direccion);
+			t_direccion*temp=(((t_variable*)list_get(contexto_a_finalizar->vars, contexto_a_finalizar->sizeVars-1))->direccion);
+			//	free(temp);
+			//	free(list_get(contexto_a_finalizar->vars, contexto_a_finalizar->sizeVars-1));
 				contexto_a_finalizar->sizeVars--;
 			}
 		while(contexto_a_finalizar->sizeArgs != 0){
-					free((t_direccion*)list_get(contexto_a_finalizar->args, contexto_a_finalizar->sizeArgs-1));
+				//	free((t_direccion*)list_get(contexto_a_finalizar->args, contexto_a_finalizar->sizeArgs-1));
 					contexto_a_finalizar->sizeArgs--;
 					}
 		free(list_get(pcb->contextoActual, pcb->sizeContextoActual-1));
@@ -25,7 +28,7 @@ void destruirPCB(t_pcb *pcb) {
 	printf("free etiqute\n");
 	free(pcb);
 	printf("funco\n");
-
+*/
 }
 
 t_pcb *desserializarPCB(char *serializado) {
@@ -51,12 +54,6 @@ t_pcb *desserializarPCB(char *serializado) {
 	pcb->contextoActual = list_create();
 	
 
-
-	//serializado += pcb->sizeContextoActual * sizeof(t_contexto*);
-
-//	printf("SIZE CONTEXTO %d\n",pcb->sizeIndiceDeEtiquetas);
-//	printf("SIZE CONTEXTO %d\n",pcb->paginasDeCodigo);
-//printf("SIZE CONTEXTO %d\n",pcb->sizeContextoActual);
 	for (i = 0; i < pcb->sizeContextoActual; i++) {
 	
 
@@ -75,30 +72,40 @@ t_pcb *desserializarPCB(char *serializado) {
 			t_direccion *dir = malloc(sizeof(t_direccion));
 			memcpy(dir, serializado, sizeof(t_direccion));
 			serializado += sizeof(t_direccion);
-			list_add(temp->args, (void*)dir);
+			list_add(temp->args, dir);
 		}
 	//	printf("SIZE var %d\n",temp->sizeVars);
 		for (y = 0; y < temp->sizeVars; y++) {
 		//	printf("AkkkkkSD\n");
 			t_variable *var = malloc(sizeof(t_variable));
 			//printf("1AkkkkkSD\n");
-			var->direccion = malloc(sizeof(t_direccion));
+			t_direccion *dire =malloc(sizeof(t_direccion));
+
 			//printf("2AkkkkkSD\n");
 			memcpy(var, serializado, sizeof(t_variable));
 		//	printf("3AkkkkkSD\n");
 			serializado += sizeof(t_variable);
-		//	printf("4AkkkkkSD\n");
-			memcpy(&var->direccion, serializado, sizeof(t_direccion));
+		printf("posicion %d \n",(serializado-serini));
+		//dire=&(var->direccion);
+
+			dire->offset=((int*)(serializado))[0];
+			dire->pagina=((int*)(serializado))[2];
+			dire->size=((int*)(serializado))[1];
+			var->direccion = dire;
+
+			printf("%d %d %d \n",dire->offset,dire->pagina,dire->size);
+		//	memcpy((t_direccion*)(var->direccion), serializado, sizeof(t_direccion));
 			//printf("5AkkkkkSD\n");
 			serializado += sizeof(t_direccion);
-			//printf("6AooooSD\n");
-			list_add(temp->vars, (void*)var);
+			printf("RETORNA \n");
+			list_add(temp->vars, var);
 		}
 		//printf("ASD\n");
-		list_add(pcb->contextoActual, (void*)temp);
+		list_add(pcb->contextoActual, temp);
 	}
 	//printf("RERE\n");
 
+	printf("DES TAMANIO PCB%d\n",(serializado-serini));
 	return pcb;
 
 
@@ -123,81 +130,10 @@ void agregarContexto(t_pcb *pcb, t_contexto *contexto) {
 }
 
 
-t_blocked *desserializarBLOQUEO(char *serializado) {
-	
-	t_blocked *retorno;	t_pcb *pcb;
-	int i=0;
-
-	retorno = malloc(sizeof(t_blocked));
-	memcpy(retorno, serializado, sizeof(t_blocked));
-	serializado += sizeof(t_blocked);
-
-	pcb = malloc(sizeof(t_pcb));
-	pcb = desserializarPCB(serializado);
-	//memcpy(pcb, serializado, sizeof(t_pcb));
-	serializado += retorno->sizePcbSerializado;
-
-	if (retorno->semaforoSize) {
-		retorno->semaforo = malloc(retorno->semaforoSize);
-		memcpy(retorno->semaforo , serializado, retorno->semaforoSize);
-		serializado += retorno->semaforoSize;
-	}
-
-
-	if (retorno->ioSize) {
-
-		retorno->io = malloc(retorno->ioSize);
-		memcpy(retorno->io , serializado, retorno->ioSize);
-		serializado += retorno->ioSize;
-		
-	}
-
-	retorno->pcb=pcb;
-
-	return (retorno);
-
-}
-
-char *serializarBLOQUEO(t_blocked *bloqueo) {
-	char *retorno, *retornotemp; int size = 0;
-	
-	t_pcb *pcbSerializado;
-	pcbSerializado = (t_pcb*)serializarPCB(bloqueo->pcb);
-
-	bloqueo->sizePcbSerializado = pcbSerializado->sizeTotal;
-	bloqueo->sizeTotal = (sizeof(char) * pcbSerializado->sizeTotal + sizeof(char) * (bloqueo->semaforoSize + bloqueo->ioSize) + sizeof(t_blocked));
-
-	retorno = malloc(sizeof(char) * pcbSerializado->sizeTotal + sizeof(char) * (bloqueo->semaforoSize + bloqueo->ioSize) + sizeof(t_blocked));
-	retornotemp=retorno;
-
-	memcpy(retornotemp, bloqueo, sizeof(t_blocked));
-	retornotemp += sizeof(t_blocked);
-
-	memcpy(retornotemp, pcbSerializado, pcbSerializado->sizeTotal);
-	retornotemp += pcbSerializado->sizeTotal;
-	free(pcbSerializado);
-	if (bloqueo->semaforoSize) {
-		memcpy(retornotemp, bloqueo->semaforo, bloqueo->semaforoSize);
-		retornotemp += bloqueo->semaforoSize;
-	}
-
-
-	if (bloqueo->ioSize) {
-		memcpy(retornotemp, bloqueo->io, bloqueo->ioSize);
-		//printf("%dEntreee%s\n",bloqueo->ioSize,retornotemp);
-		retornotemp += bloqueo->ioSize;
-	}
-
-
-	return (retorno);
-
-}
-
-
 char *serializarPCB(t_pcb *pcb) {
 	int g=0;
 
-
+printf("Entre a serialziar\n");
 	int size = 0;
 	char *retorno, *retornotemp, *retornotempp;
 
@@ -223,6 +159,7 @@ char *serializarPCB(t_pcb *pcb) {
 		for (y = 0; y < contexto->sizeVars; y++) {
 
 			size += sizeof(t_variable);
+
 			size += sizeof(t_direccion);
 		}
 	}
@@ -249,7 +186,7 @@ char *serializarPCB(t_pcb *pcb) {
 	//memcpy(retornotemp, pcb->contextoActual, pcb->sizeContextoActual * sizeof(t_contexto*));
 	//retornotemp += pcb->sizeContextoActual * sizeof(t_contexto*);
 
-
+printf("ACA DENO ENTERARa\n");
 
 	for (i = 0; i < pcb->sizeContextoActual; i++) {
 		t_contexto *contexto;
@@ -278,7 +215,17 @@ char *serializarPCB(t_pcb *pcb) {
 
 
 			retornotemp += sizeof(t_variable);
-			memcpy(retornotemp, &var->direccion, sizeof(t_direccion));
+			t_direccion * diretemp = var->direccion;
+			printf("ENCODING %d %d %d \n",diretemp->offset,diretemp->pagina,diretemp->size);
+
+			memcpy(retornotemp,&diretemp->offset,4);
+			memcpy(retornotemp+4,&diretemp->size,4);
+			memcpy(retornotemp+8,&diretemp->pagina,4);
+
+			//memcpy(retornotemp, diretemp, sizeof(t_direccion));
+			printf("posicion %d \n",(retornotemp-retorno));
+
+
 			retornotemp += sizeof(t_direccion);
 
 		}
