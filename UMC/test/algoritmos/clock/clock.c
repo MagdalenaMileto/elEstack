@@ -18,6 +18,11 @@ context(algoritmo_clock) {
 
 		}end
 
+		after {
+			list_destroy(tabla_de_paginas);
+			log_destroy(log);
+		}end
+
 		void nueva_entrada(int pid, int pagina) {
 
 			t_entrada_tabla_de_paginas * entrada = crear_nueva_entrada(pid,pagina);
@@ -79,6 +84,10 @@ context(algoritmo_clock) {
 			should_bool(entrada_2->presencia) be equal to(true);
 			should_bool(entrada_2->puntero) be equal to(true);
 
+			free(entrada_0);
+			free(entrada_1);
+			free(entrada_2);
+
 		}end
 
 		it("Caso especial") {
@@ -130,6 +139,10 @@ context(algoritmo_clock) {
 			should_bool(entrada_3->presencia) be equal to(true);
 			should_bool(entrada_3->puntero) be equal to(false);
 
+			free(entrada_0);
+			free(entrada_1);
+			free(entrada_2);
+			free(entrada_3);
 		}end
 
 	}end

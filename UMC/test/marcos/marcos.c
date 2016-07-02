@@ -16,6 +16,11 @@ context(asignacion_de_marcos) {
 			tabla_de_paginas = list_create();
 		}end
 
+		after {
+			log_destroy(log);
+			list_destroy(tabla_de_paginas);
+		}end
+
 		it("Si no se llegó al nivel máximo de marcos se asigna uno libre") {
 
 			cantidad_marcos = 2;
@@ -43,6 +48,8 @@ context(asignacion_de_marcos) {
 			should_bool(entrada_1->uso) be equal to(true);
 			should_bool(entrada_1->presencia) be equal to(true);
 			should_bool(entrada_1->puntero) be equal to(false);
+
+			list_destroy(control_de_marcos);
 
 		}end
 

@@ -40,6 +40,7 @@ int main(int argc,char **argv){
 	log_info(log,"Iniciando CPU\n");
 	char* serializado;
 	pthread_mutex_init(&mutex_pcb, NULL);
+	t_paquete* paquete_recibido;
 
 	levantar_configuraciones();
 
@@ -65,20 +66,18 @@ int main(int argc,char **argv){
 		programaAbortado = 0;
 		int quantum_aux=quantum;
 		log_info(log,"Esperando Pcb\n");
-		pcb = malloc(sizeof(t_pcb));
-		t_paquete* paquete_recibido = recibir(nucleo);
+		paquete_recibido = recibir(nucleo);
 		//sleep(4);
 		log_info(log,"Deserializando PCB\n");
 		pcb = desserializarPCB(paquete_recibido->data);
 		log_info(log,"Recibi PCB del nucleo con el program counter en: %d y SizeContextoActual en %d\n", pcb->pc, pcb->sizeContextoActual);
-		liberar_paquete(paquete_recibido);
-		log_info(log,"Pcb pid: %d\n",pcb->pid); //ver
+		log_info(log,"Pcb pid: %d\n",pcb->pid);
 		int pid = pcb->pid;
 		var_max=(tamanioPag*(stack_size+pcb->paginasDeCodigo))-1;
 		log_info(log, "Enviando pid %d a UMC\n",pcb->pid);
 		enviar(umc, 3, sizeof(int), &pid);
 		log_info(log, "Envie pid %d a UMC\n",pcb->pid);
-
+		liberar_paquete(paquete_recibido);
 
 		while((quantum_aux!=0) && !programaBloqueado && !programaFinalizado && !programaAbortado){
 
@@ -102,7 +101,7 @@ int main(int argc,char **argv){
 			log_info(log,"Tamanio sentencia: %d\n", strlen(sentencia));
 
 			log_info(log,"Recibi sentencia: %s\n", depurarSentencia(sentencia));
-			analizadorLinea(depurarSentencia(strdup(sentencia)), &primitivas, &primitivas_kernel);
+			analizadorLinea(depurarSentencia(sentencia), &primitivas, &primitivas_kernel);
 			//liberar_paquete(instruccion);
 			//free(lecturaUMC);
 			free(datos_para_umc);
@@ -137,13 +136,14 @@ int main(int argc,char **argv){
 				log_info(log,"SizeContextoActual despues: %d\n", pcb->sizeContextoActual);
 				enviar(nucleo, 304, ((t_pcb*)serializado)->sizeTotal, serializado);
 				destruirPCB(pcb);
+				log_info(log,"destrui pcb\n");
 			}
-		}
 
+		}
 	}
 
+log_info(log,"Se cierra por senial SIGUSR1\n");
 liberar_paquete(datos_kernel);
-free(pcb);
 close(nucleo);
 close(umc);
 exit(EXIT_SUCCESS);
@@ -174,7 +174,7 @@ char* leer(int pagina,int offset, int tamanio)
 
 					enviarDirecParaLeerUMC(lecturaUMC2, datos_para_umc2);
 
-					t_paquete* instruccion2=malloc(sizeof(t_paquete));
+					t_paquete* instruccion2;
 
 					instruccion2 = recibir(umc);
 					log_info(log,"Codigo de operacion recibido: %d\n", instruccion2->codigo_operacion);
@@ -183,6 +183,7 @@ char* leer(int pagina,int offset, int tamanio)
 					char* sentencia2=malloc(datos_para_umc2->size);
 					memcpy(sentencia2, instruccion2->data, datos_para_umc2->size);
 					free(lecturaUMC2);
+					free(datos_para_umc2);
 					liberar_paquete(instruccion2);
 					return sentencia2;
 
@@ -262,6 +263,7 @@ void levantar_configuraciones() {
 	config_cpu.IP_NUCLEO = config_get_string_value(archivo_configuracion, "IP_NUCLEO");
 	config_cpu.PUERTO_UMC = config_get_string_value(archivo_configuracion, "PUERTO_UMC");
 	config_cpu.IP_UMC = config_get_string_value(archivo_configuracion, "IP_UMC");
+	//config_destroy(archivo_configuracion);
 }
 
 

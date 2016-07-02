@@ -19,6 +19,12 @@ context(algoritmo_clock_modificado) {
 
 		}end
 
+		after {
+			log_destroy(log);
+			list_destroy(tabla_de_paginas);
+
+		}end
+
 		void nueva_entrada(int pid, int pagina) {
 
 			t_entrada_tabla_de_paginas * entrada = crear_nueva_entrada(pid, pagina);
@@ -86,6 +92,10 @@ context(algoritmo_clock_modificado) {
 			should_bool(entrada_2->modificado) be equal to(false);
 			should_bool(entrada_2->presencia) be equal to(true);
 			should_bool(entrada_2->puntero) be equal to(true);
+
+			free(entrada_0);
+			free(entrada_1);
+			free(entrada_2);
 
 		}end
 

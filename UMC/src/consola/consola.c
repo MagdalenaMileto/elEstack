@@ -97,12 +97,18 @@ void esperar_comando(void * parametros) {
 
 void cambiar_retardo(int retardo_numerico) {
 
+	log_info(log, "El retardo pasa de %d a %d milisegundos", retardo,
+			retardo_numerico);
 	retardo = retardo_numerico;
 }
 
 void flush_tlb() {
 
+	log_info(log, "La TLB tiene %d entradas\n", list_size(tlb));
+	log_info(log, "Se flushea la TLB\n");
 	list_clean(tlb);
+	log_info(log, "La TLB paso a tener %d entradas\n", list_size(tlb));
+
 }
 
 void flush_memory(int proceso) {
@@ -125,20 +131,35 @@ void flush_memory(int proceso) {
 				(t_entrada_tabla_de_paginas *) entrada;
 
 		entrada_tabla_paginas->modificado = true;
+		log_info(log, "La pagina %d del proceso %d se marca como modificada\n",
+				proceso, entrada_tabla_paginas->pagina);
 
 	}
 
+	log_info(log, "Se flushea el proceso %d\n", proceso);
+	log_info(log, "===== INICIO FLUSH =====\n", proceso);
 	list_iterate(lista_filtrada_por_proceso, cambiar_bit);
+	log_info(log, "===== FIN FLUSH =====\n", proceso);
 
 }
 
 void dump_total() {
 
-	escribir_a_dump(string_from_format("\n===== INICIO DUMP =====\n"));
+	char * texto = string_new();
+	string_append(&texto, "\n===== INICIO DUMP =====\n");
+
+	escribir_a_dump(texto);
+
+	free(texto);
 
 	list_iterate(tabla_de_paginas, dump_proceso_iterate);
 
+	texto = string_new();
+	string_append(&texto, "\n===== FIN DUMP =====\n");
+
 	escribir_a_dump(string_from_format("\n===== FIN DUMP =====\n"));
+
+	free(texto);
 }
 
 void dump_proceso(int pid) {
@@ -155,12 +176,20 @@ void dump_proceso(int pid) {
 	t_list * tabla_filtrada = list_filter(tabla_de_paginas,
 			filtrar_por_proceso_dump);
 
-	escribir_a_dump(
-			string_from_format("\n===== INICIO DUMP PROCESO %d =====\n", pid));
+	char * texto = string_from_format("\n===== INICIO DUMP PROCESO %d =====\n",
+			pid);
+
+	escribir_a_dump(texto);
+
+	free(texto);
 
 	list_iterate(tabla_filtrada, dump_proceso_iterate);
 
-	escribir_a_dump(string_from_format("===== FIN DUMP PROCESO %d =====", pid));
+	texto = string_from_format("\n===== FIN DUMP PROCESO %d =====\n", pid);
+
+	escribir_a_dump(texto);
+
+	free(texto);
 
 }
 
@@ -208,9 +237,9 @@ void dump_entrada(t_entrada_tabla_de_paginas * entrada) {
 				string_from_format("Su contenido es: %s.\n", contenido));
 
 	}
-
+	printf("%s", linea);
 	escribir_a_dump(linea);
-
+	free(linea);
 }
 
 void dump_proceso_iterate(void * elemento) {
@@ -241,7 +270,11 @@ bool isNumber(char * palabra) {
 		return isdigit(letra);
 	}
 
-	return list_all_satisfy(lista_chars, es_digito);
+	bool resultado = list_all_satisfy(lista_chars, es_digito);
+
+	free(lista_chars);
+
+	return resultado;
 
 }
 

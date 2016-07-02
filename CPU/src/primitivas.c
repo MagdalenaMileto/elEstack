@@ -116,7 +116,7 @@ t_valor_variable dereferenciar(t_puntero direccion_variable)
 	paquete = recibir(umc);
 	int valor;
 	memcpy(&valor, paquete->data, 4);
-	free(paquete);
+	liberar_paquete(paquete);
 	log_info(log,"Valor dereferenciado: %d", valor);
 	return valor;
 
@@ -147,6 +147,7 @@ t_valor_variable obtenerValorCompartida(t_nombre_compartida variable)
 	memcpy(&valor, paquete_nuevo->data, 4);
 	log_info(log,"%s vale %d\n", variable_compartida, valor);
 	free(variable_compartida);
+	liberar_paquete(paquete_nuevo);
 	return valor;
 }
 
@@ -275,33 +276,42 @@ void entradaSalida(t_nombre_dispositivo dispositivo,int tiempo)
 }
 
 void finalizar(){
-	//pthread_mutex_lock(&mutex_pcb);
 	log_info(log,"Entre a finalizar\n");
-	t_contexto *contexto_a_finalizar; //= malloc(sizeof(t_contexto));
+	t_contexto *contexto_a_finalizar;
 	contexto_a_finalizar= list_get(pcb->contextoActual, pcb->sizeContextoActual-1);
-/*
+
 	while(contexto_a_finalizar->sizeVars != 0){
 		t_variable * variable_borrar = (t_variable *)list_get(contexto_a_finalizar->vars, contexto_a_finalizar->sizeVars-1);
-		free(variable_borrar->direccion);
-		//free(variable_borrar); //FALTA LA MIERDA DE ESTE FREE :)
-		list_remove(contexto_a_finalizar->vars, (contexto_a_finalizar->sizeVars)-1);
+		log_info(log,"direccion: %d %d %d \n", variable_borrar->direccion->offset, variable_borrar->direccion->pagina, variable_borrar->direccion->size);
+		free((t_direccion *)((t_variable *)list_get(contexto_a_finalizar->vars, contexto_a_finalizar->sizeVars-1))->direccion);
+		log_info(log,"la etiqueta es: %c\n", variable_borrar->etiqueta);
+		log_info(log,"direccion: %d %d %d \n", variable_borrar->direccion->offset, variable_borrar->direccion->pagina, variable_borrar->direccion->size);
+		//free(list_get(contexto_a_finalizar->vars, contexto_a_finalizar->sizeVars-1)); //FALTA LA MIERDA DE ESTE FREE :)
+		//free(variable_borrar);
+		//list_remove(contexto_a_finalizar->vars, (contexto_a_finalizar->sizeVars)-1);
+		log_info(log,"la etiqueta es: %c\n", variable_borrar->etiqueta);
+		log_info(log,"pase el segundo free\n");
 		contexto_a_finalizar->sizeVars--;
 	}
-	list_destroy(contexto_a_finalizar->vars);
+	log_info(log,"hay algo: %d", sizeof(list_get(contexto_a_finalizar->vars, (contexto_a_finalizar->sizeVars)-1)));
+	//list_destroy(contexto_a_finalizar->vars);
 	log_info(log,"Destrui la lista de vars\n");
 
-	while(contexto_a_finalizar->sizeArgs-1>0){
+	while(contexto_a_finalizar->sizeArgs != 0){
 				log_info(log,"Antes del free\n");
-				free((t_direccion*)list_get(contexto_a_finalizar->args, contexto_a_finalizar->sizeArgs-1));
+			free((t_direccion*)list_get(contexto_a_finalizar->args, contexto_a_finalizar->sizeArgs-1));
+			//	log_info(log,"hay algo: %d", sizeof(list_get(contexto_a_finalizar->args, (contexto_a_finalizar->sizeArgs)-1)));
 				list_remove(contexto_a_finalizar->args, (contexto_a_finalizar->sizeArgs)-1);
 				log_info(log,"Despues del free\n");
 				contexto_a_finalizar->sizeArgs--;
 			}
-	list_destroy(contexto_a_finalizar->args);
+	log_info(log,"Estoy por eliminar lista args\n");
+	//list_destroy(contexto_a_finalizar->args);
 	log_info(log,"Destrui la lista de args\n");
 	free(contexto_a_finalizar);
+	pcb->sizeContextoActual--;
 	log_info(log,"El programa finalizo\n");
-	*/
+
 	programaFinalizado=1;
 
 	enviar(nucleo, 320, sizeof(int), &programaFinalizado);
@@ -323,6 +333,7 @@ void wait_kernel(t_nombre_semaforo identificador_semaforo){
 	memcpy(&programaBloqueado, paquete->data, 4);
 	log_info(log,"programaBloqueado= %d\n", programaBloqueado);
 	free(nombre_semaforo);
+	liberar_paquete(paquete);
 	log_info(log,"Saliendo del wait\n");
 	return;
 }

@@ -2,21 +2,21 @@
 
 int main(int argc, char** argv) {
 
-	remove("UMC.log");
-	log = log_create(ARCHIVOLOG, "UMC", 0, LOG_LEVEL_INFO);
-	log_info(log, "Iniciando UMC.\n");
-
-	remove("memory.dump");
 	setbuf(stdout, NULL);
+
+	borrar_archivos_existentes();
+	crear_log();
 
 	inicializar_semaforos();
 	levantar_configuraciones();
 	inicializar_marcos();
+	mostrar_informacion_interna();
 	solicitar_bloque_memoria();
+	registrar_senial_cierre();
 	comunicarse_con_el_swap();
 	esperar_al_nucleo();
-	atender_conexiones();
 	atender_hilo_consola();
+	atender_conexiones();
 	close(socket_conexiones_nuevas);
 	close(socket_swap);
 	return EXIT_SUCCESS;
@@ -42,6 +42,9 @@ void levantar_configuraciones() {
 	retardo = config_get_int_value(archivo_configuracion, "RETARDO");
 	algoritmo = config_get_string_value(archivo_configuracion, "ALGORITMO");
 
+	intervalo_info = config_get_int_value(archivo_configuracion,
+			"INTERVALO_INFORMACION");
+
 	log_info(log, "Se levantan con exito las configuraciones.\n");
 
 }
@@ -49,13 +52,9 @@ void levantar_configuraciones() {
 void comunicarse_con_el_swap() {
 
 	socket_swap = conectar_a(ip_swap, puerto_swap);
-	/*
-	 bool resultado = realizar_handshake(socket_swap);
 
-	 if (!resultado) {
-	 error_show("No se autenticó la conexión con el swap");
-	 exit(EXIT_FAILURE);
-	 }*/
+	escrituras_swap = list_create();
+	lecturas_swap = list_create();
 
 	log_info(log, "Conexion con SWAP.\n");
 
@@ -68,13 +67,8 @@ void esperar_al_nucleo() {
 	listen(socket_conexiones_nuevas, 1024);
 
 	socket_nucleo = aceptar_conexion(socket_conexiones_nuevas);
-//	bool resultado = esperar_handshake(socket_nucleo);
-	//if (resultado) {
+
 	pthread_create(&hilo_nucleo, NULL, (void *) atender_nucleo, NULL);
-	//} else {
-	//error_show("No se autenticó la conexión con el Nucleo");
-	//	exit(EXIT_FAILURE);
-//	}
 
 	log_info(log, "Conexion con Nucleo.\n");
 }
@@ -99,7 +93,7 @@ void atender_conexiones() {
 					(void *) nuevo_socket_cpu);
 		} else {
 
-			printf("Conexión no autenticada en el socket %d\n",
+			printf("Conexión no autenticada en el socket %d.\n",
 					*nuevo_socket_cpu);
 		}
 
@@ -112,12 +106,14 @@ void solicitar_bloque_memoria() {
 
 	tabla_de_paginas = list_create();
 
-
 	tlb = list_create();
 
+	aciertos_tlb = list_create();
+
+	fallos_tlb = list_create();
 
 	if (memoria == NULL) {
-		error_show("No se pudo otorgar la memoria solicitada");
+		error_show("No se pudo otorgar la memoria solicitada.\n");
 		exit(EXIT_FAILURE);
 	}
 
@@ -130,3 +126,51 @@ void atender_hilo_consola() {
 	pthread_create(&nuevo_hilo_consola, NULL, esperar_comando, NULL);
 }
 
+void mostrar_informacion_interna() {
+	pthread_t hilo_mostrar_en_pantalla;
+
+	pthread_create(&hilo_mostrar_en_pantalla, NULL, mostrar_estado_interno,
+	NULL);
+}
+
+void borrar_archivos_existentes() {
+
+	remove("UMC.log");
+	remove("memory.dump");
+}
+
+void crear_log() {
+
+	log = log_create(ARCHIVOLOG, "UMC", 0, LOG_LEVEL_INFO);
+	log_info(log, "Iniciando UMC.\n");
+
+}
+
+void registrar_senial_cierre() {
+
+	log_info(log, "Se registra la senial de interrupcion.\n");
+
+	void cerrar_umc(int senal) {
+
+		log_info(log, "Se cierra la UMC.\n");
+
+		free(memoria);
+
+		list_destroy(tlb);
+		list_destroy(tabla_de_paginas);
+		list_destroy(control_de_marcos);
+
+		list_destroy(aciertos_tlb);
+		list_destroy(fallos_tlb);
+
+		list_destroy(escrituras_swap);
+		list_destroy(lecturas_swap);
+
+		log_destroy(log);
+
+		exit(EXIT_FAILURE);
+
+	}
+
+	signal(SIGINT, cerrar_umc);
+}
