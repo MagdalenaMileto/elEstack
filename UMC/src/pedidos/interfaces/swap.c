@@ -18,19 +18,19 @@ bool swap_inicializar_proceso(int pid, int cantidad_paginas, char * codigo) {
 
 	enviar(socket_swap, SWAP_INICIALIZAR, tamanio_paquete, data);
 
-	log_info(log, "Se envia el paquete a swap");
+	log_info(log, "Se envia el paquete a swap\n");
 
 	t_paquete * respuesta = recibir(socket_swap);
 
 	bool resultado = respuesta->codigo_operacion == SWAP_EXITO;
 
 	log_info(log,
-			"El paquete fue recepcionado exitosamente por el proceso SWAP");
+			"El paquete fue recepcionado exitosamente por el proceso swap\n");
 
 	liberar_paquete(respuesta);
 	free(data);
 
-	log_info(log, "Se liberan las estructuras.");
+	log_info(log, "Se liberan las estructuras.\n");
 
 	return resultado;
 
@@ -41,7 +41,7 @@ void swap_finalizar_proceso(int pid) {
 	enviar(socket_swap, SWAP_FINALIZAR, sizeof(int), (void *) &pid);
 
 	log_info(log,
-			"Se envia exitosamente la peticion de finalizacion del proceso %d al SWAP",
+			"Se envia exitosamente la peticion de finalizacion del proceso %d al swap\n",
 			pid);
 }
 
@@ -50,11 +50,10 @@ void * swap_leer(int pid, int numero_pagina) {
 	int * pid_proceso = malloc(sizeof(int));
 	*pid_proceso = pid;
 
-	list_add(lecturas_swap,pid_proceso);
+	list_add(lecturas_swap, pid_proceso);
 
-	log_info(log,
-			"Comienzo de peticion de lectura al pid_proceso SWAP con el pid_proceso %d y el numero de pagina %d.",
-			pid, numero_pagina);
+	log_info(log, "Se escribe al swap la pagina %d del proceso %d.\n",
+			numero_pagina, pid);
 
 	int tamanio_paquete = sizeof(int) * 2;
 	void * data = malloc(tamanio_paquete);
@@ -64,12 +63,9 @@ void * swap_leer(int pid, int numero_pagina) {
 
 	enviar(socket_swap, SWAP_LEER, tamanio_paquete, data);
 
-	log_info(log, "Se envia el paquete al SWAP.");
-
 	t_paquete * paquete = recibir(socket_swap);
 
-	log_info(log, "Se recibe paquete de SWAP exitosamente %s",
-			(char *) paquete->data);
+	log_info(log, "El contenido de la pagina es %s\n", (char *) paquete->data);
 
 	return paquete->data;
 
@@ -80,7 +76,7 @@ void swap_escribir(t_entrada_tabla_de_paginas * entrada) {
 	int * pid_proceso = malloc(sizeof(int));
 	*pid_proceso = entrada->pid;
 
-	list_add(escrituras_swap,pid_proceso);
+	list_add(escrituras_swap, pid_proceso);
 
 	int tamanio = tamanio_marco + sizeof(int) * 2;
 
@@ -92,6 +88,9 @@ void swap_escribir(t_entrada_tabla_de_paginas * entrada) {
 	memcpy(data + sizeof(int), &entrada->pagina, sizeof(int));
 	memcpy(data + sizeof(int) * 2, memoria + marco * tamanio_marco,
 			tamanio_marco);
+
+	log_info(log, "Se escribe al swap la pagina %d del proceso %d.\n",
+			entrada->pagina, entrada->pid);
 
 	enviar(socket_swap, SWAP_ESCRIBIR, tamanio, data);
 

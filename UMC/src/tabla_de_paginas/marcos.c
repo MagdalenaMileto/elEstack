@@ -10,19 +10,19 @@
 void marco_nuevo(t_entrada_tabla_de_paginas * entrada_que_necesita_marco) {
 
 	log_info(log,
-			"Ingreso en la funcion marco nuevo, procedo a chequear si estan asignados todos los marcos");
+			"Ingreso en la funcion marco nuevo, procedo a chequear si estan asignados todos los marcos\n");
 
 	if (tiene_cantidad_maxima_marcos_asignados(
 			entrada_que_necesita_marco->pid)) {
 
 		log_info(log,
-				"Se llego a la capacidad maxima de marcos, se inicia el algoritmo de reemplazo.");
+				"Se llego a la capacidad maxima de marcos, se inicia el algoritmo de reemplazo.\n");
 
 		algoritmo_remplazo(entrada_que_necesita_marco,
 				entrada_que_necesita_marco->pid);
 
 		log_info(log,
-				"Se reemplaza exitosamente y se asigna la pagina %d al marco %d.",
+				"Se reemplaza exitosamente y se asigna la pagina %d al marco %d.\n",
 				entrada_que_necesita_marco->pagina,
 				entrada_que_necesita_marco->marco);
 
@@ -31,7 +31,7 @@ void marco_nuevo(t_entrada_tabla_de_paginas * entrada_que_necesita_marco) {
 	} else {
 
 		log_info(log,
-				"Hay marcos disponibles, por ende se le asigna a la pagina una nueva entrada.");
+				"Hay marcos disponibles, por ende se le asigna a la pagina una nueva entrada.\n");
 
 		bool marco_disponible(void * entrada) {
 
@@ -44,11 +44,11 @@ void marco_nuevo(t_entrada_tabla_de_paginas * entrada_que_necesita_marco) {
 		t_control_marco * marco_libre = list_find(control_de_marcos,
 				marco_disponible);
 
-		log_info(log, "Encuentro marco disponible %d", marco_libre->numero);
+		log_info(log, "Encuentro marco disponible %d.\n", marco_libre->numero);
 
 		marco_libre->disponible = false;
 
-		log_info(log, "El marco seleccionado ya no esta disponible");
+		log_info(log, "El marco seleccionado ya no esta disponible.\n");
 
 		entrada_que_necesita_marco->presencia = true;
 
@@ -66,17 +66,17 @@ void marco_nuevo(t_entrada_tabla_de_paginas * entrada_que_necesita_marco) {
 
 		if (list_size(paginas_presentes) == 1) {
 			log_info(log,
-					"Es el primer marco del proceso, se lo asigna como puntero");
+					"Es el primer marco del proceso, se lo asigna como puntero.\n");
 			entrada_que_necesita_marco->puntero = true;
 		} else {
 			log_info(log,
 					string_from_format(
-							"No es el primer marco del proceso, ya ocupa %d marcos. No se le asigna el puntero",
+							"No es el primer marco del proceso, ya ocupa %d marcos. No se le asigna el puntero\n",
 							list_size(paginas_presentes)));
 		}
 
 		log_info(log,
-				string_from_format("Se asigna el marco %d exitosamente.",
+				string_from_format("Se asigna el marco %d exitosamente.\n",
 						marco_libre->numero));
 	}
 }
@@ -131,7 +131,7 @@ void algoritmo_remplazo(t_entrada_tabla_de_paginas * entrada_sin_marco, int pid)
 
 	if (string_equals_ignore_case(algoritmo, "CLOCK")) {
 
-		log_info(log, "Inicio del algoritmo de reemplazo Clock");
+		log_info(log, "Inicio del algoritmo de reemplazo Clock\n");
 
 		t_list * lista_clock = lista_circular_clock(tabla_de_paginas, pid);
 
@@ -157,18 +157,18 @@ void algoritmo_remplazo(t_entrada_tabla_de_paginas * entrada_sin_marco, int pid)
 
 		if (victima == NULL) {
 
-			log_info(log, "Nadie tenia uso en 0, no hay victima");
+			log_info(log, "Nadie tenia uso en 0, no hay victima\n");
 			victima = list_find(lista_clock, buscar_victima_y_modificar_uso);
 
 		}
 		log_info(log,
 				string_from_format(
-						"La victima es la pagina %d, tiene el marco %d y puntero esta en %d",
+						"La victima es la pagina %d, tiene el marco %d y puntero esta en %d\n",
 						victima->pagina, victima->marco, victima->puntero));
 
 		if (victima->modificado) {
 
-			log_info(log, "La victima esta modificada, se escribe en el swap.");
+			log_info(log, "La victima esta modificada, se escribe en el swap.\n");
 
 			swap_escribir(victima);
 			victima->modificado = false;
@@ -178,7 +178,8 @@ void algoritmo_remplazo(t_entrada_tabla_de_paginas * entrada_sin_marco, int pid)
 		entrada_sin_marco->marco = victima->marco;
 
 		log_info(log,
-				string_from_format("Se le signa el marco %d.", victima->marco));
+				string_from_format("Se le asigna el marco %d.\n",
+						victima->marco));
 
 		entrada_sin_marco->uso = true;
 
@@ -190,7 +191,7 @@ void algoritmo_remplazo(t_entrada_tabla_de_paginas * entrada_sin_marco, int pid)
 
 	else if (string_equals_ignore_case(algoritmo, "MODIFICADO")) {
 
-		log_info(log, "Inicio del algoritmo de reemplazo Clock Modificado");
+		log_info(log, "Inicio del algoritmo de reemplazo Clock Modificado.\n");
 
 		t_list * lista_clock_modificado = lista_circular_clock(tabla_de_paginas,
 				pid);
@@ -227,7 +228,7 @@ void algoritmo_remplazo(t_entrada_tabla_de_paginas * entrada_sin_marco, int pid)
 		if (victima == NULL) {
 
 			log_info(log,
-					"No encontro victima buscando (0,0), empieza a buscar (0,1) y a poner el bit de uso en 0 de ser necesario.");
+					"No encontro victima buscando (0,0), empieza a buscar (0,1) y a poner el bit de uso en 0 de ser necesario.\n");
 
 			victima = list_find(lista_clock_modificado,
 					buscar_victima_y_modificar_uso_2);
@@ -235,7 +236,7 @@ void algoritmo_remplazo(t_entrada_tabla_de_paginas * entrada_sin_marco, int pid)
 			if (victima == NULL) {
 
 				log_info(log,
-						"No encontro victima buscando (0,1), vuelve a buscar (0,0).");
+						"No encontro victima buscando (0,1), vuelve a buscar (0,0).\n");
 
 				victima = list_find(lista_clock_modificado,
 						buscar_victima_sin_modificar_uso);
@@ -243,7 +244,7 @@ void algoritmo_remplazo(t_entrada_tabla_de_paginas * entrada_sin_marco, int pid)
 				if (victima == NULL) {
 
 					log_info(log,
-							"No encontro victima buscando (0,0), vuelve a buscar (0,1).");
+							"No encontro victima buscando (0,0), vuelve a buscar (0,1).\n");
 
 					victima = list_find(lista_clock_modificado,
 							buscar_victima_y_modificar_uso_2);
@@ -332,13 +333,13 @@ void avanzar_victima(t_list * lista_clock,
 
 	if (de_una_entrada(lista_clock)) {
 
-		log_info(log, "Solo hay una pagina presente.");
+		log_info(log, "Solo hay una pagina presente.\n");
 
 		entrada_con_marco_nuevo->puntero = true;
 
 	} else {
 
-		log_info(log, "Tiene mas de una pagina presente.");
+		log_info(log, "Tiene mas de una pagina presente.\n");
 
 		int posicion_victima = index_of(lista_clock, victima);
 
@@ -357,7 +358,8 @@ void avanzar_victima(t_list * lista_clock,
 	victima->puntero = false;
 
 	log_info(log,
-			string_from_format("Se avanza el puntero de la pagina: %d a la: %d",
+			string_from_format(
+					"Se avanza el puntero de la pagina: %d a la: %d\n",
 					victima->pagina, entrada_con_marco_nuevo->pagina));
 
 	puntero_viejo->puntero = false;
@@ -375,7 +377,7 @@ void escribir_marco(int marco, int offset, int tamanio, void * contenido) {
 
 	memcpy(memoria + desplazamiento + offset, contenido, tamanio);
 
-	log_info(log, "El marco se escribe con exito.");
+	log_info(log, "El marco se escribe con exito.\n");
 
 }
 

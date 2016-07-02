@@ -17,7 +17,7 @@
 char *puerto_umc, *ip_swap, *puerto_swap;
 
 int cantidad_marcos, tamanio_marco, cantidad_maxima_marcos, entradas_TLB,
-		retardo;
+		retardo,intervalo_info;
 
 int socket_swap, socket_nucleo, socket_conexiones_nuevas;
 

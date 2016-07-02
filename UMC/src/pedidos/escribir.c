@@ -4,7 +4,7 @@ void escribir_una_pagina(int numero_pagina, int offset, int tamanio,
 		void * buffer) {
 
 	log_info(log,
-			"Llega una peticion de lectura por parte de una de las CPUs. La pagina solicitada a escribir es la %d y su offset %d.",
+			"Llega una peticion de lectura por parte de una de las CPUs. La pagina solicitada a escribir es la %d y su offset %d.\n",
 			numero_pagina, offset);
 
 	t_entrada_tabla_de_paginas * pagina_encontrada;
@@ -15,7 +15,7 @@ void escribir_una_pagina(int numero_pagina, int offset, int tamanio,
 
 	} else {
 
-		log_info(log, "La TLB esta apagada, se busca en la tabla de paginas");
+		log_info(log, "La TLB esta apagada, se busca en la tabla de paginas\n");
 		pagina_encontrada = buscar_pagina_tabla_de_paginas(numero_pagina);
 	}
 
@@ -37,7 +37,7 @@ void escribir_una_pagina(int numero_pagina, int offset, int tamanio,
 	pagina_encontrada->modificado = true;
 	pagina_encontrada->uso = true;
 
-	log_info(log, "Se escribio con exito la pagina %d.", numero_pagina);
+	log_info(log, "Se escribio con exito la pagina %d.\n", numero_pagina);
 
 }
 

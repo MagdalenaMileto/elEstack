@@ -19,6 +19,12 @@ context(algoritmo_clock_modificado) {
 
 		}end
 
+		after{
+
+			list_destroy(tabla_de_paginas);
+
+		}end
+
 		void nueva_entrada(int pid, int pagina) {
 
 			t_entrada_tabla_de_paginas * entrada = crear_nueva_entrada(pid, pagina);

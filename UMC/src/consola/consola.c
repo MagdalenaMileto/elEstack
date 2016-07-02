@@ -97,12 +97,18 @@ void esperar_comando(void * parametros) {
 
 void cambiar_retardo(int retardo_numerico) {
 
+	log_info(log, "El retardo pasa de %d a %d milisegundos", retardo,
+			retardo_numerico);
 	retardo = retardo_numerico;
 }
 
 void flush_tlb() {
 
+	log_info(log, "La TLB tiene %d entradas\n", list_size(tlb));
+	log_info(log, "Se flushea la TLB\n");
 	list_clean(tlb);
+	log_info(log, "La TLB paso a tener %d entradas\n", list_size(tlb));
+
 }
 
 void flush_memory(int proceso) {
@@ -125,10 +131,15 @@ void flush_memory(int proceso) {
 				(t_entrada_tabla_de_paginas *) entrada;
 
 		entrada_tabla_paginas->modificado = true;
+		log_info(log, "La pagina %d del proceso %d se marca como modificada\n",
+				proceso, entrada_tabla_paginas->pagina);
 
 	}
 
+	log_info(log, "Se flushea el proceso %d\n", proceso);
+	log_info(log, "===== INICIO FLUSH =====\n", proceso);
 	list_iterate(lista_filtrada_por_proceso, cambiar_bit);
+	log_info(log, "===== FIN FLUSH =====\n", proceso);
 
 }
 
@@ -139,6 +150,7 @@ void dump_total() {
 	list_iterate(tabla_de_paginas, dump_proceso_iterate);
 
 	escribir_a_dump(string_from_format("\n===== FIN DUMP =====\n"));
+
 }
 
 void dump_proceso(int pid) {
@@ -160,7 +172,8 @@ void dump_proceso(int pid) {
 
 	list_iterate(tabla_filtrada, dump_proceso_iterate);
 
-	escribir_a_dump(string_from_format("===== FIN DUMP PROCESO %d =====", pid));
+	escribir_a_dump(
+			string_from_format("\n===== FIN DUMP PROCESO %d =====\n", pid));
 
 }
 
@@ -208,7 +221,7 @@ void dump_entrada(t_entrada_tabla_de_paginas * entrada) {
 				string_from_format("Su contenido es: %s.\n", contenido));
 
 	}
-
+	printf("%s", linea);
 	escribir_a_dump(linea);
 
 }
