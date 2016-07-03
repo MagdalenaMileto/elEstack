@@ -191,7 +191,7 @@ void mandarAEjecutar(t_proceso *proceso, int sock) {
 	proceso->socket_CPU = sock;
 	//TODO:mutex
 	queue_push(cola_exec, proceso);
-	printf("DSADASD\n");
+
 	t_datos_kernel datos_kernel;
 	datos_kernel.QUANTUM = config_nucleo->QUANTUM;
 	datos_kernel.QUANTUM_SLEEP = config_nucleo->QUANTUM_SLEEP;
@@ -199,13 +199,13 @@ void mandarAEjecutar(t_proceso *proceso, int sock) {
 	datos_kernel.STACK_SIZE = config_nucleo->STACK_SIZE;
 
 	//O que no me envie nada? timeouts?
-printf("DSADASD\n");
+
 	enviar(sock, 301, sizeof(t_datos_kernel), &datos_kernel);
 	usleep(50000);
-	printf("DSADASD\n");
+
 	enviar(sock, 303, pcbSerializado->sizeTotal, (char*)pcbSerializado);
 //	printf("NUCLEO:mande a ejecutar PID%d\n",pcbSerializado->pid);
-	printf("DSADASD ultima\n");
+
 	//free(pcbSerializado);
 }
 
@@ -213,9 +213,9 @@ void *hilo_PCP(void *arg) {
 	t_proceso *proceso; int sock;
 
 	while (1) {
-		sem_wait(&sem_ready);printf("REVASITO\n"); sem_wait(&sem_cpu);
+		sem_wait(&sem_ready); sem_wait(&sem_cpu);
 		//TODO:mutex
-		printf("Soy casi grande\n");
+		//printf("Soy casi grande\n");
 		pthread_mutex_lock(&mutex_config);
 		sock = (int)queue_pop(cola_CPU_libres);
 		proceso = queue_pop(cola_ready);
@@ -369,11 +369,12 @@ void escribeVariable(char *variable) {//
 
 void liberaSemaforo(char *semaforo) {
 	int i; t_proceso *proceso;
-	printf("NUCLEO: libera sem %s\n", semaforo);
+
 	for (i = 0; i < strlen((char*)config_nucleo->SEM_IDS) / sizeof(char*); i++) {
 		if (strcmp((char*)config_nucleo->SEM_IDS[i], semaforo) == 0) {
 		
 			if(list_size(colas_semaforos[i]->elements)){
+				proceso = queue_pop(colas_semaforos[i]);
 				queue_push(cola_ready, proceso);
 				sem_post(&sem_ready);
 			}else{
@@ -797,7 +798,7 @@ void *hilo_CONEXION_CPU(void *socket) {
 				printf("\x1b[3%dmNUCLEO: Recibi proceso %d mando a bloquear por %s por %d unidades\x1b[0m\n", ((proceso->pcb->pid)%6+1),proceso->pcb->pid,(char*)(elPaquete->data+4),tiempo);
 
 							pthread_mutex_lock(&mutex_config);
-							bloqueoIoManager(proceso, (elPaquete->data)+4, 10, tiempo);
+							bloqueoIoManager(proceso, (elPaquete->data)+4, tiempo);
 							pthread_mutex_unlock(&mutex_config);
 
 						}else{
@@ -815,6 +816,8 @@ void *hilo_CONEXION_CPU(void *socket) {
 
 			proceso = dameProceso(cola_exec, *(int*)socket);
 			pthread_mutex_lock(&mutex_config);
+			printf("\x1b[3%dmNUCLEO: Proceso %d pide semaforo:%s \x1b[0m\n", ((proceso->pcb->pid)%6+1),proceso->pcb->pid,elPaquete->data);
+
 			int * valorSemaforo = pideSemaforo(elPaquete->data);
 			int mandar;
 			if(*valorSemaforo<=0){
@@ -828,7 +831,7 @@ void *hilo_CONEXION_CPU(void *socket) {
 				proceso->pcb = temp;
 
 				if(proceso->abortado==false){
-						bloqueoSemaforo(proceso,elPaquete->data,elPaquete->tamanio);
+						bloqueoSemaforo(proceso,elPaquete->data);
 						queue_push(cola_CPU_libres, (void*)*(int*)socket);
 						sem_post(&sem_cpu);
 				}else{
@@ -851,7 +854,9 @@ void *hilo_CONEXION_CPU(void *socket) {
 			proceso = dameProceso(cola_exec, *(int*)socket);
 			queue_push(cola_exec, proceso);
 			pthread_mutex_lock(&mutex_config);
-			liberaSemaforo(elPaquete->data, elPaquete->tamanio);
+			printf("\x1b[3%dmNUCLEO: Proceso %d libera semaforo:%s \x1b[0m\n", ((proceso->pcb->pid)%6+1),proceso->pcb->pid,elPaquete->data);
+
+			liberaSemaforo(elPaquete->data);
 			pthread_mutex_unlock(&mutex_config);
 			break;
 
@@ -859,7 +864,7 @@ void *hilo_CONEXION_CPU(void *socket) {
 			proceso = dameProceso(cola_exec, *(int*)socket);
 			queue_push(cola_exec, proceso);
 			pthread_mutex_lock(&mutex_config);
-			escribeVariable(elPaquete->data, elPaquete->tamanio);
+			escribeVariable(elPaquete->data);
 			pthread_mutex_unlock(&mutex_config);
 			break;
 
@@ -867,7 +872,7 @@ void *hilo_CONEXION_CPU(void *socket) {
 			proceso = dameProceso(cola_exec, *(int*)socket);
 			queue_push(cola_exec, proceso);
 			pthread_mutex_lock(&mutex_config);
-			enviar(*(int*)socket, 352, sizeof(int), pideVariable(elPaquete->data, elPaquete->tamanio));
+			enviar(*(int*)socket, 352, sizeof(int), pideVariable(elPaquete->data));
 			pthread_mutex_unlock(&mutex_config);
 			break;
 
