@@ -302,22 +302,39 @@ int mandarCodigoAUmc(char* codigo, int size, t_proceso *proceso) {
 	return retorno;
 }
 
-int *pideSemaforo(char *semaforo, int semaforoSize) {
+int *pideSemaforo(char *semaforo) {
 	int i;
 	//printf("NUCLEO: pide sem %s\n", semaforo);
 
 	for (i = 0; i < strlen((char*)config_nucleo->SEM_IDS) / sizeof(char*); i++) {
 		//TODO: mutex confignucleo
 		if (strcmp((char*)config_nucleo->SEM_IDS[i], semaforo) == 0) {
-			if (config_nucleo->VALOR_SEM[i] == -1) {return &config_nucleo->VALOR_SEM[i];}
-			config_nucleo->VALOR_SEM[i]--;
+			
+			//if (config_nucleo->VALOR_SEM[i] == -1) {return &config_nucleo->VALOR_SEM[i];}
+			//config_nucleo->VALOR_SEM[i]--;
 			return (&config_nucleo->VALOR_SEM[i]);
 		}
 	}
 	printf("No encontre SEM id, exit\n");exit(0);
 }
 
-int *pideVariable(char *variable, int tamanio) {
+void escribeSemaforo(char *semaforo,int valor){
+	int i;
+	//printf("NUCLEO: pide sem %s\n", semaforo);
+
+	for (i = 0; i < strlen((char*)config_nucleo->SEM_IDS) / sizeof(char*); i++) {
+		//TODO: mutex confignucleo
+		if (strcmp((char*)config_nucleo->SEM_IDS[i], semaforo) == 0) {
+			
+			//if (config_nucleo->VALOR_SEM[i] == -1) {return &config_nucleo->VALOR_SEM[i];}
+			config_nucleo->VALOR_SEM[i]=valor;
+			return;
+		}
+	}
+	printf("No encontre SEM id, exit\n");exit(0);
+}
+
+int *pideVariable(char *variable) {
 	int i;
 	printf("NUCLEO: pide variable %s\n", variable);
 	for (i = 0; i < strlen((char*)config_nucleo->SHARED_VARS) / sizeof(char*); i++) {
@@ -331,7 +348,7 @@ int *pideVariable(char *variable, int tamanio) {
 }
 
 
-void escribeVariable(char *variable, int tamanio) {//
+void escribeVariable(char *variable) {//
 	//TODO ME TIENEN QUE MANDAR primero el int y luego el  string
 	int *valor = (int*)variable;
 	variable += 4;
@@ -350,11 +367,23 @@ void escribeVariable(char *variable, int tamanio) {//
 }
 
 
-void liberaSemaforo(char *semaforo, int semaforoSize) {
+void liberaSemaforo(char *semaforo) {
 	int i; t_proceso *proceso;
 	printf("NUCLEO: libera sem %s\n", semaforo);
 	for (i = 0; i < strlen((char*)config_nucleo->SEM_IDS) / sizeof(char*); i++) {
 		if (strcmp((char*)config_nucleo->SEM_IDS[i], semaforo) == 0) {
+		
+			if(list_size(colas_semaforos[i]->elements)){
+				queue_push(cola_ready, proceso);
+				sem_post(&sem_ready);
+			}else{
+				config_nucleo->VALOR_SEM[i]++;
+			}
+
+			return;
+/*
+
+
 		//TODO:aca esta funcando con el \n OJO
 			//TODO: mutex confignucleo
 			config_nucleo->VALOR_SEM[i]++;
@@ -365,13 +394,15 @@ void liberaSemaforo(char *semaforo, int semaforoSize) {
 				sem_post(&sem_ready);
 			}
 			return;
+
+			*/
 		}
 	}
 	printf("No encontre SEM id, exit\n");exit(0);
 }
 
 
-void  bloqueoSemaforoManager(t_proceso *proceso, char *semaforo, int semSize) {
+void  bloqueoSemaforo(t_proceso *proceso, char *semaforo) {
 	int i;
 
 	for (i = 0; i < strlen((char*)config_nucleo->SEM_IDS) / sizeof(char*); i++) {
@@ -387,7 +418,7 @@ void  bloqueoSemaforoManager(t_proceso *proceso, char *semaforo, int semSize) {
 	printf("No encontre SEM id, exit\n");exit(0);
 }
 
-void bloqueoIoManager(t_proceso *proceso, char *ioString, int sizeString, int unidadesBloqueado) {
+void bloqueoIoManager(t_proceso *proceso, char *ioString, int unidadesBloqueado) {
 	int i; int b = 0;
 	//printf("NUCLEO: mando  %s proceso %d a BLOCK por IO\n",ioString, proceso->pcb->pid);
 	for (i = 0; i < strlen((char*)config_nucleo->IO_IDS) / sizeof(char*); i++) {
@@ -784,38 +815,35 @@ void *hilo_CONEXION_CPU(void *socket) {
 
 			proceso = dameProceso(cola_exec, *(int*)socket);
 			pthread_mutex_lock(&mutex_config);
-			int * valorSemaforo = pideSemaforo(elPaquete->data, elPaquete->tamanio);
+			int * valorSemaforo = pideSemaforo(elPaquete->data);
 			int mandar;
-			if(*valorSemaforo==-1){
+			if(*valorSemaforo<=0){
 				mandar =1;
 				printf("\x1b[3%dmNUCLEO: Recibi proceso %d mando a bloquear por semaforo %s\x1b[0m\n", ((proceso->pcb->pid)%6+1),proceso->pcb->pid,elPaquete->data);
 				enviar(*(int*)socket, 342, sizeof(int), &mandar);// 1 si se bloquea 0 si no
+				elPaquete2 = recibir(*(int*)socket);
+				temp = desserializarPCB(elPaquete2->data);
+				liberar_paquete(elPaquete2);
+				destruirPCB(proceso->pcb);
+				proceso->pcb = temp;
+
+				if(proceso->abortado==false){
+						bloqueoSemaforo(proceso,elPaquete->data,elPaquete->tamanio);
+						queue_push(cola_CPU_libres, (void*)*(int*)socket);
+						sem_post(&sem_cpu);
+				}else{
+						printf("\x1b[3%dmNUCLEO: Recibi proceso %d por fin de quantum, abortado \x1b[0m\n", ((proceso->pcb->pid)%6+1),proceso->pcb->pid);
+						abortar(proceso);
+				}
+
 			}else{
+				escribeSemaforo(elPaquete->data,*pideSemaforo(elPaquete->data)-1);
 				mandar=0;
 				enviar(*(int*)socket, 342, sizeof(int), &mandar);//
-			}
-			if(*valorSemaforo == -1){
-					elPaquete2 = recibir(*(int*)socket);
-					temp = desserializarPCB(elPaquete2->data);
-					liberar_paquete(elPaquete2);
-					destruirPCB(proceso->pcb);
-					proceso->pcb = temp;
-
-					if(proceso->abortado==false){
-						bloqueoSemaforoManager(proceso,elPaquete->data,elPaquete->tamanio);
-									queue_push(cola_CPU_libres, (void*)*(int*)socket);
-									sem_post(&sem_cpu);
-								}else{
-									printf("\x1b[3%dmNUCLEO: Recibi proceso %d por fin de quantum, abortado \x1b[0m\n", ((proceso->pcb->pid)%6+1),proceso->pcb->pid);
-
-									abortar(proceso);
-								}
-
-
-
-			}else{
 				queue_push(cola_exec, proceso);
 			}
+			
+
 			pthread_mutex_unlock(&mutex_config);
 			break;
 

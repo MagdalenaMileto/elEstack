@@ -101,14 +101,14 @@ typedef struct {
 
 } t_proceso;
 void abortar(t_proceso*proceso);
-void escribeVariable(char *variable,int tamanio);
-int *pideVariable(char *variable,int tamanio);
+void escribeVariable(char *variable);
+int *pideVariable(char *variable);
 void * nalloc(int tamanio);
 
-void liberaSemaforo(char *semaforo,int semaforoSize);
-int *pideSemaforo(char *semaforo,int semaforoSize);
-void  bloqueoSemaforoManager(t_proceso *proceso,char *semaforo,int semSize);
-void bloqueoIoManager(t_proceso *proceso, char *ioString, int sizeString, int unidadesBloqueado);
+void liberaSemaforo(char *semaforo);
+int *pideSemaforo(char *semaforo);
+void  bloqueoSemaforo(t_proceso *proceso,char *semaforo);
+void bloqueoIoManager(t_proceso *proceso, char *ioString, int unidadesBloqueado);
 
 
 
