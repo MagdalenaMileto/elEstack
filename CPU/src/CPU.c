@@ -273,6 +273,7 @@ void crearEstructuraParaUMC (t_pcb* pcb, int tamPag, t_direccion* informacion){
 	info->size=pcb->indiceDeCodigo [((pcb->pc)*2)+1];
 	memcpy(informacion, info, 12);
 	free(info);
+	log_info(log,"Voy a leer en la posicion %d %d %d\n", ((int*)(informacion))[0],((int*)(informacion))[1],((int*)(informacion))[2]);
 	return;
 }
 
