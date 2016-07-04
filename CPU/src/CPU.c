@@ -49,7 +49,10 @@ int main(int argc,char **argv){
 	umc = conectarConUmc();
 
 	nucleo = conectarConNucleo();
+
 	t_paquete* datos_kernel=recibir(nucleo);
+	asignar_datos_de_nucleo(datos_kernel);
+	liberar_paquete(datos_kernel);
 
 	quantum = ((t_datos_kernel*)(datos_kernel->data))->QUANTUM;
 	tamanioPag = ((t_datos_kernel*)(datos_kernel->data))->TAMPAG;
@@ -69,18 +72,9 @@ int main(int argc,char **argv){
 
 
 		//Recibo quantum
-
-
-		t_paquete* datos_kernel=recibir(nucleo);
-
-		quantum = ((t_datos_kernel*)(datos_kernel->data))->QUANTUM;
-		tamanioPag = ((t_datos_kernel*)(datos_kernel->data))->TAMPAG;
-		quantum_sleep = ((t_datos_kernel*)(datos_kernel->data))->QUANTUM_SLEEP;
-		stack_size=	((t_datos_kernel*)(datos_kernel->data))->STACK_SIZE;
-
+		datos_kernel=recibir(nucleo);
+		asignar_datos_de_nucleo(datos_kernel);
 		liberar_paquete(datos_kernel);
-
-
 
 		paquete_recibido = recibir(nucleo);
 		//sleep(4);
@@ -171,6 +165,14 @@ exit(EXIT_SUCCESS);
 
 //*******************************************FUNCIONES**********************************************************
 
+void asignar_datos_de_nucleo(t_paquete *datos_kernel){
+
+	quantum = ((t_datos_kernel*)(datos_kernel->data))->QUANTUM;
+	tamanioPag = ((t_datos_kernel*)(datos_kernel->data))->TAMPAG;
+	quantum_sleep = ((t_datos_kernel*)(datos_kernel->data))->QUANTUM_SLEEP;
+	stack_size=	((t_datos_kernel*)(datos_kernel->data))->STACK_SIZE;
+
+}
 void sig_handler(int signo) {
 	sigusr1_desactivado = 0;
 	log_info(log,"Se detecto señal SIGUSR1, la CPU se cerrara al finalizar\n");
