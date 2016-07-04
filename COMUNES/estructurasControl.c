@@ -9,14 +9,21 @@ void destruirPCB(t_pcb *pcb) {
 			t_direccion*temp=(((t_variable*)list_get(contexto_a_finalizar->vars, contexto_a_finalizar->sizeVars-1))->direccion);
 				free(temp);
 				free(list_get(contexto_a_finalizar->vars, contexto_a_finalizar->sizeVars-1));
+				list_remove(contexto_a_finalizar->vars, (contexto_a_finalizar->sizeVars)-1);
 				contexto_a_finalizar->sizeVars--;
 			}
+		printf("1");
+		list_destroy(contexto_a_finalizar->vars);
 		while(contexto_a_finalizar->sizeArgs != 0){
 					free((t_direccion*)list_get(contexto_a_finalizar->args, contexto_a_finalizar->sizeArgs-1));
+					list_remove(contexto_a_finalizar->args, (contexto_a_finalizar->sizeArgs)-1);
 					contexto_a_finalizar->sizeArgs--;
 					}
+		list_destroy(contexto_a_finalizar->args);
+		printf("2");
 		free(list_get(pcb->contextoActual, pcb->sizeContextoActual-1));
 		printf("libere algo\n");
+		list_remove(pcb->contextoActual, pcb->sizeContextoActual-1);
 		pcb->sizeContextoActual--;
 	}
 	printf("estoy por eliminar la lista\n");

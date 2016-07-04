@@ -213,19 +213,21 @@ void retornar(t_valor_variable retorno)
 	//Destruyo Contexto de Funcion
 
 	//log_info(log,"Empiezo a destruir %d\n", list_size(contexto_final->vars));
-	while(contexto_final->sizeVars-1!=0){
+	while(contexto_final->sizeVars!=0){
 		free(((t_variable*)list_get(contexto_final->vars, contexto_final->sizeVars-1))->direccion);
-		//free(list_get(contexto_final->vars, contexto_final->sizeVars-1));
+		free(list_get(contexto_final->vars, contexto_final->sizeVars-1));
+		list_remove(contexto_final->vars, (contexto_final->sizeVars)-1);
 		contexto_final->sizeVars--;
 	}
 	list_destroy(contexto_final->vars);
 	log_info(log,"Destrui vars de funcion\n");
 
 	//log_info(log,"Empiezo a destruir args de funcion %d\n",list_size(contexto_final->args));
-	while(contexto_final->sizeArgs-1!=0){
+	while(contexto_final->sizeArgs!=0){
 			log_info(log,"Antes del free\n");
 			free((t_direccion*)list_get(contexto_final->args, contexto_final->sizeArgs-1));
 			log_info(log,"Despues del free\n");
+			list_remove(contexto_final->args, (contexto_final->sizeArgs)-1);
 			contexto_final->sizeArgs--;
 		}
 	list_destroy(contexto_final->args);
@@ -286,15 +288,15 @@ void finalizar(){
 		free((t_direccion *)((t_variable *)list_get(contexto_a_finalizar->vars, contexto_a_finalizar->sizeVars-1))->direccion);
 		log_info(log,"la etiqueta es: %c\n", variable_borrar->etiqueta);
 		log_info(log,"direccion: %d %d %d \n", variable_borrar->direccion->offset, variable_borrar->direccion->pagina, variable_borrar->direccion->size);
-		//free(list_get(contexto_a_finalizar->vars, contexto_a_finalizar->sizeVars-1)); //FALTA LA MIERDA DE ESTE FREE :)
+		free(list_get(contexto_a_finalizar->vars, contexto_a_finalizar->sizeVars-1)); //FALTA LA MIERDA DE ESTE FREE :)
 		//free(variable_borrar);
-		//list_remove(contexto_a_finalizar->vars, (contexto_a_finalizar->sizeVars)-1);
+		list_remove(contexto_a_finalizar->vars, (contexto_a_finalizar->sizeVars)-1);
 		log_info(log,"la etiqueta es: %c\n", variable_borrar->etiqueta);
 		log_info(log,"pase el segundo free\n");
 		contexto_a_finalizar->sizeVars--;
 	}
 	log_info(log,"hay algo: %d", sizeof(list_get(contexto_a_finalizar->vars, (contexto_a_finalizar->sizeVars)-1)));
-	//list_destroy(contexto_a_finalizar->vars);
+	list_destroy(contexto_a_finalizar->vars);
 	log_info(log,"Destrui la lista de vars\n");
 
 	while(contexto_a_finalizar->sizeArgs != 0){
@@ -306,7 +308,7 @@ void finalizar(){
 				contexto_a_finalizar->sizeArgs--;
 			}
 	log_info(log,"Estoy por eliminar lista args\n");
-	//list_destroy(contexto_a_finalizar->args);
+	list_destroy(contexto_a_finalizar->args);
 	log_info(log,"Destrui la lista de args\n");
 	free(contexto_a_finalizar);
 	pcb->sizeContextoActual--;
