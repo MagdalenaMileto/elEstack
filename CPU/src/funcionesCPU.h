@@ -46,7 +46,7 @@ typedef struct {
 } t_datos_kernel;
 
 
-typedef struct {
+typedef struct __attribute__((packed)){
   char* PUERTO_NUCLEO;
   char* IP_NUCLEO;
   char* PUERTO_UMC;

@@ -80,7 +80,7 @@ typedef struct {
 } CONF_NUCLEO;
 
 
-typedef struct {
+typedef struct __attribute__((packed)){
     int QUANTUM;
    int QUANTUM_SLEEP;
   int TAMPAG;

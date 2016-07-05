@@ -265,8 +265,12 @@ int mandarCodigoAUmc(char* codigo, int size, t_proceso *proceso) {
 	memcpy(proceso->pcb->indiceDeEtiquetas, metadata_program->etiquetas, proceso->pcb->sizeIndiceDeEtiquetas * sizeof(char));
 
 	proceso->pcb->contextoActual = list_create();
+
 	t_contexto *contextocero;
 	contextocero = malloc(sizeof(t_contexto));
+
+	contextocero->args = list_create();
+	contextocero->vars = list_create();
 
 	contextocero->sizeVars = 0;
 	contextocero->sizeArgs = 0;
@@ -296,7 +300,7 @@ int mandarCodigoAUmc(char* codigo, int size, t_proceso *proceso) {
 	paquete = recibir(umc);
 	int retorno = paquete->codigo_operacion;
 
-	free(paqueteUMC);
+//	free(paqueteUMC);
 	liberar_paquete(paquete);
 	pthread_mutex_unlock(&umcm);
 	return retorno;

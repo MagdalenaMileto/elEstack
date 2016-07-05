@@ -1,40 +1,44 @@
 #include "estructurasControl.h"
 
+
 void destruirPCB(t_pcb *pcb) {
 
 	t_contexto *contexto_a_finalizar;
 	while(pcb->sizeContextoActual != 0){
 		contexto_a_finalizar= list_get(pcb->contextoActual, pcb->sizeContextoActual-1);
+		//printf("sizeVars%d %d",contexto_a_finalizar->sizeVars,list_size(contexto_a_finalizar->vars));
+
 		while(contexto_a_finalizar->sizeVars != 0){
+
 			t_direccion*temp=(((t_variable*)list_get(contexto_a_finalizar->vars, contexto_a_finalizar->sizeVars-1))->direccion);
 				free(temp);
 				free(list_get(contexto_a_finalizar->vars, contexto_a_finalizar->sizeVars-1));
-				list_remove(contexto_a_finalizar->vars, (contexto_a_finalizar->sizeVars)-1);
 				contexto_a_finalizar->sizeVars--;
 			}
-		printf("1");
-		list_destroy(contexto_a_finalizar->vars);
 		while(contexto_a_finalizar->sizeArgs != 0){
 					free((t_direccion*)list_get(contexto_a_finalizar->args, contexto_a_finalizar->sizeArgs-1));
-					list_remove(contexto_a_finalizar->args, (contexto_a_finalizar->sizeArgs)-1);
 					contexto_a_finalizar->sizeArgs--;
 					}
+	//	printf("casi3s\n");
+		list_destroy(contexto_a_finalizar->vars);
+	//	printf("pase\n");
 		list_destroy(contexto_a_finalizar->args);
-		printf("2");
+
+	//	printf("recaca\n");
+
 		free(list_get(pcb->contextoActual, pcb->sizeContextoActual-1));
-		printf("libere algo\n");
-		list_remove(pcb->contextoActual, pcb->sizeContextoActual-1);
+	//	printf("libere algo\n");
 		pcb->sizeContextoActual--;
 	}
-	printf("estoy por eliminar la lista\n");
+//s	printf("estoy por eliminar la lista\n");
 	list_destroy(pcb->contextoActual);
-	printf("elimine lista\n");
+//	printf("elimine lista\n");
 	free(pcb->indiceDeCodigo);
-	printf("free indice de codigo\n");
+	//printf("free indice de codigo\n");
 	free(pcb->indiceDeEtiquetas);
-	printf("free etiqute\n");
+	//printf("free etiqute\n");
 	free(pcb);
-	printf("funco\n");
+	//printf("funco\n");
 
 }
 
@@ -92,7 +96,7 @@ t_pcb *desserializarPCB(char *serializado) {
 			memcpy(var, serializado, sizeof(t_variable));
 		//	printf("3AkkkkkSD\n");
 			serializado += sizeof(t_variable);
-		printf("posicion %d \n",(serializado-serini));
+	//	printf("posicion %d \n",(serializado-serini));
 		//dire=&(var->direccion);
 
 			dire->offset=((int*)(serializado))[0];
@@ -100,11 +104,11 @@ t_pcb *desserializarPCB(char *serializado) {
 			dire->size=((int*)(serializado))[1];
 			var->direccion = dire;
 
-			printf("%d %d %d \n",dire->offset,dire->pagina,dire->size);
+		//	printf("%d %d %d \n",dire->offset,dire->pagina,dire->size);
 		//	memcpy((t_direccion*)(var->direccion), serializado, sizeof(t_direccion));
 			//printf("5AkkkkkSD\n");
 			serializado += sizeof(t_direccion);
-			printf("RETORNA \n");
+			//printf("RETORNA \n");
 			list_add(temp->vars, var);
 		}
 		//printf("ASD\n");
@@ -112,7 +116,7 @@ t_pcb *desserializarPCB(char *serializado) {
 	}
 	//printf("RERE\n");
 
-	printf("DES TAMANIO PCB%d\n",(serializado-serini));
+	//printf("DES TAMANIO PCB%d\n",(serializado-serini));
 	return pcb;
 
 
@@ -140,7 +144,7 @@ void agregarContexto(t_pcb *pcb, t_contexto *contexto) {
 char *serializarPCB(t_pcb *pcb) {
 	int g=0;
 
-printf("Entre a serialziar\n");
+//printf("Entre a serialziar\n");
 	int size = 0;
 	char *retorno, *retornotemp, *retornotempp;
 
@@ -193,7 +197,7 @@ printf("Entre a serialziar\n");
 	//memcpy(retornotemp, pcb->contextoActual, pcb->sizeContextoActual * sizeof(t_contexto*));
 	//retornotemp += pcb->sizeContextoActual * sizeof(t_contexto*);
 
-printf("ACA DENO ENTERARa\n");
+//printf("ACA DENO ENTERARa\n");
 
 	for (i = 0; i < pcb->sizeContextoActual; i++) {
 		t_contexto *contexto;
@@ -223,14 +227,14 @@ printf("ACA DENO ENTERARa\n");
 
 			retornotemp += sizeof(t_variable);
 			t_direccion * diretemp = var->direccion;
-			printf("ENCODING %d %d %d \n",diretemp->offset,diretemp->pagina,diretemp->size);
+		//	printf("ENCODING %d %d %d \n",diretemp->offset,diretemp->pagina,diretemp->size);
 
 			memcpy(retornotemp,&diretemp->offset,4);
 			memcpy(retornotemp+4,&diretemp->size,4);
 			memcpy(retornotemp+8,&diretemp->pagina,4);
 
 			//memcpy(retornotemp, diretemp, sizeof(t_direccion));
-			printf("posicion %d \n",(retornotemp-retorno));
+		//	printf("posicion %d \n",(retornotemp-retorno));
 
 
 			retornotemp += sizeof(t_direccion);
