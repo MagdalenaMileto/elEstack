@@ -54,11 +54,6 @@ int main(int argc,char **argv){
 	asignar_datos_de_nucleo(datos_kernel);
 	liberar_paquete(datos_kernel);
 
-	quantum = ((t_datos_kernel*)(datos_kernel->data))->QUANTUM;
-	tamanioPag = ((t_datos_kernel*)(datos_kernel->data))->TAMPAG;
-	quantum_sleep = ((t_datos_kernel*)(datos_kernel->data))->QUANTUM_SLEEP;
-	stack_size=	((t_datos_kernel*)(datos_kernel->data))->STACK_SIZE;
-	log_info(log,"Quantum: %d TamPag: %d Quantum Sleep: %d Stack size: %d Var Max: %d\n", quantum, tamanioPag, quantum_sleep, stack_size, var_max);
 
 
 
@@ -73,8 +68,8 @@ int main(int argc,char **argv){
 
 		//Recibo quantum
 		datos_kernel=recibir(nucleo);
-		asignar_datos_de_nucleo(datos_kernel);
-		liberar_paquete(datos_kernel);
+	//	asignar_datos_de_nucleo(datos_kernel);
+	//	liberar_paquete(datos_kernel);
 
 		paquete_recibido = recibir(nucleo);
 		//sleep(4);
@@ -171,6 +166,7 @@ void asignar_datos_de_nucleo(t_paquete *datos_kernel){
 	tamanioPag = ((t_datos_kernel*)(datos_kernel->data))->TAMPAG;
 	quantum_sleep = ((t_datos_kernel*)(datos_kernel->data))->QUANTUM_SLEEP;
 	stack_size=	((t_datos_kernel*)(datos_kernel->data))->STACK_SIZE;
+	log_info(log,"Quantum: %d TamPag: %d Quantum Sleep: %d Stack size: %d Var Max: %d\n", quantum, tamanioPag, quantum_sleep, stack_size, var_max);
 
 }
 void sig_handler(int signo) {
