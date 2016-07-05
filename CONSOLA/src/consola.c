@@ -5,8 +5,6 @@
  *      Author: utnso
  */
 
-
-
 #include "funcionesConsola.h"
 
 int socketConexionNucleo;
@@ -71,10 +69,17 @@ int main(int argc, char **argv) {
 					programa_finalizado=0;
 					close(nucleo);
 					break;
+			case -1:
+					printf("CONSOLA: nucleo desconecto\n");
+					close(nucleo);
+					liberar_paquete(paquete);
+					printf("Se cierra CONSOLA\n");
+					return 0;
+
 			}
 }
 
-
+close(nucleo);
 liberar_paquete(paquete);
 printf("Se cierra CONSOLA\n");
 
