@@ -216,7 +216,6 @@ void retornar(t_valor_variable retorno)
 	while(contexto_final->sizeVars!=0){
 		free(((t_variable*)list_get(contexto_final->vars, contexto_final->sizeVars-1))->direccion);
 		free(list_get(contexto_final->vars, contexto_final->sizeVars-1));
-		list_remove(contexto_final->vars, (contexto_final->sizeVars)-1);
 		contexto_final->sizeVars--;
 	}
 	list_destroy(contexto_final->vars);
@@ -227,7 +226,6 @@ void retornar(t_valor_variable retorno)
 			log_info(log,"Antes del free\n");
 			free((t_direccion*)list_get(contexto_final->args, contexto_final->sizeArgs-1));
 			log_info(log,"Despues del free\n");
-			list_remove(contexto_final->args, (contexto_final->sizeArgs)-1);
 			contexto_final->sizeArgs--;
 		}
 	list_destroy(contexto_final->args);
@@ -235,7 +233,6 @@ void retornar(t_valor_variable retorno)
 
 
 	free(list_get(pcb->contextoActual, pcb->sizeContextoActual-1));
-	list_remove(pcb->contextoActual, pcb->sizeContextoActual-1);
 	log_info(log,"Contexto Destruido\n");
 	pcb->sizeContextoActual--;
 
@@ -290,7 +287,6 @@ void finalizar(){
 		log_info(log,"direccion: %d %d %d \n", variable_borrar->direccion->offset, variable_borrar->direccion->pagina, variable_borrar->direccion->size);
 		free(list_get(contexto_a_finalizar->vars, contexto_a_finalizar->sizeVars-1)); //FALTA LA MIERDA DE ESTE FREE :)
 		//free(variable_borrar);
-		list_remove(contexto_a_finalizar->vars, (contexto_a_finalizar->sizeVars)-1);
 		log_info(log,"la etiqueta es: %c\n", variable_borrar->etiqueta);
 		log_info(log,"pase el segundo free\n");
 		contexto_a_finalizar->sizeVars--;
@@ -303,7 +299,6 @@ void finalizar(){
 				log_info(log,"Antes del free\n");
 			free((t_direccion*)list_get(contexto_a_finalizar->args, contexto_a_finalizar->sizeArgs-1));
 			//	log_info(log,"hay algo: %d", sizeof(list_get(contexto_a_finalizar->args, (contexto_a_finalizar->sizeArgs)-1)));
-				list_remove(contexto_a_finalizar->args, (contexto_a_finalizar->sizeArgs)-1);
 				log_info(log,"Despues del free\n");
 				contexto_a_finalizar->sizeArgs--;
 			}
