@@ -22,6 +22,12 @@ void atender_cpu(void * parametro_hilo) {
 
 		switch (paquete_nuevo->codigo_operacion) {
 
+		case -1:
+			//	printf("Evento desconexion cpu\n");
+			//no se si deberias hacer un free de parametro hilo u otras cosas
+			return;
+			break;
+
 		case LEER:
 
 			memcpy(&numero_pagina, paquete_nuevo->data, sizeof(int));
