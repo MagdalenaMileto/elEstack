@@ -1,0 +1,15 @@
+cd SWAP
+lxterminal
+cd -
+cd UMC
+lxterminal
+cd -
+cd NUCLEO
+lxterminal
+cd -
+cd CPU
+lxterminal
+cd -
+cd CONSOLA
+lxterminal
+cd -
