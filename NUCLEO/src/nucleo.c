@@ -71,7 +71,7 @@ int main() {
 	//Levantar archivo de configuracion
 	
 	
-	config_nucleo = malloc(sizeof(CONF_NUCLEO));
+
 	get_config_nucleo();//Crea y setea el config del kernel
 
 	//MOCK SACAR UNA VEZ INTEGRADO
@@ -256,7 +256,7 @@ int mandarCodigoAUmc(char* codigo, int size, t_proceso *proceso) {
 
 	//Creamos el indice de codigo
 	for (i = 0; i < metadata_program->instrucciones_size; i++) {
-		//printf("Instruccion inicio:%d offset:%d %.*s\n",metadata_program->instrucciones_serializado[i].start,metadata_program->instrucciones_serializado[i].offset,metadata_program->instrucciones_serializado[i].offset,codigo+metadata_program->instrucciones_serializado[i].start);
+		printf("Instruccion inicio:%d offset:%d %.*s\n",metadata_program->instrucciones_serializado[i].start,metadata_program->instrucciones_serializado[i].offset,metadata_program->instrucciones_serializado[i].offset,codigo+metadata_program->instrucciones_serializado[i].start);
 		proceso->pcb->indiceDeCodigo[i * 2] = metadata_program->instrucciones_serializado[i].start;
 		proceso->pcb->indiceDeCodigo[i * 2 + 1] = metadata_program->instrucciones_serializado[i].offset;
 	}
@@ -1178,11 +1178,42 @@ void *hilo_mock_cpu(void *arg) {
 void get_config_nucleo ()
 {
 
+
+	bool tengoIo() {
+		bool retorno = false;
+		int i;
+		for(i=0;i<strlen((char*)config_nucleo->IO_SLEEP);i++){
+			if(list_size(colas_ios[i]->elements)>0) retorno = true;
+		}
+
+		return retorno;
+	}
+
+	bool tengoSem() {
+		bool retorno = false;
+		int i;
+		for(i=0;i<strlen((char*)config_nucleo->SEM_INIT);i++){
+			if(list_size(colas_semaforos[i]->elements)>0) retorno = true;
+		}
+
+		return retorno;
+	}
+
+
+
 	if(config_nucleo){
-		//config_destroy(config_nucleo);
-		//printf("HAY CONFIG\n");
+		//printf("llegoe\n");
+	bool sema; bool io;
+	sema = tengoSem();
+	io = tengoIo();
+	if(sema||io){
+		printf("NUCLEO: no se puede cambiar la configuracion hasta que las colas de IO y Semaforos se encuentren vacias\n");
+	while(tengoSem()||tengoIo()){}
+	printf("NUCLEO: Colas vacias, voy a cambiar configuracion de nucleo\n");
+	}
 
 	}else{
+		config_nucleo = malloc(sizeof(CONF_NUCLEO));
 		//printf("no hay config\n");
 	}
 
