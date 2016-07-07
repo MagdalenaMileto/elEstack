@@ -61,8 +61,10 @@ void marco_nuevo(t_entrada_tabla_de_paginas * entrada_que_necesita_marco) {
 					&& entrada->pid == entrada_que_necesita_marco->pid;
 		}
 
+		pthread_mutex_lock(&semaforo_mutex_tabla_de_paginas);
 		t_list * paginas_presentes = list_filter(tabla_de_paginas,
 				coincide_pid_y_esta_presente);
+		pthread_mutex_unlock(&semaforo_mutex_tabla_de_paginas);
 
 		if (list_size(paginas_presentes) == 1) {
 			log_info(log,
@@ -99,11 +101,14 @@ bool tiene_cantidad_maxima_marcos_asignados(int pid) {
 		return marco->disponible;
 
 	}
+
+	pthread_mutex_lock(&semaforo_mutex_tabla_de_paginas);
 	int marcos_utilizados = list_count_satisfying(tabla_de_paginas,
 			coincide_pid_y_esta_presente);
 
 	t_control_marco * marco_libre = list_find(control_de_marcos,
 			marco_disponible);
+	pthread_mutex_unlock(&semaforo_mutex_tabla_de_paginas);
 
 	return (marcos_utilizados == cantidad_maxima_marcos)
 			|| (marco_libre == NULL);
@@ -132,7 +137,9 @@ void algoritmo_remplazo(t_entrada_tabla_de_paginas * entrada_sin_marco, int pid)
 
 		log_info(log, "Inicio del algoritmo de reemplazo Clock\n");
 
+		pthread_mutex_lock(&semaforo_mutex_tabla_de_paginas);
 		t_list * lista_clock = lista_circular_clock(tabla_de_paginas, pid);
+		pthread_mutex_unlock(&semaforo_mutex_tabla_de_paginas);
 
 		bool buscar_victima_y_modificar_uso(void * elemento) {
 
@@ -193,8 +200,10 @@ void algoritmo_remplazo(t_entrada_tabla_de_paginas * entrada_sin_marco, int pid)
 
 		log_info(log, "Inicio del algoritmo de reemplazo Clock Modificado.\n");
 
+		pthread_mutex_lock(&semaforo_mutex_tabla_de_paginas);
 		t_list * lista_clock_modificado = lista_circular_clock(tabla_de_paginas,
 				pid);
+		pthread_mutex_unlock(&semaforo_mutex_tabla_de_paginas);
 
 		bool buscar_victima_sin_modificar_uso(void * elemento) {
 

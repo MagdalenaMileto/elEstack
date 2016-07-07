@@ -7,9 +7,7 @@ void finalizar_proceso(int pid) {
 	eliminar_proceso_tlb(pid);
 
 	pthread_mutex_lock(&semaforo_mutex_tabla_de_paginas);
-
 	eliminar_proceso_tabla_de_paginas(pid);
-
 	pthread_mutex_unlock(&semaforo_mutex_tabla_de_paginas);
 
 	swap_finalizar_proceso(pid);

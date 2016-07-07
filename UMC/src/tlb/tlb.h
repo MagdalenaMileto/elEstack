@@ -13,6 +13,7 @@
 #include "../globales.h"
 #include "../commonsV2.h"
 
+#include <string.h>
 #include <stdbool.h>
 
 t_entrada_tabla_de_paginas * buscar_tlb(int pid, int numero_pagina);

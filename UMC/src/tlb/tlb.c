@@ -15,8 +15,10 @@ t_entrada_tabla_de_paginas * buscar_tlb(int pid, int numero_pagina) {
 		return entrada->pagina == numero_pagina && entrada->pid == pid;
 	}
 
+	pthread_mutex_lock(&semaforo_mutex_tlb);
 	t_entrada_tabla_de_paginas * resultado = list_find(tlb,
 			filtrar_por_proceso_y_pagina);
+	pthread_mutex_unlock(&semaforo_mutex_tlb);
 
 	int * pid_pedido = malloc(sizeof(int));
 
@@ -26,26 +28,26 @@ t_entrada_tabla_de_paginas * buscar_tlb(int pid, int numero_pagina) {
 
 		log_info(log, "Acierto en la TLB.\n");
 
+		pthread_mutex_lock(&semaforo_mutex_stats_tlb);
 		list_add(aciertos_tlb, pid_pedido);
+		pthread_mutex_unlock(&semaforo_mutex_stats_tlb);
 
 		pthread_mutex_lock(&semaforo_mutex_tlb);
-
 		resultado->ultima_vez_usado = numero_operacion();
-
 		pthread_mutex_unlock(&semaforo_mutex_tlb);
 
 	} else {
 
 		log_info(log, "No se encuentra en la TLB.\n");
 
+		pthread_mutex_lock(&semaforo_mutex_stats_tlb);
 		list_add(fallos_tlb, pid_pedido);
+		pthread_mutex_unlock(&semaforo_mutex_stats_tlb);
 
 		resultado = buscar_pagina_tabla_de_paginas(pid, numero_pagina);
 
 		pthread_mutex_lock(&semaforo_mutex_tlb);
-
 		agregar_entrada_tlb(resultado);
-
 		pthread_mutex_unlock(&semaforo_mutex_tlb);
 	}
 
@@ -71,7 +73,9 @@ void agregar_entrada_tlb(t_entrada_tabla_de_paginas * entrada) {
 
 bool hay_entradas_tlb_disponibles() {
 
+	pthread_mutex_lock(&semaforo_mutex_tlb);
 	int cantidad_disponible = entradas_TLB - list_size(tlb);
+	pthread_mutex_unlock(&semaforo_mutex_tlb);
 
 	return cantidad_disponible > 0;
 

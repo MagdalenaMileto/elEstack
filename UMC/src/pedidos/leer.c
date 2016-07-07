@@ -22,15 +22,11 @@ void * leer_una_pagina(int pid, int numero_pagina, int offset, int tamanio) {
 
 	if (!pagina_encontrada->presencia) {
 
-		pthread_mutex_lock(&semaforo_mutex_marcos);
-
 		if (no_tiene_ni_hay_marcos(pid)) {
 
 			log_info(log,
 					"Se finaliza el proceso %d por no haber marcos libres ni el tener uno.\n",
 					pid);
-
-			pthread_mutex_unlock(&semaforo_mutex_marcos);
 
 			return string_from_format("No hay lugar disponible!");
 
@@ -44,8 +40,6 @@ void * leer_una_pagina(int pid, int numero_pagina, int offset, int tamanio) {
 				contenido_faltante);
 
 		pagina_encontrada->presencia = true;
-
-		pthread_mutex_unlock(&semaforo_mutex_marcos);
 
 	}
 
@@ -73,8 +67,10 @@ bool no_tiene_ni_hay_marcos(int pid) {
 		return entrada->pid == pid && entrada->presencia;
 	}
 
+	pthread_mutex_lock(&semaforo_mutex_tabla_de_paginas);
 	bool tiene_alguno = list_any_satisfy(tabla_de_paginas,
 			coincide_pid_y_esta_presente);
+	pthread_mutex_unlock(&semaforo_mutex_tabla_de_paginas);
 
 	return !tiene_alguno && !hay_marcos_disponibles();
 
