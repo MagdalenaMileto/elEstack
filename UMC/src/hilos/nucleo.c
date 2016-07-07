@@ -35,7 +35,7 @@ void atender_nucleo() {
 			memcpy(codigo, paquete_nuevo->data + sizeof(int) * 3,
 					tamanio_codigo);
 
-			pthread_mutex_lock(&semaforo_mutex_marcos);
+			//pthread_mutex_lock(&semaforo_mutex_tabla_de_paginas);
 
 			if (puede_iniciar_proceso(pid, paginas_requeridas, codigo)) {
 
@@ -52,7 +52,7 @@ void atender_nucleo() {
 				enviar(socket_nucleo, FRACASO, sizeof(int), &pid);
 			}
 
-			pthread_mutex_unlock(&semaforo_mutex_marcos);
+			//pthread_mutex_unlock(&semaforo_mutex_tabla_de_paginas);
 
 			free(codigo);
 
@@ -62,11 +62,11 @@ void atender_nucleo() {
 
 			pid = *(int *) paquete_nuevo->data;
 
-			pthread_mutex_lock(&semaforo_mutex_marcos);
+			pthread_mutex_lock(&semaforo_mutex_tabla_de_paginas);
 
 			finalizar_proceso(pid);
 
-			pthread_mutex_unlock(&semaforo_mutex_marcos);
+			pthread_mutex_unlock(&semaforo_mutex_tabla_de_paginas);
 
 			break;
 
