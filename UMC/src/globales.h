@@ -29,6 +29,8 @@ pthread_mutex_t semaforo_mutex_tabla_de_paginas;
 
 pthread_mutex_t semaforo_mutex_tlb;
 
+pthread_mutex_t semaforo_mutex_marcos;
+
 pthread_mutex_t semaforo_mutex_stats_tlb;
 
 pthread_mutex_t semaforo_mutex_stats_swap;

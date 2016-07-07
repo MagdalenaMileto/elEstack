@@ -22,8 +22,11 @@ void * leer_una_pagina(int pid, int numero_pagina, int offset, int tamanio) {
 
 	if (!pagina_encontrada->presencia) {
 
+		pthread_mutex_lock(&semaforo_mutex_marcos);
+
 		if (no_tiene_ni_hay_marcos(pid)) {
 
+			pthread_mutex_unlock(&semaforo_mutex_marcos);
 			log_info(log,
 					"Se finaliza el proceso %d por no haber marcos libres ni el tener uno.\n",
 					pid);

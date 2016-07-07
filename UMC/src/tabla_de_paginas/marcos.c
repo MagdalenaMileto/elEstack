@@ -15,6 +15,8 @@ void marco_nuevo(t_entrada_tabla_de_paginas * entrada_que_necesita_marco) {
 	if (tiene_cantidad_maxima_marcos_asignados(
 			entrada_que_necesita_marco->pid)) {
 
+		pthread_mutex_unlock(&semaforo_mutex_marcos);
+
 		log_info(log,
 				"Se llego a la capacidad maxima de marcos, se inicia el algoritmo de reemplazo.\n");
 
@@ -49,6 +51,8 @@ void marco_nuevo(t_entrada_tabla_de_paginas * entrada_que_necesita_marco) {
 		marco_libre->disponible = false;
 
 		log_info(log, "El marco seleccionado ya no esta disponible.\n");
+
+		pthread_mutex_unlock(&semaforo_mutex_marcos);
 
 		entrada_que_necesita_marco->presencia = true;
 
