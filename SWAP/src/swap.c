@@ -30,6 +30,8 @@ int main(int argc, char **argv) {
 
 	//pthread_t mock;
 	//pthread_create(&mock, NULL, hilo_mock, NULL);
+	//printf("codigo  DIVIDO EN PAGINAS: %s \n", (char*)dataPaginaAEscribir);
+
 
 	if (abrirConfiguracion() == -1) {
 		return -1;
@@ -44,7 +46,7 @@ int main(int argc, char **argv) {
 	while (1) {
 
 		socket_umc = aceptar_conexion(sock_lst);
-		printf("acepto\n");
+		printf("Acepto UMC\n");
 		t_paquete *mensaje;
 
 		while (1) {
@@ -65,8 +67,6 @@ int main(int argc, char **argv) {
 				codigo = malloc(TAMANIO_PAGINA * pagina);
 				memset(codigo, '\0', TAMANIO_PAGINA * pagina);
 				memcpy(codigo, mensaje->data + sizeof(int) * 2, tamanio_codigo);
-
-				//printf("UMC: %s, %d %d \n",(char*)paquetin, pid, pagina);
 
 				log_info(log, "Se creara un nuevo proceso de %d paginas y con PID: %d \n", pagina, pid);
 				usleep(RETARDO_ACCESO * 1000);
@@ -164,7 +164,6 @@ void inicializarProceso(int pid, int pagina, char*codigo){
 		void *dataPaginaAEscribir;
 		dataPaginaAEscribir = malloc(TAMANIO_PAGINA);
 		memcpy(dataPaginaAEscribir, codigo + (i*TAMANIO_PAGINA), TAMANIO_PAGINA);
-		//printf("codigo  DIVIDO EN PAGINAS: %s \n", (char*)dataPaginaAEscribir);
 		escribirPaginaProceso(pid, i, dataPaginaAEscribir);
 		free(dataPaginaAEscribir);
 	}
@@ -446,9 +445,6 @@ void escribirPagina(int nroPag, void*dataPagina) {
 	int numero = nroPag;
 	inicioPag = obtenerlugarDeInicioDeLaPagina(numero); //con esto determino los valores de inicio de escritura
 	memset(discoParaleloNoVirtualMappeado + inicioPag, '\0', TAMANIO_PAGINA);
-	///printf("codigo: %s \n", (char*)dataPagina);
-
-	//printf("Pagina de Inicio en la que va a copiar:%d \n", inicioPag);
 	memcpy(discoParaleloNoVirtualMappeado + inicioPag, dataPagina, TAMANIO_PAGINA);
 	log_info(log, "Pagina %d, copiada con exito! \n", nroPag);
 }
@@ -456,8 +452,6 @@ void escribirPagina(int nroPag, void*dataPagina) {
 void leerPaginaProceso(int idProceso, int nroPag, void* paginaALeer) {
 	int primerPag = getPrimerPagProc(idProceso);
 	int posPag = primerPag + nroPag;
-
-	//printf("codigo todo: %s \n", (char*) discoParaleloNoVirtualMappeado);
 
 	long int inicio;
 	inicio = obtenerlugarDeInicioDeLaPagina(posPag); //con esto determino los valores de inicio de lectura
