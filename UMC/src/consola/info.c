@@ -14,8 +14,10 @@ void mostrar_estado_interno() {
 
 		int cantidad_aciertos, cantidad_fallas;
 
+		pthread_mutex_lock(&semaforo_mutex_stats_tlb);
 		cantidad_aciertos = list_size(aciertos_tlb);
 		cantidad_fallas = list_size(fallos_tlb);
+		pthread_mutex_unlock(&semaforo_mutex_stats_tlb);
 
 		int cantidad_total = cantidad_fallas + cantidad_aciertos;
 

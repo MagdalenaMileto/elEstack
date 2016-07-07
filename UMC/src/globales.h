@@ -17,7 +17,7 @@
 char *puerto_umc, *ip_swap, *puerto_swap;
 
 int cantidad_marcos, tamanio_marco, cantidad_maxima_marcos, entradas_TLB,
-		retardo,intervalo_info;
+		retardo, intervalo_info;
 
 int socket_swap, socket_nucleo, socket_conexiones_nuevas;
 
@@ -25,10 +25,13 @@ int numero_operacion_actual;
 
 pthread_mutex_t semaforo_mutex_swap;
 
-pthread_mutex_t semaforo_mutex_marcos;
+pthread_mutex_t semaforo_mutex_tabla_de_paginas;
 
 pthread_mutex_t semaforo_mutex_tlb;
 
+pthread_mutex_t semaforo_mutex_stats_tlb;
+
+pthread_mutex_t semaforo_mutex_stats_swap;
 
 void * memoria;
 

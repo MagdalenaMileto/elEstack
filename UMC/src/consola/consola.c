@@ -123,7 +123,7 @@ void flush_memory(int proceso) {
 
 	}
 
-	pthread_mutex_lock(&semaforo_mutex_marcos);
+	pthread_mutex_lock(&semaforo_mutex_tabla_de_paginas);
 
 	t_list * lista_filtrada_por_proceso = list_filter(tabla_de_paginas,
 			filtrar_por_proceso);
@@ -144,12 +144,12 @@ void flush_memory(int proceso) {
 	list_iterate(lista_filtrada_por_proceso, cambiar_bit);
 	log_info(log, "===== FIN FLUSH =====\n", proceso);
 
-	pthread_mutex_lock(&semaforo_mutex_marcos);
+	pthread_mutex_lock(&semaforo_mutex_tabla_de_paginas);
 }
 
 void dump_total() {
 
-	pthread_mutex_lock(&semaforo_mutex_marcos);
+	pthread_mutex_lock(&semaforo_mutex_tabla_de_paginas);
 
 	char * texto = string_new();
 	string_append(&texto, "\n===== INICIO DUMP =====\n");
@@ -166,7 +166,7 @@ void dump_total() {
 	escribir_a_dump(string_from_format("\n===== FIN DUMP =====\n"));
 
 	free(texto);
-	pthread_mutex_unlock(&semaforo_mutex_marcos);
+	pthread_mutex_unlock(&semaforo_mutex_tabla_de_paginas);
 }
 
 void dump_proceso(int pid) {
@@ -180,7 +180,7 @@ void dump_proceso(int pid) {
 
 	}
 
-	pthread_mutex_lock(&semaforo_mutex_marcos);
+	pthread_mutex_lock(&semaforo_mutex_tabla_de_paginas);
 
 	t_list * tabla_filtrada = list_filter(tabla_de_paginas,
 			filtrar_por_proceso_dump);
@@ -200,7 +200,7 @@ void dump_proceso(int pid) {
 
 	free(texto);
 
-	pthread_mutex_unlock(&semaforo_mutex_marcos);
+	pthread_mutex_unlock(&semaforo_mutex_tabla_de_paginas);
 
 }
 
