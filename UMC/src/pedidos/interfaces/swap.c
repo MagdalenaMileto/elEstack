@@ -60,7 +60,9 @@ void * swap_leer(int pid, int numero_pagina) {
 	int * pid_proceso = malloc(sizeof(int));
 	*pid_proceso = pid;
 
+	pthread_mutex_lock(&semaforo_mutex_stats_swap);
 	list_add(lecturas_swap, pid_proceso);
+	pthread_mutex_unlock(&semaforo_mutex_stats_swap);
 
 	log_info(log, "Se escribe al swap la pagina %d del proceso %d.\n",
 			numero_pagina, pid);
@@ -90,7 +92,9 @@ void swap_escribir(t_entrada_tabla_de_paginas * entrada) {
 	int * pid_proceso = malloc(sizeof(int));
 	*pid_proceso = entrada->pid;
 
+	pthread_mutex_lock(&semaforo_mutex_stats_swap);
 	list_add(escrituras_swap, pid_proceso);
+	pthread_mutex_unlock(&semaforo_mutex_stats_swap);
 
 	int tamanio = tamanio_marco + sizeof(int) * 2;
 
