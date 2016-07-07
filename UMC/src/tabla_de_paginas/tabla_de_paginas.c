@@ -5,7 +5,7 @@ t_entrada_tabla_de_paginas * buscar_pagina_tabla_de_paginas(int pid,
 
 	log_info(log, "Retardo de %d milisegundos.\n", retardo);
 
-	log_info(log, "Zzzzz\n", retardo);
+	log_info(log, "Zzzzz\n");
 
 	usleep(retardo * 1000);
 
@@ -20,6 +20,8 @@ t_entrada_tabla_de_paginas * buscar_pagina_tabla_de_paginas(int pid,
 	t_entrada_tabla_de_paginas * pagina_encontrada = list_find(tabla_de_paginas,
 			filtrar_por_proceso_y_pagina);
 	pthread_mutex_unlock(&semaforo_mutex_tabla_de_paginas);
+
+	log_info(log, "Se encontró la página en la tabla de páginas");
 
 	return pagina_encontrada;
 
