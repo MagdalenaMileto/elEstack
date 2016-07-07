@@ -18,6 +18,8 @@
 #include <unistd.h>
 #include <pthread.h>
 
+
+
 #include <semaphore.h>
 
 //#include <event.h>
@@ -42,7 +44,7 @@
 //#include "../../COMUNES/nsockets.c"
 //#include "../../COMUNES/estructurasControl.h"
 #include "../../COMUNES/estructurasControl.c"
-
+#include <commons/log.h>
 
 
 #define PUERTO "9997"
@@ -100,6 +102,10 @@ typedef struct {
 
 
 } t_proceso;
+
+
+
+
 void abortar(t_proceso*proceso);
 void escribeVariable(char *variable);
 int *pideVariable(char *variable);
@@ -126,6 +132,8 @@ void conectarUmc(void);
 void *hilo_PLP(void *arg);
 void *hilo_PCP(void *arg);
 
+
+void dibujarPantalla(void);
 
 t_proceso* dameProceso(t_queue *cola, int sock );
 void mandarAEjecutar(t_proceso *proceso, int sock);

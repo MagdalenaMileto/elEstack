@@ -101,7 +101,12 @@ t_paquete* recibir(un_socket socket_para_recibir) {
 	retorno = recv(socket_para_recibir, &paquete_recibido->codigo_operacion, sizeof(int),
 	MSG_WAITALL);
 
-	if(retorno==0){paquete_recibido->codigo_operacion=-1;return;}
+	if(retorno==0){paquete_recibido->codigo_operacion=-1;
+	void * informacion_recibida = malloc(sizeof(int));
+	paquete_recibido->data = informacion_recibida;
+	return paquete_recibido;
+
+	}
 	recv(socket_para_recibir, &paquete_recibido->tamanio, sizeof(int),
 	MSG_WAITALL);
 

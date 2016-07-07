@@ -27,16 +27,22 @@ t_queue* cola_block;
 t_queue** colas_ios;
 
 timer_t** timers;
-
+t_log * logger;
 //semaforos
 sem_t sem_ready;
 sem_t sem_cpu;
 sem_t sem_new;
 
+timer_t *timerPantalla;
+
 //Colas sem
 t_queue** colas_semaforos;
 
 pthread_mutex_t mutex_cola_new, mutex_cola_ready, mutex_variables,total,umcm;
+
+
+pthread_mutex_t mcola_new,mcola_exit,mcola_exec,mcola_ready,mcolas_io,mcolas_sem,mcola_CPU_libres;
+
 
 pthread_mutex_t mutex_config;
 
@@ -64,15 +70,33 @@ char codigo[250] = "#!/usr/bin/ansisop\nbegin\n:etiqueta\ntextPrint    Hola Mund
 
 /* FIN DE VARIABLES GLOBALES */
 
+void gotoxy(int x,int y)
+{
+printf("%c[%d;%df",0x1B,y,x);
+}
+
 int main() {
 	signal(SIGINT, intHandler);
-	printf("NUCLEO: INICIÓ\n");
+	logger = log_create("NUCLEO.log", "NUCLEO", 0, LOG_LEVEL_INFO);
+
+
+	log_info(logger, "*************************************************");
+	log_info(logger, "*************NUCLEO INICIO***********************");
+	log_info(logger, "*************************************************");
+
+
 
 	//Levantar archivo de configuracion
-	
-	
+
+	timerPantalla=nalloc(sizeof(timer_t));
+
+	makeTimer(timerPantalla, 200, 200); //2ms
 
 	get_config_nucleo();//Crea y setea el config del kernel
+
+
+
+	
 
 	//MOCK SACAR UNA VEZ INTEGRADO
 	pthread_t mock;
@@ -82,9 +106,14 @@ int main() {
 
 	//Inicializaciones 
 
-	sem_init(&sem_cpu, 0, 0);
+	sem_init(&sem_cpu, 0, 0); // Los uso
+
 	sem_init(&sem_new, 0, 0);
 	sem_init(&sem_ready, 0, 0);
+
+
+
+
 
 	cola_new = queue_create();
 	cola_exec = queue_create();
@@ -97,6 +126,15 @@ int main() {
 	pthread_mutex_init(&umcm, NULL);
 	pthread_mutex_init(&mutex_cola_new, NULL);
 	pthread_mutex_init(&total, NULL);
+
+
+	pthread_mutex_init(&mutex_config, NULL);
+	pthread_mutex_init(&mcola_new, NULL);
+	pthread_mutex_init(&mcola_exit, NULL);
+	pthread_mutex_init(&mcola_ready, NULL);
+	pthread_mutex_init(&mcolas_sem, NULL);
+	pthread_mutex_init(&mcolas_io, NULL);
+
 
 	pthread_t thPCP, thPLP, thCONEXIONES_CPU, thCONEXIONES_CONSOLA;
 	pthread_create(&thCONEXIONES_CONSOLA, NULL, hilo_HANDLER_CONEXIONES_CONSOLA, NULL);
@@ -127,7 +165,7 @@ int main() {
 					//Deberia hacer un free de todo lo otro
 						//printf("EVENTO\n");
 						if (strcmp(event->name, CONFIG_NUCLEO_SIMPLE) == 0){
-							printf("NUCLEO: cambio el archivo config\n");
+							log_info(logger, "NUCLEO: cambio el archivo config");
 							get_config_nucleo(config_nucleo);//Crea y setea el config del kernel
 						}
 					}
@@ -173,11 +211,15 @@ void *hilo_PLP(void *arg) {
 	while (1) {
 		sem_wait(&sem_new);
 		//TODO: poner mutex 
+		pthread_mutex_lock(&mcola_new);
 		proceso = queue_pop(cola_new);
-		printf("\x1b[3%dmNUCLEO: saco proceso %d new mando a ready\x1b[0m\n", ((proceso->pcb->pid)%6+1),proceso->pcb->pid);
+		pthread_mutex_unlock(&mcola_new);
+		log_info(logger, "\x1b[3%dmNUCLEO: saco proceso %d new mando a ready\x1b[0m", ((proceso->pcb->pid)%6+1),proceso->pcb->pid);
+		//printf();
 
+		pthread_mutex_lock(&mcola_ready);
 		queue_push(cola_ready, proceso);
-
+		pthread_mutex_unlock(&mcola_ready);
 
 		sem_post(&sem_ready);
 	}
@@ -190,7 +232,9 @@ void mandarAEjecutar(t_proceso *proceso, int sock) {
 
 	proceso->socket_CPU = sock;
 	//TODO:mutex
+	pthread_mutex_lock(&mcola_exec);
 	queue_push(cola_exec, proceso);
+	pthread_mutex_unlock(&mcola_exec);
 
 	t_datos_kernel datos_kernel;
 	datos_kernel.QUANTUM = config_nucleo->QUANTUM;
@@ -218,8 +262,10 @@ void *hilo_PCP(void *arg) {
 		//printf("Soy casi grande\n");
 		pthread_mutex_lock(&mutex_config);
 		sock = (int)queue_pop(cola_CPU_libres);
+		pthread_mutex_lock(&mcola_ready);
 		proceso = queue_pop(cola_ready);
-		printf("\x1b[3%dmNUCLEO: saco proceso %d ready mando a ejecutar\x1b[0m\n", ((proceso->pcb->pid)%6+1),proceso->pcb->pid);
+		pthread_mutex_unlock(&mcola_ready);
+		log_info(logger,"\x1b[3%dmNUCLEO: saco proceso %d ready mando a ejecutar\x1b[0m", ((proceso->pcb->pid)%6+1),proceso->pcb->pid);
 
 
 		mandarAEjecutar(proceso, sock);
@@ -256,7 +302,7 @@ int mandarCodigoAUmc(char* codigo, int size, t_proceso *proceso) {
 
 	//Creamos el indice de codigo
 	for (i = 0; i < metadata_program->instrucciones_size; i++) {
-		printf("Instruccion inicio:%d offset:%d %.*s\n",metadata_program->instrucciones_serializado[i].start,metadata_program->instrucciones_serializado[i].offset,metadata_program->instrucciones_serializado[i].offset,codigo+metadata_program->instrucciones_serializado[i].start);
+		//printf("Instruccion inicio:%d offset:%d %.*s\n",metadata_program->instrucciones_serializado[i].start,metadata_program->instrucciones_serializado[i].offset,metadata_program->instrucciones_serializado[i].offset,codigo+metadata_program->instrucciones_serializado[i].start);
 		proceso->pcb->indiceDeCodigo[i * 2] = metadata_program->instrucciones_serializado[i].start;
 		proceso->pcb->indiceDeCodigo[i * 2 + 1] = metadata_program->instrucciones_serializado[i].offset;
 	}
@@ -286,7 +332,7 @@ int mandarCodigoAUmc(char* codigo, int size, t_proceso *proceso) {
 
 	char*paqueteUMC; paqueteUMC=malloc(size+3*sizeof(int));
 	int temp =proceso->pcb->paginasDeCodigo+proceso->pcb->paginasDeMemoria;
-	printf("NUCLEO: Cantidad de paingas %d\n",temp);
+	log_info(logger,"NUCLEO: Cantidad de paingas %d",temp);
 
 	memcpy(paqueteUMC,&(proceso->pcb->pid), sizeof(int));
 	memcpy(paqueteUMC+sizeof(int), &temp, sizeof(int));
@@ -340,7 +386,7 @@ void escribeSemaforo(char *semaforo,int valor){
 
 int *pideVariable(char *variable) {
 	int i;
-	printf("NUCLEO: pide variable %s\n", variable);
+	log_info(logger,"NUCLEO: pide variable %s", variable);
 	for (i = 0; i < strlen((char*)config_nucleo->SHARED_VARS) / sizeof(char*); i++) {
 		//TODO:aca esta funcando con el \n OJO
 		//TODO: mutex confignucleo
@@ -379,7 +425,9 @@ void liberaSemaforo(char *semaforo) {
 		
 			if(list_size(colas_semaforos[i]->elements)){
 				proceso = queue_pop(colas_semaforos[i]);
+				pthread_mutex_lock(&mcola_ready);
 				queue_push(cola_ready, proceso);
+				pthread_mutex_unlock(&mcola_ready);
 				sem_post(&sem_ready);
 			}else{
 				config_nucleo->VALOR_SEM[i]++;
@@ -434,19 +482,19 @@ void bloqueoIoManager(t_proceso *proceso, char *ioString, int unidadesBloqueado)
 			if (queue_size(colas_ios[i]) == 0) {
 				queue_push(colas_ios[i], proceso);
 
-				printf("LA SIZE: %d",queue_size(colas_ios[i]));
+				//printf("LA SIZE: %d",queue_size(colas_ios[i]));
 				makeTimer(timers[i], config_nucleo->VALOR_IO[i] * unidadesBloqueado, 0); //2ms
 				return;
 			} else {
 
 			}
 			queue_push(colas_ios[i], proceso);
-			printf("LA SIZE: %d\n",queue_size(colas_ios[i]));
+			//printf("LA SIZE: %d\n",queue_size(colas_ios[i]));
 			return;
 		}
 
 	}
-	printf("No encontre IO id, exit\n");exit(0);
+	printf("No encontre IO id x, exit\n");exit(0);
 
 }
 
@@ -482,6 +530,7 @@ static int makeTimer( timer_t *timerID, int expireMS, int intervalMS )
 void analizarIO(int sig, siginfo_t *si, void *uc) {
 	int *tidp;
 	int i, io;
+	if (si->si_value.sival_ptr==timerPantalla){dibujarPantalla();return;}
 	for (i = 0; i < strlen((char*)config_nucleo->IO_SLEEP) / sizeof(char*); i++) {
 		//TODO: mutex
 		if (timers[i] == si->si_value.sival_ptr) {io = i;}
@@ -491,21 +540,111 @@ void analizarIO(int sig, siginfo_t *si, void *uc) {
 	//TODO: mutex
 	proceso = queue_pop(colas_ios[io]);
 	if(proceso->abortado==true){
-		printf("\x1b[32mNUCLEO: Saco proceso %d de Cola IO %d por aborto consola\n\x1b[0m", proceso->pcb->pid, io);
+		log_info(logger,"\x1b[32mNUCLEO: Saco proceso %d de Cola IO %d por aborto consola\x1b[0m", proceso->pcb->pid, io);
 		abortar(proceso);
 	}else{
-	printf("\x1b[32mNUCLEO: Saco proceso %d de Cola IO %d mando READY\n\x1b[0m", proceso->pcb->pid, io);
+		log_info(logger,"\x1b[32mNUCLEO: Saco proceso %d de Cola IO %d mando READY\x1b[0m", proceso->pcb->pid, io);
+		pthread_mutex_lock(&mcola_ready);
 	queue_push(cola_ready, proceso);
+	pthread_mutex_unlock(&mcola_ready);
 	sem_post(&sem_ready);
 	}
 	if (queue_size(colas_ios[io]) != 0) {
-		printf("todavi\n");
+		//printf("todavi\n");
 		proceso = (t_proceso*)list_get(colas_ios[io]->elements, queue_size(colas_ios[io]) - 1);
 		makeTimer(timers[io], config_nucleo->VALOR_IO[io] * proceso->unidadesBloqueado, 0); //2ms
 	}
 
 }
 
+
+void dibujarPantalla(void){
+	//printf("HOLIS\n");
+	printf("\e[1;1H\e[2J");printf("\e[?25l");
+	t_proceso *proceso;
+	int i;int a=1;int x;
+
+	gotoxy(30,5);
+	printf("║Cola New");
+	pthread_mutex_lock(&mcola_new);
+	for(x=0;x<list_size(cola_new->elements);x++){
+		gotoxy(28-3*x,5);
+		proceso = list_get(cola_new->elements,x);
+		printf("\x1b[3%dmP%d\x1b[0m",((proceso->pcb->pid)%6+1),proceso->pcb->pid);
+	}
+	pthread_mutex_unlock(&mcola_new);
+
+
+	gotoxy(30,6);
+	printf("║Cola Ready");
+	pthread_mutex_lock(&mcola_ready);
+	for(x=0;x<list_size(cola_ready->elements);x++){
+		gotoxy(28-3*x,6);
+		proceso = list_get(cola_ready->elements,x);
+
+		printf("\x1b[3%dmP%d\x1b[0m",((proceso->pcb->pid)%6+1),proceso->pcb->pid);
+	}
+	pthread_mutex_unlock(&mcola_ready);
+
+
+	gotoxy(30,7);
+	printf("║Cola Exec");
+	pthread_mutex_lock(&mcola_exec);
+	for(x=0;x<list_size(cola_exec->elements);x++){
+		gotoxy(28-3*x,7);
+
+		proceso = list_get(cola_exec->elements,x);
+		printf("\x1b[3%dmP%d\x1b[0m",((proceso->pcb->pid)%6+1),proceso->pcb->pid);
+	}
+	pthread_mutex_unlock(&mcola_exec);
+
+
+	//log_info(logger, "\x1b[3%dmNUCLEO: saco proceso %d new mando a ready\x1b[0m\n", );
+
+	//config_nucleo->VALOR_IO = convertirConfigInt(config_nucleo->IO_SLEEP, config_nucleo->IO_IDS);
+	//config_nucleo->VALOR_SEM = convertirConfigInt(config_nucleo->SEM_INIT, config_nucleo->SEM_IDS);
+//printf("aaa\n");
+
+	for(i=0;i<strlen((char*)config_nucleo->IO_IDS)/ sizeof(char*);i++){
+		gotoxy(30,7+a);
+		printf("║Cola IO %s\n",(char*)config_nucleo->IO_IDS[i]);
+
+		for(x=0;x<list_size(colas_ios[i]->elements);x++){
+			gotoxy(28-3*x,7+a);
+			proceso = list_get(colas_ios[i]->elements,x);
+			printf("\x1b[3%dmP%d\x1b[0m",((proceso->pcb->pid)%6+1),proceso->pcb->pid);
+
+		}
+		a++;
+		//if(list_size(colas_ios[i]->elements)>0) retorno = true;
+	}
+	for(i=0;i<strlen((char*)config_nucleo->SEM_IDS)/ sizeof(char*);i++){
+		gotoxy(30,7+a);
+		printf("║Cola SEM %s   Valor Actual: %d\n",(char*)config_nucleo->SEM_IDS[i],config_nucleo->VALOR_SEM[i]);
+		for(x=0;x<list_size(colas_semaforos[i]->elements);x++){
+			gotoxy(28-3*x,7+a);
+			proceso = list_get(colas_semaforos[i]->elements,x);
+			printf("\x1b[3%dmP%d\x1b[0m",((proceso->pcb->pid)%6+1),proceso->pcb->pid);
+
+		}
+		a++;
+	}
+
+	gotoxy(30,7+a);
+	printf("║Cola EXIT");
+	pthread_mutex_lock(&mcola_exit);
+	for(x=0;x<list_size(cola_exit->elements);x++){
+		gotoxy(28-3*x,7+a);
+		proceso = list_get(cola_exit->elements,x);
+		printf("\x1b[3%dmP%d\x1b[0m",((proceso->pcb->pid)%6+1),proceso->pcb->pid);
+	}
+	pthread_mutex_unlock(&mcola_exit);
+
+
+	//colas_ios[i]->elements
+	fflush(stdout);
+
+}
 /********************************************************************************
 *********************************************************************************
 *********************************************************************************
@@ -515,8 +654,12 @@ void analizarIO(int sig, siginfo_t *si, void *uc) {
 *********************************************************************************
 */
 void abortar(t_proceso *proceso){
+	pthread_mutex_lock(&mcola_exit);
 	queue_push(cola_exit, proceso);
+	pthread_mutex_unlock(&mcola_exit);
+	pthread_mutex_lock(&umcm);
 	enviar(umc, 6, sizeof(int), &proceso->pcb->pid);
+	pthread_mutex_unlock(&umcm);
 }
 void abortarProceso(int SockId){
 
@@ -527,34 +670,37 @@ void abortarProceso(int SockId){
 				return proceso->socket_CONSOLA==SockId;
 			}
 
-
+			pthread_mutex_lock(&mcola_exit);
 			procesin=(t_proceso*)list_find(cola_exit->elements,esMiConsola);
+			pthread_mutex_unlock(&mcola_exit);
 			if(procesin!=NULL){
-				printf("Ya estaba en exit\n");
+				log_info(logger,"Ya estaba en exit");
 				return;
 			}
 
 
 
 			//printf("TAMANIO %d\n",list_size(cola_ready->elements));
+			pthread_mutex_lock(&mcola_ready);
 			procesin=(t_proceso*)list_remove_by_condition(cola_ready->elements,esMiConsola);
-
+			pthread_mutex_unlock(&mcola_ready);
 			//printf("LA LISTA QUEDO EN %d\n",list_size(cola_ready->elements));
 
 			if(procesin!=NULL){
 				//Caso que lo tengo en ready
-				printf("NUCLEO: Abortado x consola, en ready\n");
-				printf("entra\n");
+				log_info(logger,"NUCLEO: Abortado x consola, en ready");
+				//printf("entra\n");
 				sem_wait(&sem_ready);
-				printf("sale\n");
+				//printf("sale\n");
 				abortar(procesin);
 			}else{
 				//Aca no lo tengo en ready, lo busco en exec
-
+				pthread_mutex_lock(&mcola_exec);
 				procesin=(t_proceso*)list_find(cola_exec->elements,esMiConsola);
+				pthread_mutex_unlock(&mcola_exec);
 
 				if(procesin!=NULL){
-					printf("NUCLEO: Abortado x consola, en exec, espero que termine de trabajar\n");
+					log_info(logger,"NUCLEO: Abortado x consola, en exec, espero que termine de trabajar");
 					procesin->abortado=true;
 
 				}else{
@@ -567,7 +713,7 @@ void abortarProceso(int SockId){
 
 					}
 					if(procesin!=NULL){
-						printf("NUCLEO: Abortado x consola, en semaforo\n");
+						log_info(logger,"NUCLEO: Abortado x consola, en semaforo");
 						abortar(procesin);
 
 					}else{
@@ -578,18 +724,18 @@ void abortarProceso(int SockId){
 							procesin=list_get(colas_ios[i]->elements,0);
 							if(procesin!=NULL){
 								if(procesin->socket_CONSOLA==SockId){
-									printf("NUCLEO: Abortado x consola, en IO, libero\n");
+									log_info(logger,"NUCLEO: Abortado x consola, en IO, libero");
 									procesin->abortado=true;
 									makeTimer(timers[i], 1, 0); //2ms
 
 								//Esta ejecutando
 								}
 							}
-								sleep(1);
-								printf("TAMANOI %d:\n",queue_size(colas_ios[i]));
+								//sleep(1);
+								log_info(logger,"TAMANOI %d:",queue_size(colas_ios[i]));
 							procesin=(t_proceso*)list_remove_by_condition(colas_ios[i]->elements,esMiConsola);
 							if(procesin!=NULL) {
-								printf("\x1b[32mNUCLEO: Saco proceso %d de Cola IO %d mando exit. no procesado\n\x1b[0m", procesin->pcb->pid, i);
+								log_info(logger,"\x1b[32mNUCLEO: Saco proceso %d de Cola IO %d mando exit. no procesado\x1b[0m", procesin->pcb->pid, i);
 
 								abortar(procesin);
 							}else{
@@ -625,7 +771,7 @@ void *hilo_CONEXION_CONSOLA(void *socket) {
 
 	//TODO: handshake
 	proceso = crearPrograma(*(int*)socket);
-	printf("NUCLEO: Handshake valido consola, creando proceso %d\n", proceso->pcb->pid);
+	log_info(logger,"NUCLEO: Handshake valido consola, creando proceso %d", proceso->pcb->pid);
 
 	while (1) {
 		int estado;
@@ -633,7 +779,7 @@ void *hilo_CONEXION_CONSOLA(void *socket) {
 		paquete = recibir(*(int*)socket);
 		switch (paquete->codigo_operacion) {
 			case -1:
-				printf("NUCLEO: consola desconecto  \n");
+				log_info(logger,"NUCLEO: consola desconecto  ");
 				abortarProceso(*(int*)socket);
 				//TODO:borrar proceso del sistema
 				free(socket);
@@ -643,7 +789,7 @@ void *hilo_CONEXION_CONSOLA(void *socket) {
 				estado = mandarCodigoAUmc(paquete->data, paquete->tamanio, proceso);
 
 				if(estado==-1){
-					printf("NUCLEO: ERROR EN SWAP\n");
+					log_info(logger,"NUCLEO: ERROR EN SWAP");
 					enviar(*(int*)socket, 163, sizeof(int), &estado);//
 					return 0;
 					//exit(0);
@@ -657,7 +803,7 @@ void *hilo_CONEXION_CONSOLA(void *socket) {
 				pthread_mutex_unlock(&mutex_cola_new);
 			break;
 		}
-		//liberar_paquete()
+		liberar_paquete(paquete);
 	}
 	//TODO: free el int socket
 }
@@ -675,7 +821,7 @@ void *hilo_HANDLER_CONEXIONES_CONSOLA(void *arg) {
 		*socketClienteTemp = socketCliente;
 		pthread_t thCONEXION_CONSOLA;
 		pthread_create(&thCONEXION_CONSOLA, NULL, hilo_CONEXION_CONSOLA, (void *)socketClienteTemp);
-		printf("NUCLEO: Acepte consola %d\n", socketCliente);
+		log_info(logger,"NUCLEO: Acepte consola %d", socketCliente);
 	}
 
 }
@@ -711,7 +857,7 @@ void *hilo_CONEXION_CPU(void *socket) {
 
 	enviar(*(int*)socket, 301, sizeof(t_datos_kernel), &datos_kernel);
 
-	printf("NUCLEO: conecto nueva CPU\n");
+	log_info(logger,"NUCLEO: conecto nueva CPU");
 
 	//TODO VER ESTO
 
@@ -734,79 +880,118 @@ void *hilo_CONEXION_CPU(void *socket) {
 		switch (elPaquete->codigo_operacion) {
 
 		case -1:
-			printf("NUCLEO: ABORTO CPU, TERMINAR\n");
+			log_info(logger,"NUCLEO: ABORTO CPU, TERMINAR %d",list_size(cola_exec->elements));
 			int a = 0;int w;
-			while (w = list_get(cola_CPU_libres->elements, a)) {
+			t_proceso * procesin;
+
+			bool hayProcesoAbortado(void* entrada) {
+				log_info(logger,"pase x aca");
+				t_proceso * proceso = (t_proceso *) entrada;
+				return (proceso->socket_CPU)==*(int*)socket;
+			}
+
+
+			procesin=(t_proceso*)list_remove_by_condition(cola_exec->elements,hayProcesoAbortado);
+			if(procesin!=NULL){
+			log_info(logger,"NUCLEO: ABORTO CPU, SACO COLA CPU READY. HABIA PROCESO EXEC.");
+			abortar(procesin);
+			}else{
+			log_info(logger,"NUCLEO: ABORTO CPU, SACO COLA CPU READY. NO HABIA PROCESO EXEC.");
+			}
+
+			while (w = (int)list_get(cola_CPU_libres->elements, a)) {
 				if (w == *(int*)socket) {list_remove(cola_CPU_libres->elements, a);
-					printf("NUCLEO: ABORTO CPU, SACO COLA CPU READY\n");
+				sem_wait(&sem_cpu);
 				}
 				a++;
 			}
 			return 0;
 			break;
 		case 304:
+			pthread_mutex_lock(&mcola_exec);
 			proceso = dameProceso(cola_exec,*(int*)socket);
+			pthread_mutex_unlock(&mcola_exec);
 			temp = desserializarPCB(elPaquete->data);
 			destruirPCB(proceso->pcb);
 			proceso->pcb = temp;
 			//TODO: mutex
 
 			if(proceso->abortado==false){
+			pthread_mutex_lock(&mcola_ready);
 			queue_push(cola_ready, proceso);
+			pthread_mutex_unlock(&mcola_ready);
 			sem_post(&sem_ready);
-			printf("\x1b[3%dmNUCLEO: Recibi proceso %d por fin de quantum, encolando en ready \x1b[0m\n", ((proceso->pcb->pid)%6+1),proceso->pcb->pid);
+			log_info(logger,"\x1b[3%dmNUCLEO: Recibi proceso %d por fin de quantum, encolando en ready \x1b[0m", ((proceso->pcb->pid)%6+1),proceso->pcb->pid);
 
 			}else{
-				printf("\x1b[3%dmNUCLEO: Recibi proceso %d por fin de quantum, abortado \x1b[0m\n", ((proceso->pcb->pid)%6+1),proceso->pcb->pid);
+				log_info(logger,"\x1b[3%dmNUCLEO: Recibi proceso %d por fin de quantum, abortado \x1b[0m", ((proceso->pcb->pid)%6+1),proceso->pcb->pid);
 
 				abortar(proceso);
 			}
-			printf("Pasa por aqui\n");
+			//printf("Pasa por aqui");
 			queue_push(cola_CPU_libres, (void*)*(int*)socket);
 			sem_post(&sem_cpu);
-			printf("Pasa por alla\n");
+			//printf("Pasa por alla\n");
 
 			break;
 
 		case 320: //
+			pthread_mutex_lock(&mcola_exec);
 			proceso = dameProceso(cola_exec, *(int*)socket);
-			printf("\x1b[3%dmNUCLEO: Recibi proceso %d por fin de ejecucion, encolando en cola exit\x1b[0m\n", ((proceso->pcb->pid)%6+1),proceso->pcb->pid);
+			pthread_mutex_unlock(&mcola_exec);
+			log_info(logger,"\x1b[3%dmNUCLEO: Recibi proceso %d por fin de ejecucion, encolando en cola exit\x1b[0m", ((proceso->pcb->pid)%6+1),proceso->pcb->pid);
+			pthread_mutex_lock(&mcola_exit);
 			queue_push(cola_exit, proceso);
+			pthread_mutex_unlock(&mcola_exit);
 			queue_push(cola_CPU_libres, (void*)*(int*)socket);
 			sem_post(&sem_cpu);
+			pthread_mutex_lock(&umcm);
 			enviar(umc, 6, sizeof(int), &proceso->pcb->pid);
+			pthread_mutex_unlock(&umcm);
 			enviar(proceso->socket_CONSOLA,162,sizeof(int),&proceso->pcb->pid);
 			break;
 
 		case 370: //
+			pthread_mutex_lock(&mcola_exec);
 			proceso = dameProceso(cola_exec, *(int*)socket);
-			printf("\x1b[3%dmNUCLEO: Recibi proceso %d por abortado, encolando en cola exit\x1b[0m\n", ((proceso->pcb->pid)%6+1),proceso->pcb->pid);
+			pthread_mutex_unlock(&mcola_exec);
+			log_info(logger,"\x1b[3%dmNUCLEO: Recibi proceso %d por abortado, encolando en cola exit\x1b[0m", ((proceso->pcb->pid)%6+1),proceso->pcb->pid);
+			pthread_mutex_lock(&mcola_exit);
 			queue_push(cola_exit, proceso);
+			pthread_mutex_unlock(&mcola_exit);
 			queue_push(cola_CPU_libres, (void*)*(int*)socket);
 			sem_post(&sem_cpu);
+			pthread_mutex_lock(&umcm);
 			enviar(umc, 6, sizeof(int), &proceso->pcb->pid);
+			pthread_mutex_unlock(&umcm);
 			enviar(proceso->socket_CONSOLA,164,sizeof(int),&proceso->pcb->pid);
 			break;
 
 		case 380:
+			pthread_mutex_lock(&mcola_exec);
 			proceso = dameProceso(cola_exec, *(int*)socket);
+			pthread_mutex_unlock(&mcola_exec);
 			int tiempo;
 			tiempo=((int*)(elPaquete->data))[0];
 
 
-			elPaquete = recibir(*(int*)socket);
-			temp = desserializarPCB(elPaquete->data);
+			elPaquete2 = recibir(*(int*)socket);
+			temp = desserializarPCB(elPaquete2->data);
 			destruirPCB(proceso->pcb);
+			liberar_paquete(elPaquete2);
 			proceso->pcb = temp;
 			if(proceso->abortado==false){
-				printf("\x1b[3%dmNUCLEO: Recibi proceso %d mando a bloquear por %s por %d unidades\x1b[0m\n", ((proceso->pcb->pid)%6+1),proceso->pcb->pid,(char*)(elPaquete->data+4),tiempo);
+			//	((char*)elPaquete->data)[7]='\0';
+				//log_info(logger,"COSO %c %c", ((char*)elPaquete->data)[4],((char*)elPaquete->data)[5] );
+
+				log_info(logger,"\x1b[3%dmNUCLEO: Recibi proceso %d mando a bloquear por %s por %d unidades\x1b[0m", ((proceso->pcb->pid)%6+1),proceso->pcb->pid,(char*)(elPaquete->data+4),tiempo);
 
 							pthread_mutex_lock(&mutex_config);
 							bloqueoIoManager(proceso, (elPaquete->data)+4, tiempo);
 							pthread_mutex_unlock(&mutex_config);
 
 						}else{
-							printf("\x1b[3%dmNUCLEO: Recibi proceso %d por fin de quantum, abortado \x1b[0m\n", ((proceso->pcb->pid)%6+1),proceso->pcb->pid);
+							log_info(logger,"\x1b[3%dmNUCLEO: Recibi proceso %d por fin de quantum, abortado \x1b[0m", ((proceso->pcb->pid)%6+1),proceso->pcb->pid);
 
 							abortar(proceso);
 						}
@@ -817,16 +1002,17 @@ void *hilo_CONEXION_CPU(void *socket) {
 			break;
 
 		case 341: //Pide semaforo
-
+			pthread_mutex_lock(&mcola_exec);
 			proceso = dameProceso(cola_exec, *(int*)socket);
+			pthread_mutex_unlock(&mcola_exec);
 			pthread_mutex_lock(&mutex_config);
-			printf("\x1b[3%dmNUCLEO: Proceso %d pide semaforo:%s \x1b[0m\n", ((proceso->pcb->pid)%6+1),proceso->pcb->pid,elPaquete->data);
+			log_info(logger,"\x1b[3%dmNUCLEO: Proceso %d pide semaforo:%s \x1b[0m", ((proceso->pcb->pid)%6+1),proceso->pcb->pid,elPaquete->data);
 
 			int * valorSemaforo = pideSemaforo(elPaquete->data);
 			int mandar;
 			if(*valorSemaforo<=0){
 				mandar =1;
-				printf("\x1b[3%dmNUCLEO: Recibi proceso %d mando a bloquear por semaforo %s\x1b[0m\n", ((proceso->pcb->pid)%6+1),proceso->pcb->pid,elPaquete->data);
+				log_info(logger,"\x1b[3%dmNUCLEO: Recibi proceso %d mando a bloquear por semaforo %s\x1b[0m", ((proceso->pcb->pid)%6+1),proceso->pcb->pid,elPaquete->data);
 				enviar(*(int*)socket, 342, sizeof(int), &mandar);// 1 si se bloquea 0 si no
 				elPaquete2 = recibir(*(int*)socket);
 				temp = desserializarPCB(elPaquete2->data);
@@ -839,7 +1025,7 @@ void *hilo_CONEXION_CPU(void *socket) {
 						queue_push(cola_CPU_libres, (void*)*(int*)socket);
 						sem_post(&sem_cpu);
 				}else{
-						printf("\x1b[3%dmNUCLEO: Recibi proceso %d por fin de quantum, abortado \x1b[0m\n", ((proceso->pcb->pid)%6+1),proceso->pcb->pid);
+					log_info(logger,"\x1b[3%dmNUCLEO: Recibi proceso %d por fin de quantum, abortado \x1b[0m", ((proceso->pcb->pid)%6+1),proceso->pcb->pid);
 						abortar(proceso);
 				}
 
@@ -847,7 +1033,9 @@ void *hilo_CONEXION_CPU(void *socket) {
 				escribeSemaforo(elPaquete->data,*pideSemaforo(elPaquete->data)-1);
 				mandar=0;
 				enviar(*(int*)socket, 342, sizeof(int), &mandar);//
+				pthread_mutex_lock(&mcola_exec);
 				queue_push(cola_exec, proceso);
+				pthread_mutex_unlock(&mcola_exec);
 			}
 			
 
@@ -855,45 +1043,55 @@ void *hilo_CONEXION_CPU(void *socket) {
 			break;
 
 		case 343: //Libera semaforo
+			pthread_mutex_lock(&mcola_exec);
 			proceso = dameProceso(cola_exec, *(int*)socket);
 			queue_push(cola_exec, proceso);
+			pthread_mutex_unlock(&mcola_exec);
 			pthread_mutex_lock(&mutex_config);
-			printf("\x1b[3%dmNUCLEO: Proceso %d libera semaforo:%s \x1b[0m\n", ((proceso->pcb->pid)%6+1),proceso->pcb->pid,elPaquete->data);
+			log_info(logger,"\x1b[3%dmNUCLEO: Proceso %d libera semaforo:%s \x1b[0m", ((proceso->pcb->pid)%6+1),proceso->pcb->pid,elPaquete->data);
 
 			liberaSemaforo(elPaquete->data);
 			pthread_mutex_unlock(&mutex_config);
 			break;
 
 		case 350: //Escribe variable
+			pthread_mutex_lock(&mcola_exec);
 			proceso = dameProceso(cola_exec, *(int*)socket);
 			queue_push(cola_exec, proceso);
+			pthread_mutex_unlock(&mcola_exec);
 			pthread_mutex_lock(&mutex_config);
 			escribeVariable(elPaquete->data);
 			pthread_mutex_unlock(&mutex_config);
 			break;
 
 		case 351: //Pide variable
+			pthread_mutex_lock(&mcola_exec);
 			proceso = dameProceso(cola_exec, *(int*)socket);
 			queue_push(cola_exec, proceso);
+			pthread_mutex_unlock(&mcola_exec);
 			pthread_mutex_lock(&mutex_config);
 			enviar(*(int*)socket, 352, sizeof(int), pideVariable(elPaquete->data));
 			pthread_mutex_unlock(&mutex_config);
 			break;
 
 		case 360: //imprimir
+			pthread_mutex_lock(&mcola_exec);
 			proceso = dameProceso(cola_exec, *(int*)socket);
 			queue_push(cola_exec, proceso);
+			pthread_mutex_unlock(&mcola_exec);
 			if(proceso->abortado==false) enviar(proceso->socket_CONSOLA, 160, elPaquete->tamanio, elPaquete->data);
 			break;
 		case 361: //imprimir texto
+			pthread_mutex_lock(&mcola_exec);
 			proceso = dameProceso(cola_exec, *(int*)socket);
 			queue_push(cola_exec, proceso);
+			pthread_mutex_unlock(&mcola_exec);
 			if(proceso->abortado==false) enviar(proceso->socket_CONSOLA, 161, elPaquete->tamanio, elPaquete->data);
 		}
 
 
 
-		//liberar_paquete(elPaquete);
+		liberar_paquete(elPaquete);
 	}
 
 }
@@ -1182,7 +1380,7 @@ void get_config_nucleo ()
 	bool tengoIo() {
 		bool retorno = false;
 		int i;
-		for(i=0;i<strlen((char*)config_nucleo->IO_SLEEP);i++){
+		for(i=0;i<strlen((char*)config_nucleo->IO_SLEEP)/ sizeof(char*);i++){
 			if(list_size(colas_ios[i]->elements)>0) retorno = true;
 		}
 
@@ -1192,7 +1390,7 @@ void get_config_nucleo ()
 	bool tengoSem() {
 		bool retorno = false;
 		int i;
-		for(i=0;i<strlen((char*)config_nucleo->SEM_INIT);i++){
+		for(i=0;i<strlen((char*)config_nucleo->SEM_INIT)/ sizeof(char*);i++){
 			if(list_size(colas_semaforos[i]->elements)>0) retorno = true;
 		}
 
@@ -1207,9 +1405,9 @@ void get_config_nucleo ()
 	sema = tengoSem();
 	io = tengoIo();
 	if(sema||io){
-		printf("NUCLEO: no se puede cambiar la configuracion hasta que las colas de IO y Semaforos se encuentren vacias\n");
+		log_info(logger,"NUCLEO: no se puede cambiar la configuracion hasta que las colas de IO y Semaforos se encuentren vacias");
 	while(tengoSem()||tengoIo()){}
-	printf("NUCLEO: Colas vacias, voy a cambiar configuracion de nucleo\n");
+	log_info(logger,"NUCLEO: Colas vacias, voy a cambiar configuracion de nucleo");
 	}
 
 	}else{
@@ -1275,7 +1473,7 @@ void get_config_nucleo ()
 	colas_ios = nalloc(strlen((char*)config_nucleo->IO_SLEEP) * sizeof(char*));
 
 	int i;
-	for (i = 0; i < strlen((char*)config_nucleo->IO_SLEEP); i++) {
+	for (i = 0; i < strlen((char*)config_nucleo->IO_SLEEP)/ sizeof(char*); i++) {
 
 		timers[i] = nalloc(sizeof(timer_t));
 		colas_ios[i] = nalloc(sizeof(t_queue*));
@@ -1288,7 +1486,7 @@ void get_config_nucleo ()
 	}
 	colas_semaforos = nalloc(strlen((char*)config_nucleo->SEM_INIT) * sizeof(char*));
 
-	for (i = 0; i < strlen((char*)config_nucleo->SEM_INIT); i++) {
+	for (i = 0; i < strlen((char*)config_nucleo->SEM_INIT)/ sizeof(char*); i++) {
 
 		colas_semaforos[i] = nalloc(sizeof(t_queue*));
 		colas_semaforos[i] = queue_create();
