@@ -62,11 +62,7 @@ void atender_nucleo() {
 
 			pid = *(int *) paquete_nuevo->data;
 
-			pthread_mutex_lock(&semaforo_mutex_tabla_de_paginas);
-
 			finalizar_proceso(pid);
-
-			pthread_mutex_unlock(&semaforo_mutex_tabla_de_paginas);
 
 			break;
 

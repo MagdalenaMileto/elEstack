@@ -26,9 +26,11 @@ int main(int argc, char** argv) {
 
 void inicializar_semaforos() {
 
-	pthread_mutex_init(&semaforo_mutex_marcos, NULL);
+	pthread_mutex_init(&semaforo_mutex_tabla_de_paginas, NULL);
 	pthread_mutex_init(&semaforo_mutex_tlb, NULL);
 	pthread_mutex_init(&semaforo_mutex_swap, NULL);
+	pthread_mutex_init(&semaforo_mutex_stats_tlb, NULL);
+	pthread_mutex_init(&semaforo_mutex_stats_swap, NULL);
 	log_info(log, "Se inicializan los semaforos.\n");
 }
 
