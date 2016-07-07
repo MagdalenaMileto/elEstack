@@ -39,6 +39,7 @@ void atender_nucleo() {
 
 			if (puede_iniciar_proceso(pid, paginas_requeridas, codigo)) {
 
+
 				inicializar_programa(pid, paginas_requeridas);
 
 				log_info(log, "Se pudo inicializar el proceso.\n");

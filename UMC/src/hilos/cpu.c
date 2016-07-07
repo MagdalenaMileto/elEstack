@@ -92,12 +92,11 @@ void atender_cpu(void * parametro_hilo) {
 
 			cerrar = true;
 
-
 			break;
 
 		}
 
-		//liberar_paquete(paquete_nuevo);
+		liberar_paquete(paquete_nuevo);
 	}
 
 	close(socket_cpu);

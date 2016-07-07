@@ -73,9 +73,7 @@ void agregar_entrada_tlb(t_entrada_tabla_de_paginas * entrada) {
 
 bool hay_entradas_tlb_disponibles() {
 
-	pthread_mutex_lock(&semaforo_mutex_tlb);
 	int cantidad_disponible = entradas_TLB - list_size(tlb);
-	pthread_mutex_unlock(&semaforo_mutex_tlb);
 
 	return cantidad_disponible > 0;
 

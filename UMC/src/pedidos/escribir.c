@@ -21,7 +21,7 @@ void escribir_una_pagina(int pid, int numero_pagina, int offset, int tamanio,
 
 	if (!pagina_encontrada->presencia) {
 
-		void * contenido_faltante = swap_leer<h(pid, numero_pagina);
+		void * contenido_faltante = swap_leer(pid, numero_pagina);
 
 		marco_nuevo(pagina_encontrada);
 

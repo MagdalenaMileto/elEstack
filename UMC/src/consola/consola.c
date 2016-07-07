@@ -144,7 +144,7 @@ void flush_memory(int proceso) {
 	list_iterate(lista_filtrada_por_proceso, cambiar_bit);
 	log_info(log, "===== FIN FLUSH =====\n", proceso);
 
-	pthread_mutex_lock(&semaforo_mutex_tabla_de_paginas);
+	pthread_mutex_unlock(&semaforo_mutex_tabla_de_paginas);
 }
 
 void dump_total() {
