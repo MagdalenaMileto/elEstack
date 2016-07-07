@@ -92,6 +92,7 @@ void atender_cpu(void * parametro_hilo) {
 
 			cerrar = true;
 
+
 			break;
 
 		}
