@@ -78,6 +78,8 @@ void esperar_al_nucleo() {
 
 	pthread_create(&hilo_nucleo, NULL, (void *) atender_nucleo, NULL);
 
+	enviar(socket_nucleo, 13, sizeof(int), &tamanio_marco);
+
 	log_info(log, "Conexion con Nucleo.\n");
 }
 

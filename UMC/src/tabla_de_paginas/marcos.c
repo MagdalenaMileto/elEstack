@@ -203,8 +203,8 @@ void algoritmo_remplazo(t_entrada_tabla_de_paginas * entrada_sin_marco, int pid)
 		int i;
 		for (i = 0; i < list_size(lista_clock); i++) {
 			t_entrada_tabla_de_paginas * coso = list_get(lista_clock, i);
-			log(log,
-					"XXX PID:%d  PAGINA:%d  MARCO:%d  PRESENCIA:%d  --- (U:%d M:%d) P:%d\n",
+			log_info(log,
+					"XXX PID:%d  PAGINA:%d  MARCO:%d  PRESENCIA:%d  --- (U:%d M:%d) P:%d",
 					coso->pid, coso->pagina, coso->marco, coso->presencia,
 					coso->uso, coso->modificado, coso->puntero);
 
