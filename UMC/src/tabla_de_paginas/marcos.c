@@ -198,6 +198,18 @@ void algoritmo_remplazo(t_entrada_tabla_de_paginas * entrada_sin_marco, int pid)
 		entrada_sin_marco->presencia = true;
 
 		avanzar_victima(lista_clock, entrada_sin_marco, victima);
+
+		log_info(log, "***********\n");
+		int i;
+		for (i = 0; i < list_size(lista_clock); i++) {
+			t_entrada_tabla_de_paginas * coso = list_get(lista_clock, i);
+			log(log,
+					"XXX PID:%d  PAGINA:%d  MARCO:%d  PRESENCIA:%d  --- (U:%d M:%d) P:%d\n",
+					coso->pid, coso->pagina, coso->marco, coso->presencia,
+					coso->uso, coso->modificado, coso->puntero);
+
+		}
+
 		victima->presencia = false;
 	}
 
@@ -344,6 +356,7 @@ void avanzar_victima(t_list * lista_clock,
 		t_entrada_tabla_de_paginas * victima) {
 
 	t_entrada_tabla_de_paginas * puntero_viejo = head(lista_clock);
+	puntero_viejo->puntero = false;
 
 	if (de_una_entrada(lista_clock)) {
 
@@ -362,7 +375,9 @@ void avanzar_victima(t_list * lista_clock,
 		if (posicion_victima == list_size(lista_clock) - 1) {
 
 			nuevo_puntero = list_get(lista_clock, 0);
+
 		} else {
+
 			nuevo_puntero = list_get(lista_clock, posicion_victima + 1);
 
 		}
@@ -376,8 +391,6 @@ void avanzar_victima(t_list * lista_clock,
 
 	}
 	victima->puntero = false;
-
-	puntero_viejo->puntero = false;
 
 	log_info(log, string_from_format("Pongo el puntero viejo en falso"));
 }
