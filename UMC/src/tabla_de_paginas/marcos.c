@@ -364,19 +364,22 @@ void avanzar_victima(t_list * lista_clock,
 			nuevo_puntero = list_get(lista_clock, 0);
 		} else {
 			nuevo_puntero = list_get(lista_clock, posicion_victima + 1);
+
 		}
 
 		nuevo_puntero->puntero = true;
 
+		log_info(log,
+				string_from_format(
+						"Se avanza el puntero de la pagina: %d a la: %d\n",
+						victima->pagina, nuevo_puntero->pagina));
+
 	}
 	victima->puntero = false;
 
-	log_info(log,
-			string_from_format(
-					"Se avanza el puntero de la pagina: %d a la: %d\n",
-					victima->pagina, entrada_con_marco_nuevo->pagina));
-
 	puntero_viejo->puntero = false;
+
+	log_info(log, string_from_format("Pongo el puntero viejo en falso"));
 }
 
 bool de_una_entrada(t_list * lista) {

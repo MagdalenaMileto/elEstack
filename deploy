@@ -1,0 +1,14 @@
+#!/bin/sh
+
+
+# Instalar las dependencias
+
+echo Instalando cspec
+
+cd cspec
+make install
+
+echo Instalando commons
+cd ../so-commons-library
+make install
+

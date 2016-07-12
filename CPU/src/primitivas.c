@@ -165,7 +165,8 @@ t_valor_variable asignarValorCompartida(t_nombre_compartida variable,t_valor_var
 
 void irAlLabel(t_nombre_etiqueta etiqueta)
 {	t_puntero_instruccion instruccion;
-	instruccion = metadata_buscar_etiqueta(etiqueta, pcb->indiceDeEtiquetas, 1);
+	log_info(log, "Busco etiqueta: %s y mide: %d\n", etiqueta, strlen(etiqueta));
+	instruccion = metadata_buscar_etiqueta(etiqueta, pcb->indiceDeEtiquetas, pcb->sizeIndiceDeEtiquetas);
 	log_info(log,"Ir a instruccion %d\n", instruccion);
 	/*int i;
 	int contador=0;

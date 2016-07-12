@@ -102,7 +102,8 @@ void remplazo_lru(t_entrada_tabla_de_paginas * entrada) {
 	list_add(tlb, entrada);
 
 	log_info(log,
-			"Se agrega en su respectivo marco el nuevo proceso en la TLB.\n");
+			"Se agrega la nueva entrada en la TLB, esta es la pagina %d del proceso %d y su marco es %d\n",
+			entrada->pagina, entrada->pid, entrada->marco);
 
 }
 
