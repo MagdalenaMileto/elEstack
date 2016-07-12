@@ -24,8 +24,9 @@ void marco_nuevo(t_entrada_tabla_de_paginas * entrada_que_necesita_marco) {
 				entrada_que_necesita_marco->pid);
 
 		log_info(log,
-				"Se reemplaza exitosamente y se asigna la pagina %d al marco %d.\n",
+				"Se reemplaza exitosamente y se asigna la pagina %d del proceso %d al marco %d.\n",
 				entrada_que_necesita_marco->pagina,
+				entrada_que_necesita_marco->pid,
 				entrada_que_necesita_marco->marco);
 
 		entrada_que_necesita_marco->presencia = true;
