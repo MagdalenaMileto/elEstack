@@ -149,7 +149,7 @@ int main(int argc, char **argv) {
 				break;
 			}
 			default:
-				printf("Pedido incorrecto, me cierro");
+				printf("Pedido incorrecto, me cierro \n");
 				exit(0);
 			}
 			liberar_paquete(mensaje);
