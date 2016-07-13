@@ -73,9 +73,7 @@ void agregar_entrada_tlb(t_entrada_tabla_de_paginas * entrada) {
 
 bool hay_entradas_tlb_disponibles() {
 
-	pthread_mutex_lock(&semaforo_mutex_tlb);
 	int cantidad_disponible = entradas_TLB - list_size(tlb);
-	pthread_mutex_unlock(&semaforo_mutex_tlb);
 
 	return cantidad_disponible > 0;
 
@@ -104,7 +102,8 @@ void remplazo_lru(t_entrada_tabla_de_paginas * entrada) {
 	list_add(tlb, entrada);
 
 	log_info(log,
-			"Se agrega en su respectivo marco el nuevo proceso en la TLB.\n");
+			"Se agrega la nueva entrada en la TLB, esta es la pagina %d del proceso %d y su marco es %d\n",
+			entrada->pagina, entrada->pid, entrada->marco);
 
 }
 

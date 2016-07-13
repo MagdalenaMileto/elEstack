@@ -64,9 +64,6 @@ void * swap_leer(int pid, int numero_pagina) {
 	list_add(lecturas_swap, pid_proceso);
 	pthread_mutex_unlock(&semaforo_mutex_stats_swap);
 
-	log_info(log, "Se escribe al swap la pagina %d del proceso %d.\n",
-			numero_pagina, pid);
-
 	int tamanio_paquete = sizeof(int) * 2;
 	void * data = malloc(tamanio_paquete);
 

@@ -4,8 +4,8 @@ void escribir_una_pagina(int pid, int numero_pagina, int offset, int tamanio,
 		void * buffer) {
 
 	log_info(log,
-			"Llega una peticion de lectura por parte de una de las CPUs. La pagina solicitada a escribir es la %d y su offset %d.\n",
-			numero_pagina, offset);
+			"Llega una peticion de escritura por parte de una de las CPUs, donde la pagina solicitada a escribir es la %d, el proceso es %d y su offset %d.\n",
+			numero_pagina, pid, offset);
 
 	t_entrada_tabla_de_paginas * pagina_encontrada;
 
@@ -21,7 +21,7 @@ void escribir_una_pagina(int pid, int numero_pagina, int offset, int tamanio,
 
 	if (!pagina_encontrada->presencia) {
 
-		void * contenido_faltante = swap_leer<h(pid, numero_pagina);
+		void * contenido_faltante = swap_leer(pid, numero_pagina);
 
 		marco_nuevo(pagina_encontrada);
 
