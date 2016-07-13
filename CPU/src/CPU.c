@@ -34,7 +34,7 @@ AnSISOP_kernel primitivas_kernel = {
 
 
 int main(int argc,char **argv){
-	int sigusr1_desactivado=1;
+	sigusr1_desactivado=1;
 	signal(SIGUSR1, sig_handler);
 	log= log_create(ARCHIVOLOG, "CPU", 0, LOG_LEVEL_INFO);
 	log_info(log,"Iniciando CPU\n");

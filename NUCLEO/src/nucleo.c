@@ -90,7 +90,6 @@ int main() {
 
 	timerPantalla=nalloc(sizeof(timer_t));
 
-	makeTimer(timerPantalla, 200, 200); //2ms
 
 	get_config_nucleo();//Crea y setea el config del kernel
 
@@ -141,6 +140,7 @@ int main() {
 	pthread_create(&thCONEXIONES_CPU, NULL, hilo_HANDLER_CONEXIONES_CPU, NULL);
 	pthread_create(&thPCP, NULL, hilo_PCP, NULL);
 	pthread_create(&thPLP, NULL, hilo_PLP, NULL);
+	makeTimer(timerPantalla, 300, 300); //2ms
 
 	conectarUmc();
 
@@ -149,6 +149,7 @@ int main() {
 	if (file_descriptor < 0) perror("inotify_init");
 	int watch_descriptor = inotify_add_watch(file_descriptor, CONFIG_PATH , IN_CLOSE_WRITE);
 	char buffer[1000];
+	//while(1){}
 	while(1){
 		int length = read(file_descriptor, buffer, 1000);
 		if (length < 0) {
@@ -189,6 +190,11 @@ int main() {
 void conectarUmc(void) {
 	pthread_mutex_lock(&mutex_config);
 	umc = conectar_a(config_nucleo->IP_UMC, config_nucleo->PUERTO_UMC);
+	t_paquete* paquete;
+	paquete = recibir(umc);
+	config_nucleo->TAMPAG=*((int*)paquete->data);
+	log_info(logger, "NUCLEO: Tamano pagina del UMC %d",config_nucleo->TAMPAG);
+
 	pthread_mutex_unlock(&mutex_config);
 	//Tengo que hacer handshake?
 }
@@ -245,7 +251,7 @@ void mandarAEjecutar(t_proceso *proceso, int sock) {
 	//O que no me envie nada? timeouts?
 
 	enviar(sock, 301, sizeof(t_datos_kernel), &datos_kernel);
-	usleep(50000);
+	//usleep(50000);
 
 	enviar(sock, 303, pcbSerializado->sizeTotal, (char*)pcbSerializado);
 //	printf("NUCLEO:mande a ejecutar PID%d\n",pcbSerializado->pid);
@@ -302,7 +308,7 @@ int mandarCodigoAUmc(char* codigo, int size, t_proceso *proceso) {
 
 	//Creamos el indice de codigo
 	for (i = 0; i < metadata_program->instrucciones_size; i++) {
-		//printf("Instruccion inicio:%d offset:%d %.*s\n",metadata_program->instrucciones_serializado[i].start,metadata_program->instrucciones_serializado[i].offset,metadata_program->instrucciones_serializado[i].offset,codigo+metadata_program->instrucciones_serializado[i].start);
+		log_info(logger,"Instruccion inicio:%d offset:%d %.*s",metadata_program->instrucciones_serializado[i].start,metadata_program->instrucciones_serializado[i].offset,metadata_program->instrucciones_serializado[i].offset,codigo+metadata_program->instrucciones_serializado[i].start);
 		proceso->pcb->indiceDeCodigo[i * 2] = metadata_program->instrucciones_serializado[i].start;
 		proceso->pcb->indiceDeCodigo[i * 2 + 1] = metadata_program->instrucciones_serializado[i].offset;
 	}
@@ -615,6 +621,7 @@ void dibujarPantalla(void){
 			printf("\x1b[3%dmP%d\x1b[0m",((proceso->pcb->pid)%6+1),proceso->pcb->pid);
 
 		}
+
 		a++;
 		//if(list_size(colas_ios[i]->elements)>0) retorno = true;
 	}
@@ -655,6 +662,7 @@ void dibujarPantalla(void){
 */
 void abortar(t_proceso *proceso){
 	pthread_mutex_lock(&mcola_exit);
+	destruirCONTEXTO(proceso->pcb);
 	queue_push(cola_exit, proceso);
 	pthread_mutex_unlock(&mcola_exit);
 	pthread_mutex_lock(&umcm);
@@ -941,6 +949,7 @@ void *hilo_CONEXION_CPU(void *socket) {
 			pthread_mutex_unlock(&mcola_exec);
 			log_info(logger,"\x1b[3%dmNUCLEO: Recibi proceso %d por fin de ejecucion, encolando en cola exit\x1b[0m", ((proceso->pcb->pid)%6+1),proceso->pcb->pid);
 			pthread_mutex_lock(&mcola_exit);
+			destruirCONTEXTO(proceso->pcb);
 			queue_push(cola_exit, proceso);
 			pthread_mutex_unlock(&mcola_exit);
 			queue_push(cola_CPU_libres, (void*)*(int*)socket);
@@ -957,6 +966,7 @@ void *hilo_CONEXION_CPU(void *socket) {
 			pthread_mutex_unlock(&mcola_exec);
 			log_info(logger,"\x1b[3%dmNUCLEO: Recibi proceso %d por abortado, encolando en cola exit\x1b[0m", ((proceso->pcb->pid)%6+1),proceso->pcb->pid);
 			pthread_mutex_lock(&mcola_exit);
+			destruirCONTEXTO(proceso->pcb);
 			queue_push(cola_exit, proceso);
 			pthread_mutex_unlock(&mcola_exit);
 			queue_push(cola_CPU_libres, (void*)*(int*)socket);
@@ -1436,17 +1446,25 @@ void get_config_nucleo ()
 	 *
 	 */
 	config_nucleo->PUERTO_PROG = config_get_string_value(fnucleo, "PUERTO_PROG");
+
 	config_nucleo->PUERTO_CPU = config_get_string_value(fnucleo, "PUERTO_CPU");
 	config_nucleo->QUANTUM = config_get_int_value(fnucleo, "QUANTUM");
 	config_nucleo->QUANTUM_SLEEP = config_get_int_value(fnucleo, "QUANTUM_SLEEP");
 	config_nucleo->IO_IDS = config_get_array_value(fnucleo, "IO_IDS");
 	config_nucleo->IO_SLEEP = config_get_array_value(fnucleo, "IO_SLEEP");
+	config_nucleo->IO_SLEEP = config_get_array_value(fnucleo, "IO_SLEEP");
+
 	config_nucleo->SEM_IDS = config_get_array_value(fnucleo, "SEM_IDS");
 	config_nucleo->SEM_INIT = config_get_array_value(fnucleo, "SEM_INIT");
+
+	//printf("COSOx %d %d %d\n",strlen((char*)config_nucleo->IO_SLEEP),strlen((char*)config_nucleo->IO_IDS),strlen((char*)config_nucleo->SEM_INIT));
+
+
+
 	config_nucleo->SHARED_VARS = config_get_array_value(fnucleo, "SHARED_VARS");
 	config_nucleo->STACK_SIZE = config_get_int_value(fnucleo, "STACK_SIZE");
 	//HASTA ACA LO QUE PIDE EL ENUNCIADO
-	config_nucleo->TAMPAG = config_get_int_value(fnucleo, "SIZE_PAGINA");
+
 	config_nucleo->IP_UMC = config_get_string_value(fnucleo, "IP_UMC");
 	config_nucleo->PUERTO_UMC = config_get_string_value(fnucleo, "PUERTO_UMC");
 	config_nucleo->VALOR_SHARED_VARS = convertirConfig0(config_nucleo->SHARED_VARS);
@@ -1473,11 +1491,15 @@ void get_config_nucleo ()
 	colas_ios = nalloc(strlen((char*)config_nucleo->IO_SLEEP) * sizeof(char*));
 
 	int i;
+	//printf("COSO %d %d %d\n",strlen((char*)config_nucleo->IO_SLEEP),strlen((char*)config_nucleo->IO_IDS),strlen((char*)config_nucleo->SEM_INIT));
+	//sleep(5);
 	for (i = 0; i < strlen((char*)config_nucleo->IO_SLEEP)/ sizeof(char*); i++) {
 
 		timers[i] = nalloc(sizeof(timer_t));
 		colas_ios[i] = nalloc(sizeof(t_queue*));
 		colas_ios[i] = queue_create();
+		//printf("crea uno\n");
+		//sleep(5);
 	}
 
 	if(colas_semaforos!=0){

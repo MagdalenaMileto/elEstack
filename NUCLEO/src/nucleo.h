@@ -62,6 +62,7 @@ typedef struct {
   char** SEM_INIT;
   char** IO_IDS;
   char** IO_SLEEP;
+  char** IO_SLEEP2;
   char** SHARED_VARS;
   int STACK_SIZE;
 

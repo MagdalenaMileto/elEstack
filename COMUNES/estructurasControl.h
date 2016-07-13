@@ -76,7 +76,7 @@ typedef struct __attribute__((packed))t_blocked{
 }t_blocked;
 
 
-
+void destruirCONTEXTO(t_pcb *pcb);
 
 t_blocked *desserializarBLOQUEO(char *serializado);
 char *serializarPCB(t_pcb *pcb);
