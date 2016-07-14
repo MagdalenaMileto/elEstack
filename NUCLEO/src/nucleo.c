@@ -747,6 +747,9 @@ void abortarProceso(int SockId){
 
 								abortar(procesin);
 							}else{
+								abortar(procesin);
+								log_info(logger,"\x1b[32mNUCLEO: ***** Saco proceso %d de ?? %d mando exit. \x1b[0m", procesin->pcb->pid, i);
+
 								//printf("este caso no se podria dar\n");
 							}
 
