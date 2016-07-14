@@ -38,12 +38,15 @@
 #include <parser/metadata_program.h>
 
 #include <signal.h>
-#include "../../Sockets Maggie/src/socketLibrary.h"
-#include "../../Sockets Maggie/src/socketLibrary.c"
-#include "../../COMUNES/nsockets.h"
+#include <theDebuggers/socketLibrary.h>
 //#include "../../COMUNES/nsockets.c"
 //#include "../../COMUNES/estructurasControl.h"
-#include "../../COMUNES/estructurasControl.c"
+
+//#include "../../COMUNES/nsockets.h"
+//#include "../../COMUNES/estructurasControl.c"
+
+#include <theDebuggers/estructurasControl.h>
+
 #include <commons/log.h>
 
 
@@ -51,6 +54,11 @@
 #define BACKLOG 5     // Define cuantas conexiones vamos a mantener pendientes al mismo tiempo
 #define PACKAGESIZE 1024  // Define cual va a ser el size maximo del paquete a enviar
 
+typedef struct{
+	int32_t id;
+	int32_t size;
+	void* data;
+}t_header;
 
 
 typedef struct {

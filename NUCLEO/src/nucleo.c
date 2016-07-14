@@ -1183,7 +1183,7 @@ while(1){}
 void *hilo_mock_consola(void *arg) {
 	int consola;
 	sleep(4);
-	consola = cliente("127.0.0.1", 1210);
+	consola = conectar_a("127.0.0.1", "1210");
 	printf("\x1b[36mCONSOLAMOCK: Conecté%d \n\x1b[0m", consola);
 	//codigo[0]='a'+rodo;
 	//rodo++;
@@ -1202,7 +1202,7 @@ void *hilo_mock_cpu(void *arg) {
 	char ss[7]  = "Disco\0";
 	char ee[8]  = "Scanner\0";
 	sleep(5);
-	cpu = cliente("127.0.0.1", 1202);
+	cpu = conectar_a("127.0.0.1", "1202");
 	printf("\x1b[31mCPUMOCK: Conecté%d\n\x1b[0m", cpu);
 
 	t_blocked *bloqueado, *bloqueadoSerializado;
