@@ -48,6 +48,7 @@ pthread_mutex_t mutex_config;
 
 int pidcounter = 0;
 
+volatile int flag=0;
 
 // Listas que maneja el PCP
 t_queue* cola_CPU_libres;
@@ -263,9 +264,11 @@ void *hilo_PCP(void *arg) {
 	t_proceso *proceso; int sock;
 
 	while (1) {
-		 sem_wait(&sem_cpu);sem_wait(&sem_ready);
+		 sem_wait(&sem_ready);sem_wait(&sem_cpu);
 		//TODO:mutex
 		//printf("Soy casi grande\n");
+
+		if(flag==0){
 		pthread_mutex_lock(&mutex_config);
 		sock = (int)queue_pop(cola_CPU_libres);
 		pthread_mutex_lock(&mcola_ready);
@@ -276,6 +279,10 @@ void *hilo_PCP(void *arg) {
 
 		mandarAEjecutar(proceso, sock);
 		pthread_mutex_unlock(&mutex_config);
+		}else{
+			flag=0;
+
+		}
 
 	}
 }
@@ -661,7 +668,7 @@ void dibujarPantalla(void){
 *********************************************************************************
 */
 void abortar(t_proceso *proceso){
-	enviar(proceso->socket_CONSOLA,162,sizeof(int),&proceso->pcb->pid);
+	enviar(proceso->socket_CONSOLA,164,sizeof(int),&proceso->pcb->pid);
 	pthread_mutex_lock(&mcola_exit);
 	destruirCONTEXTO(proceso->pcb);
 	queue_push(cola_exit, proceso);
@@ -697,10 +704,18 @@ void abortarProceso(int SockId){
 
 			if(procesin!=NULL){
 				//Caso que lo tengo en ready
-				log_info(logger,"NUCLEO: Abortado x consola, en ready");
+				log_info(logger,"NUCLEO: Abortado x consola, en ready. Pre wait");
 				//printf("entra\n");
-				if(list_size(cola_CPU_libres->elements)!=0) sem_wait(&sem_cpu);
-				sem_wait(&sem_ready);
+				//if(list_size(cola_CPU_libres->elements)!=0)
+
+
+				//sem_wait(&sem_cpu);
+				flag ++;
+				sem_signal(&sem_cpu);
+				log_info(logger,"NUCLEO: post wait");
+
+
+				//sem_wait(&sem_ready);
 				//printf("sale\n");
 				abortar(procesin);
 			}else{
