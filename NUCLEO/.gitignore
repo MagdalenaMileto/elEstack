@@ -2,3 +2,4 @@ NUCLEO
 .project
 .cproject
 /.settings/
+/Debug/
