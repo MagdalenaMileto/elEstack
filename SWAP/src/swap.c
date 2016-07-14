@@ -2,7 +2,7 @@
  * swap.c
  *
  *  Created on: 21/4/2016
- *      Author: Ivan Bober
+, *      Author: Ivan Bober
  */
 
 #include "swap.h"
@@ -50,8 +50,15 @@ int main(int argc, char **argv) {
 		t_paquete *mensaje;
 
 		while (1) {
-			mensaje = recibir(socket_umc);
 
+
+			mensaje = recibir(socket_umc);
+int i;
+printf("********\n");
+for(i=0;i<80;i++){
+printf("P:%d O:%d Pid:%d",i,paginasSWAP[i].ocupada,paginasSWAP[i].idProcesoQueLoOcupa);
+if(i%10==0) printf("\n");
+}
 			//printf("*a\n");
 			log_info(log, "Llego un mensaje, Codigo operacion %d\n", mensaje->codigo_operacion);
 
