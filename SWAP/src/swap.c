@@ -291,21 +291,18 @@ int hayLugarParaNuevoProceso(int cantPagsNecesita) {
 			}
 			contadorPaginasSeguidas++;
 			if (contadorPaginasSeguidas >= cantPagsNecesita){
+				printf("ENTRE A HAY SEGUIDAS\n");
 				return primeraPaginaLibre;
 			}
+		}else{contadorPaginasSeguidas ==0;
+		printf("CONTADOR DE PAG EN 0\n");
+
 		}
-		else {
-			if (contadorPaginasSeguidas >= cantPagsNecesita){
-				return primeraPaginaLibre;
-			}
-			else{
-				contadorPaginasSeguidas = 0;
-			}
-		}
+
 
 	}
 
-
+printf("RETORNE -1\n");
 	return -1;
 }
 
