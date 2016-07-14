@@ -799,6 +799,10 @@ void *hilo_CONEXION_CONSOLA(void *socket) {
 				if(estado==-1){
 					log_info(logger,"NUCLEO: ERROR EN SWAP");
 					enviar(*(int*)socket, 163, sizeof(int), &estado);//
+					pthread_mutex_lock(&umcm);
+					enviar(umc, 6, sizeof(int), &proceso->pcb->pid);
+					pthread_mutex_unlock(&umcm);
+
 					return 0;
 					//exit(0);
 				}
