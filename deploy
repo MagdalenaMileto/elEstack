@@ -3,13 +3,13 @@ DEPLOY_FOLDER=/home/utnso/elAlgoritmoDelRitmo
 
 # Instalar las dependencias
 
-echo Instalando cspec
+echo Instalando Cspec
 cd cspec
 make install
 echo
 echo
 echo
-echo Instalando commons
+echo Instalando Commons
 cd ../so-commons-library
 make install
 echo
@@ -21,12 +21,18 @@ make install
 echo
 echo
 echo
+echo Instalando librerias globales
+cd ../../Sockets Maggie
+make install
+echo
+echo
+echo
 echo Dependencias instaladas
 echo
 echo
 echo
 echo Creando directorio del tp
-mkdir $DEPLOY_FOLDER/elAlgoritmoDelRitmo
+mkdir $DEPLOY_FOLDER
 echo Directorio creado
 echo
 echo
