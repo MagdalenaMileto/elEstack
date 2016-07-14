@@ -4,3 +4,4 @@ NUCLEO
 /.settings/
 *.log
 /Debug/
+core
