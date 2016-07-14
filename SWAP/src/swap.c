@@ -107,7 +107,7 @@ if(i%10==0) printf("\n");
 						flagRespuesta = NOHAYLUGAR;
 					}
 				}
-
+				printf("FLAG RESRPUESTA%d\n",flagRespuesta);
 				enviar(socket_umc, flagRespuesta, sizeof(int), &pid);
 				free(codigo);
 				break;
