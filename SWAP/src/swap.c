@@ -122,7 +122,7 @@ int main(int argc, char **argv) {
 				memcpy(codigo, mensaje->data + sizeof(int) * 2,
 						TAMANIO_PAGINA * pagina);
 
-				log_info(log, "Se escribira para el proceso %d, la pagina %d \n", pid, pagina);
+		//		log_info(log, "Se escribira para el proceso %d, la pagina %d \n", pid, pagina);
 				usleep(RETARDO_ACCESO * 1000);
 
 				escribirPaginaProceso(pid, pagina, codigo);
@@ -139,7 +139,7 @@ int main(int argc, char **argv) {
 				memcpy(&pid, mensaje->data, sizeof(int));
 				memcpy(&pagina, mensaje->data + sizeof(int), sizeof(int));
 
-				log_info(log, "Se leera la pagina: %d, del proceso %d \n", pagina, pid);
+		//		log_info(log, "Se leera la pagina: %d, del proceso %d \n", pagina, pid);
 				usleep(RETARDO_ACCESO * 1000);
 
 				leerPaginaProceso(pid, pagina, paginaALeer);
@@ -341,7 +341,7 @@ void reservarProceso(int pidProceso, int cantPags, int pagAPartir) {
 	int primerPaginaLibre = pagAPartir;
 	int i;
 	for (i = 0; i < cantPags; i++) {
-		log_info(log, "Se asignara la pagina %d al proceso %d \n", primerPaginaLibre + i, pidProceso);
+	//	log_info(log, "Se asignara la pagina %d al proceso %d \n", primerPaginaLibre + i, pidProceso);
 		paginasSWAP[primerPaginaLibre + i].ocupada = 1;
 		paginasSWAP[primerPaginaLibre + i].idProcesoQueLoOcupa = pidProceso;
 	}
@@ -362,7 +362,7 @@ void compactacion() {
 		}
 		inicioOcupada = obtenerlugarDeInicioDeLaPagina(primerPaginaOcupada);
 		inicioLibre = obtenerlugarDeInicioDeLaPagina(primerPaginaLibre);
-		log_info(log, "La pagina ocupada %d pasara a la pagina %d libre \n", primerPaginaOcupada, primerPaginaLibre);
+	//	log_info(log, "La pagina ocupada %d pasara a la pagina %d libre \n", primerPaginaOcupada, primerPaginaLibre);
 		memcpy(discoParaleloNoVirtualMappeado + inicioLibre, discoParaleloNoVirtualMappeado + inicioOcupada, TAMANIO_PAGINA);
 		paginasSWAP[primerPaginaOcupada].ocupada = 0;
 		paginasSWAP[primerPaginaLibre].idProcesoQueLoOcupa = paginasSWAP[primerPaginaOcupada].idProcesoQueLoOcupa;
@@ -411,7 +411,7 @@ void liberarProceso(int idProc) {
 	int i;
 	for (i = 0; i < CANTIDAD_PAGINAS; i++) {
 		if (paginasSWAP[i].idProcesoQueLoOcupa == idProc){
-			log_info(log, "Borrando pagina %d ocupada por %d \n", primerPaginaDelProceso,idProc);
+	//		log_info(log, "Borrando pagina %d ocupada por %d \n", primerPaginaDelProceso,idProc);
 
 			paginasSWAP[primerPaginaDelProceso].ocupada = 0;
 			paginasSWAP[primerPaginaDelProceso].idProcesoQueLoOcupa = -1;
@@ -436,7 +436,7 @@ void escribirPaginaProceso(int idProceso, int nroPag, void*data) {
 	int primeraPagProceso = getPrimerPagProc(idProceso);
 	int paginaAEscribir = nroPag + primeraPagProceso;
 
-	log_info(log, "Se escribira la pagina %d del proceso: %d, cuya asociada es paginasSwap es %d \n", nroPag, idProceso, paginaAEscribir);
+//	log_info(log, "Se escribira la pagina %d del proceso: %d, cuya asociada es paginasSwap es %d \n", nroPag, idProceso, paginaAEscribir);
 	escribirPagina(paginaAEscribir, data);
 }
 
@@ -447,7 +447,7 @@ void escribirPagina(int nroPag, void*dataPagina) {
 	inicioPag = obtenerlugarDeInicioDeLaPagina(numero); //con esto determino los valores de inicio de escritura
 	memset(discoParaleloNoVirtualMappeado + inicioPag, '\0', TAMANIO_PAGINA);
 	memcpy(discoParaleloNoVirtualMappeado + inicioPag, dataPagina, TAMANIO_PAGINA);
-	log_info(log, "Pagina %d, copiada con exito! \n", nroPag);
+//	log_info(log, "Pagina %d, copiada con exito! \n", nroPag);
 }
 
 void leerPaginaProceso(int idProceso, int nroPag, void* paginaALeer) {
