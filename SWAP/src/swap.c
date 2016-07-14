@@ -305,9 +305,8 @@ int hayLugarParaNuevoProceso(int cantPagsNecesita) {
 
 	}
 
-	else{
-		return -1;
-	}
+
+	return -1;
 }
 
 int primerPaginaOcupadaLuegoDeUnaLibreDada(int nroPag) {
