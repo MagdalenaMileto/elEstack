@@ -3,3 +3,4 @@ swap.data
 .cproject
 *.log
 /Debug/
+core
