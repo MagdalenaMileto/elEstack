@@ -4,13 +4,14 @@ void finalizar_proceso(int pid) {
 
 	log_info(log, "Se envia una peticion para finalizar el proceso %d\n", pid);
 
+	swap_finalizar_proceso(pid);
+
 	eliminar_proceso_tlb(pid);
 
 	pthread_mutex_lock(&semaforo_mutex_tabla_de_paginas);
 	eliminar_proceso_tabla_de_paginas(pid);
 	pthread_mutex_unlock(&semaforo_mutex_tabla_de_paginas);
 
-	swap_finalizar_proceso(pid);
 
 	bool coincide_pid(void * elemento) {
 

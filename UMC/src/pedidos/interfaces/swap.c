@@ -47,7 +47,7 @@ void swap_finalizar_proceso(int pid) {
 	enviar(socket_swap, SWAP_FINALIZAR, sizeof(int), (void *) &pid);
 
 	log_info(log,
-			"Se envia exitosamente la peticion de finalizacion del proceso %d al swap\n",
+			"\x1b[33mSe envia exitosamente la peticion de finalizacion del proceso %d al swap\n\x1b[0m",
 			pid);
 
 	pthread_mutex_unlock(&semaforo_mutex_swap);
