@@ -263,7 +263,7 @@ void *hilo_PCP(void *arg) {
 	t_proceso *proceso; int sock;
 
 	while (1) {
-		sem_wait(&sem_ready); sem_wait(&sem_cpu);
+		 sem_wait(&sem_cpu);sem_wait(&sem_ready);
 		//TODO:mutex
 		//printf("Soy casi grande\n");
 		pthread_mutex_lock(&mutex_config);
