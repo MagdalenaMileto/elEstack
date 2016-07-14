@@ -699,7 +699,7 @@ void abortarProceso(int SockId){
 				log_info(logger,"NUCLEO: Abortado x consola, en ready");
 				//printf("entra\n");
 				if(list_size(cola_CPU_libres->elements)!=0) sem_wait(&sem_cpu);
-				if(list_size(cola_ready->elements)!=0) sem_wait(&sem_ready);
+				sem_wait(&sem_ready);
 				//printf("sale\n");
 				abortar(procesin);
 			}else{
