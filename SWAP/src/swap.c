@@ -89,6 +89,8 @@ if(i%10==0) printf("\n");
 				{
 					reservarProceso(pid, pagina, paginaAPartir);
 					inicializarProceso(pid, pagina, codigo);
+					flagRespuesta = EXITO;
+
 				}
 				else
 				{
