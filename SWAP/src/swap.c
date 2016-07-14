@@ -349,7 +349,6 @@ void reservarProceso(int pidProceso, int cantPags, int pagAPartir) {
 
 void compactacion() {
 	log_info(log, "INICIANDO COMPACTACION \n");
-	usleep(RETARDO_COMPACTACION * 1000);
 	long int inicioOcupada;
 	long int inicioLibre;
 	int primerPaginaOcupada;
@@ -370,6 +369,8 @@ void compactacion() {
 		paginasSWAP[primerPaginaOcupada].idProcesoQueLoOcupa = -1;
 		paginasSWAP[primerPaginaLibre].ocupada = 1;
 	} while (hayPaginasOcupadasLuegoDeLaUltimaLibre());
+	usleep(RETARDO_COMPACTACION * 1000);
+
 	log_info(log, "Termino compactacion\n");
 }
 
