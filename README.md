@@ -3,6 +3,12 @@
 
 #Protocolos  
 
+###Pre build command
+```
+make clean
+```
+
+
 ###Post build command
 ```
 cp -f ${BuildArtifactFilePrefix}${BuildArtifactFileName} ${ProjDirPath}
