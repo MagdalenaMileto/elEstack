@@ -290,6 +290,9 @@ int hayLugarParaNuevoProceso(int cantPagsNecesita) {
 				primeraPaginaLibre = i;
 			}
 			contadorPaginasSeguidas++;
+			if (contadorPaginasSeguidas >= cantPagsNecesita){
+				return primeraPaginaLibre;
+			}
 		}
 		else {
 			if (contadorPaginasSeguidas >= cantPagsNecesita){
@@ -301,9 +304,7 @@ int hayLugarParaNuevoProceso(int cantPagsNecesita) {
 		}
 
 	}
-	if (contadorPaginasSeguidas >= cantPagsNecesita){
-		return primeraPaginaLibre;
-	}
+
 	else{
 		return -1;
 	}
