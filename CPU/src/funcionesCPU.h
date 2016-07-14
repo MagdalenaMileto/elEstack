@@ -23,9 +23,10 @@
 #include <parser/parser.h>
 #include <parser/sintax.h>
 #include <parser/metadata_program.h>
-#include "../../COMUNES/nsockets.h"
-#include "../../COMUNES/estructurasControl.h"
-#include "../../COMUNES/handshake.h"
+//#include "../../COMUNES/nsockets.h"
+//#include "../../COMUNES/estructurasControl.h"
+//#include "../../COMUNES/handshake.h"
+#include <theDebuggers/estructurasControl.h>
 #include "primitivas.h"
 #include <commons/config.h>
 #include <commons/log.h>
@@ -39,59 +40,58 @@
 t_log* log;
 
 typedef struct {
-	 int QUANTUM;
-	 int QUANTUM_SLEEP;
-	 int TAMPAG;
-	 int STACK_SIZE;
+	int QUANTUM;
+	int QUANTUM_SLEEP;
+	int TAMPAG;
+	int STACK_SIZE;
 } t_datos_kernel;
 
+typedef struct
+	__attribute__((packed)) {
+		char* PUERTO_NUCLEO;
+		char* IP_NUCLEO;
+		char* PUERTO_UMC;
+		char* IP_UMC;
+	} CONF_CPU;
 
-typedef struct __attribute__((packed)){
-  char* PUERTO_NUCLEO;
-  char* IP_NUCLEO;
-  char* PUERTO_UMC;
-  char* IP_UMC;
-}CONF_CPU;
+	int umc, nucleo;
+	t_pcb* pcb;
+	int quantum;
+	int tamanioPag;
+	int quantum_sleep;
+	int stack_size;
+	int programaBloqueado;
+	int programaFinalizado;
+	int programaAbortado;
+	int var_max;
 
+	int conectarConUmc();
+	int conectarConNucleo();
+	void crearEstructuraParaUMC(t_pcb* pcb, int tamPag,
+			t_direccion* informacion);
+	void levantar_configuraciones();
+	char* depurarSentencia(char* sentencia);
+	void sig_handler(int signo);
+	char* leer(int pagina, int offset, int tamanio);
+	void sig_handler(int signo);
+	void asignar_datos_de_nucleo(t_paquete *datos_kernel);
 
-int umc, nucleo;
-t_pcb* pcb;
-int quantum;
-int tamanioPag;
-int quantum_sleep;
-int stack_size;
-int programaBloqueado;
-int programaFinalizado;
-int programaAbortado;
-int var_max;
-
-
-int conectarConUmc();
-int conectarConNucleo();
-void crearEstructuraParaUMC (t_pcb* pcb, int tamPag, t_direccion* informacion);
-void levantar_configuraciones();
-char* depurarSentencia(char* sentencia);
-void sig_handler(int signo);
-char* leer(int pagina,int offset, int tamanio);
-void sig_handler(int signo);
-void asignar_datos_de_nucleo(t_paquete *datos_kernel);
-
-/* Emi para tener un machete de los codigos de operacion y no confundirnos:
- *
- * 303->recibo pcb serializado
- * 352->recibo variable
- * 342->recibo valor del semaforo
- *
- * 304->envio pcb serializado por fin de quantum
- * 320->envio finalizacion del programa
- * 340->envio pcb bloqueado
- * 341->envio pido un semaforo
- * 342->envio liberar semaforo
- * 350->envio escribe una variable
- * 351->envio pide la variable
- * 360->envio impromir un valor numerico
- * 361->envio imprimir texto
- */
-pthread_mutex_t mutex_pcb;
+	/* Emi para tener un machete de los codigos de operacion y no confundirnos:
+	 *
+	 * 303->recibo pcb serializado
+	 * 352->recibo variable
+	 * 342->recibo valor del semaforo
+	 *
+	 * 304->envio pcb serializado por fin de quantum
+	 * 320->envio finalizacion del programa
+	 * 340->envio pcb bloqueado
+	 * 341->envio pido un semaforo
+	 * 342->envio liberar semaforo
+	 * 350->envio escribe una variable
+	 * 351->envio pide la variable
+	 * 360->envio impromir un valor numerico
+	 * 361->envio imprimir texto
+	 */
+	pthread_mutex_t mutex_pcb;
 
 #endif /* FUNCIONESCPU_H_ */

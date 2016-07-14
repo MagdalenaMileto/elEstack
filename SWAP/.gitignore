@@ -1,4 +1,5 @@
 swap.data
 .project
 .cproject
-
+*.log
+/Debug/

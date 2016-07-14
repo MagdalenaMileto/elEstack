@@ -14,7 +14,8 @@ context(consola) {
 		before {
 			log = log_create(ARCHIVOLOG, "UMC", 0, LOG_LEVEL_INFO);
 			tabla_de_paginas = list_create();
-			remove("./memory.dump");
+			remove("memory.dump");
+			inicializar_semaforos();
 		}end
 
 		after {
@@ -24,29 +25,30 @@ context(consola) {
 
 		describe("dump total") {
 
-			void escribir(int pid, int pagina, int tamanio, void * contenido) {
-
-				bool pid_y_pagina(void * elemento) {
-					t_entrada_tabla_de_paginas * entrada =
-					(t_entrada_tabla_de_paginas *) elemento;
-
-					return entrada->pid == pid && entrada->pagina == pagina;
-				}
-
-				t_entrada_tabla_de_paginas * entrada_a_escribir =
-				list_filter(tabla_de_paginas,pid_y_pagina);
-
-				marco_nuevo(entrada_a_escribir);
-
-				memcpy(memoria + entrada_a_escribir->marco * tamanio_marco,contenido,tamanio);
-
-				entrada_a_escribir-> modificado = true;
-			}
-
 			it("Escribe el archivo de dump" ) {
 
-				tamanio_marco = 5;
+				void escribir(int pid, int pagina, int tamanio, void * contenido) {
+
+					bool pid_y_pagina(void * elemento) {
+						t_entrada_tabla_de_paginas * entrada =
+						(t_entrada_tabla_de_paginas *) elemento;
+
+						return entrada->pid == pid && entrada->pagina == pagina;
+					}
+
+					t_entrada_tabla_de_paginas * entrada_a_escribir =
+					list_find(tabla_de_paginas,pid_y_pagina);
+
+					marco_nuevo(entrada_a_escribir);
+
+					memcpy(memoria + entrada_a_escribir->marco * tamanio_marco,contenido,tamanio);
+
+					entrada_a_escribir-> modificado = true;
+				}
+
+				tamanio_marco = 10;
 				cantidad_marcos = 4;
+				cantidad_maxima_marcos = 4;
 				solicitar_bloque_memoria();
 				inicializar_marcos();
 

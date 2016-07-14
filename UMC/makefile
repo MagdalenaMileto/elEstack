@@ -1,0 +1,2 @@
+build:
+	gcc src/*.c src/consola/*.c src/hilos/*.c src/pedidos/*.c src/pedidos/interfaces/*.c src/tabla_de_paginas/*.c src/tlb/*.c test/algoritmos/*.c test/algoritmos/clock/*.c test/algoritmos/clock-m/*.c test/commonsV2/*.c test/consola/*.c test/marcos/*.c test/pedidos/nucleo/*.c test/tlb/*.c -o UMC -lcommons -lpthread -ltheDebuggers -lcspecs -g -w

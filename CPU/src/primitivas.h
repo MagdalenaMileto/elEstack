@@ -7,7 +7,8 @@
 
 #ifndef PRIMITIVAS_H_
 #define PRIMITIVAS_H_
-#include "../../COMUNES/estructurasControl.h"
+//#include "../../COMUNES/estructurasControl.h"
+#include <theDebuggers/estructurasControl.h>
 
 void armarDireccionPrimeraPagina(t_direccion* direccionReal);
 void armarProximaDireccion(t_direccion* direccionReal);

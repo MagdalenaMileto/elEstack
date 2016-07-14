@@ -164,20 +164,6 @@ void registrar_senial_cierre() {
 
 		log_info(log, "Se cierra la UMC.\n");
 
-		free(memoria);
-
-		list_destroy(tlb);
-		list_destroy(tabla_de_paginas);
-		list_destroy(control_de_marcos);
-
-		list_destroy(aciertos_tlb);
-		list_destroy(fallos_tlb);
-
-		list_destroy(escrituras_swap);
-		list_destroy(lecturas_swap);
-
-		log_destroy(log);
-
 		exit(EXIT_FAILURE);
 
 	}
