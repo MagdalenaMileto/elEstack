@@ -4,3 +4,9 @@
 [submodule "cspec"]
 	path = cspec
 	url = https://github.com/mumuki/cspec.git
+[submodule "scripts-ansisop"]
+	path = scripts-ansisop
+	url = https://github.com/sisoputnfrba/scripts-ansisop.git
+[submodule "ansisop-parser"]
+	path = ansisop-parser
+	url = https://github.com/sisoputnfrba/ansisop-parser.git
