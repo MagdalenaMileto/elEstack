@@ -661,6 +661,7 @@ void dibujarPantalla(void){
 *********************************************************************************
 */
 void abortar(t_proceso *proceso){
+	enviar(proceso->socket_CONSOLA,162,sizeof(int),&proceso->pcb->pid);
 	pthread_mutex_lock(&mcola_exit);
 	destruirCONTEXTO(proceso->pcb);
 	queue_push(cola_exit, proceso);
@@ -910,6 +911,7 @@ void *hilo_CONEXION_CPU(void *socket) {
 			procesin=(t_proceso*)list_remove_by_condition(cola_exec->elements,hayProcesoAbortado);
 			if(procesin!=NULL){
 			log_info(logger,"NUCLEO: ABORTO CPU, SACO COLA CPU READY. HABIA PROCESO EXEC.");
+
 			abortar(procesin);
 			}else{
 			log_info(logger,"NUCLEO: ABORTO CPU, SACO COLA CPU READY. NO HABIA PROCESO EXEC.");
