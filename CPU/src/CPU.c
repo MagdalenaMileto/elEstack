@@ -153,6 +153,8 @@ int main(int argc,char **argv){
 log_info(log,"Se cierra por senial SIGUSR1\n");
 printf("SALI BIEN\n");
 //liberar_paquete(datos_kernel);
+
+int algo2;enviar(nucleo,4,sizeof(int),algo2);
 close(nucleo);
 close(umc);
 exit(EXIT_SUCCESS);
