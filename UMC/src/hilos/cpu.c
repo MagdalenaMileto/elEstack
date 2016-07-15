@@ -76,6 +76,9 @@ void atender_cpu(void * parametro_hilo) {
 			escribir_una_pagina(pid_actual, numero_pagina, offset, tamanio,
 					buffer);
 
+			int a;
+			enviar(socket_cpu, 6, sizeof(int), &a);
+
 			free(buffer);
 
 			break;
