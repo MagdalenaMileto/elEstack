@@ -74,6 +74,7 @@ typedef struct
 	void sig_handler(int signo);
 	char* leer(int pagina, int offset, int tamanio);
 	void sig_handler(int signo);
+	void sig_handler2(int signo);
 	void asignar_datos_de_nucleo(t_paquete *datos_kernel);
 
 	/* Emi para tener un machete de los codigos de operacion y no confundirnos:
