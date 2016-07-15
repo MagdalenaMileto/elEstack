@@ -711,7 +711,7 @@ void abortarProceso(int SockId){
 
 				//sem_wait(&sem_cpu);
 				flag ++;
-				sem_signal(&sem_cpu);
+				sem_post(&sem_cpu);
 				log_info(logger,"NUCLEO: post wait");
 
 
