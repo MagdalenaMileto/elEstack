@@ -34,7 +34,7 @@ AnSISOP_kernel primitivas_kernel = {
 
 
 int main(int argc,char **argv){
-	arrancar_cpu();
+	printf("%s", "\n\n****** INICIO CPU ******\n\n");
 	sigusr1_desactivado=1;
 	signal(SIGUSR1, sig_handler);
 	signal(SIGINT, sig_handler2);
@@ -288,7 +288,3 @@ char* depurarSentencia(char* sentencia){
 
 }
 
-void arrancar_cpu() {
-
-	printf("%s", "\n\n****** INICIO CPU ******\n\n");
-}
