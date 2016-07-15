@@ -53,7 +53,8 @@ void levantar_configuraciones() {
 	intervalo_info = config_get_int_value(archivo_configuracion,
 			"INTERVALO_INFORMACION");
 
-	log_info(log, "\x1b[32mSe levantan con exito las configuraciones.\n\x1b[0m");
+	log_info(log,
+			"\x1b[32mSe levantan con exito las configuraciones.\n\x1b[0m");
 
 }
 
@@ -123,7 +124,8 @@ void solicitar_bloque_memoria() {
 	fallos_tlb = list_create();
 
 	if (memoria == NULL) {
-		error_show("\x1b[31mNo se pudo otorgar la memoria solicitada.\n\x1b[0m");
+		error_show(
+				"\x1b[31mNo se pudo otorgar la memoria solicitada.\n\x1b[0m");
 		exit(EXIT_FAILURE);
 	}
 
