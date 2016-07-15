@@ -41,46 +41,46 @@ echo
 echo Copiando Consola
 cd ../
 cp -rf CONSOLA $DEPLOY_FOLDER
-cd  /mnt/usb/UMC
-gcc -o CONSOLA/src/consola -lcommons -ltheDebuggers
-make install
+cd  DEPLOY_FOLDER/CONSOLA
+make
 echo Copiado y compilado exitoso
+cd 
 echo 
 echo 
 echo 
 echo Copiando Cpu
 cp -rf CPU $DEPLOY_FOLDER
-cd  /mnt/usb/CPU
-gcc -o CPU/src/CPU -lparser-ansisop -lcommons -ltheDebuggers
-make install
+cd  DEPLOY_FOLDER/CPU
+make
 echo Copiado exitoso
+cd 
 echo 
 echo 
 echo 
 echo Copiando Nucleo
 cp -rf NUCLEO $DEPLOY_FOLDER
-cd  /mnt/usb/NUCLEO
-gcc -o NUCLEO/src/nucleo -lpthread -lm -lcommons -lrt -lparser-ansisop
-make install
+cd  DEPLOY_FOLDER/NUCLEO
+make
 echo Copiado exitoso
+cd 
 echo 
 echo 
 echo 
 echo Copiando Swap
 cp -rf SWAP $DEPLOY_FOLDER
-cd  /mnt/usb/SWAP
-gcc -o SWAP/src/swap -lcommons -ltheDebuggers
-make install
+cd  DEPLOY_FOLDER/SWAP
+make
 echo Copiado exitoso
+cd
 echo 
 echo 
 echo 
 echo Copiando UMC
 cp -rf UMC $DEPLOY_FOLDER
-cd  /mnt/usb/UMC
-gcc -o NUCLEO/src/umc -lcspecs -lcommons -lpthread -ltheDebuggers
-make install
+cd  DEPLOY_UMC/UMC
+make
 echo Copiado exitoso
+cd
 echo 
 echo 
 echo 
