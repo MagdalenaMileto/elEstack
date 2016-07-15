@@ -42,13 +42,13 @@ void atender_nucleo() {
 
 				inicializar_programa(pid, paginas_requeridas);
 
-				log_info(log, "Se pudo inicializar el proceso.\n");
+				log_info(log, "Se pudo inicializar el proceso de pid %d.\n", pid);
 
 				enviar(socket_nucleo, EXITO, sizeof(int), &pid);
 
 			} else {
 
-				log_info(log, "No se pudo inicializar el proceso.\n");
+				log_info(log, "No se pudo inicializar el proceso de pid %d.\n", pid);
 
 				enviar(socket_nucleo, FRACASO, sizeof(int), &pid);
 			}

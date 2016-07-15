@@ -9,7 +9,7 @@
 bool swap_inicializar_proceso(int pid, int cantidad_paginas, char * codigo) {
 
 	pthread_mutex_lock(&semaforo_mutex_swap);
-	log_info(log,"Se envia el pedido de inicialización al swap\n");
+	log_info(log,"Se envia el pedido de inicialización del pid %d (%d paginas) al swap.\n", pid, cantidad_paginas);
 	int tamanio_codigo = string_length(codigo);
 	int tamanio_paquete = (sizeof(int) * 2) + tamanio_codigo;
 	void * data = malloc(tamanio_paquete);
@@ -20,20 +20,16 @@ bool swap_inicializar_proceso(int pid, int cantidad_paginas, char * codigo) {
 
 	enviar(socket_swap, SWAP_INICIALIZAR, tamanio_paquete, data);
 
-	log_info(log, "Se envia el paquete a swap\n");
-
 	t_paquete * respuesta = recibir(socket_swap);
 
 	bool resultado = respuesta->codigo_operacion == SWAP_EXITO;
 
-	log_info(log,
-			"El paquete fue recepcionado exitosamente por el proceso swap\n");
+	log_info(log, "Respuesta del swap recibida\n");
 
 	liberar_paquete(respuesta);
+	
 	free(data);
-
-	log_info(log, "Se liberan las estructuras.\n");
-
+	
 	pthread_mutex_unlock(&semaforo_mutex_swap);
 
 	return resultado;
