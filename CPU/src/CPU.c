@@ -36,6 +36,7 @@ AnSISOP_kernel primitivas_kernel = {
 int main(int argc,char **argv){
 	sigusr1_desactivado=1;
 	signal(SIGUSR1, sig_handler);
+	signal(SIGINT, sig_handler2);
 	log= log_create(ARCHIVOLOG, "CPU", 0, LOG_LEVEL_INFO);
 	log_info(log,"Iniciando CPU\n");
 	char* serializado;
@@ -174,6 +175,14 @@ void sig_handler(int signo) {
 	log_info(log,"Se detecto señal SIGUSR1, la CPU se cerrara al finalizar\n");
 	return;
 }
+void sig_handler2(int signo) {
+	sigusr1_desactivado = 0;
+	programaAbortado=1;
+
+	log_info(log,"Se detecto señal sig int CRT C.\n");
+	return;
+}
+
 
 char* leer(int pagina,int offset, int tamanio)
 {

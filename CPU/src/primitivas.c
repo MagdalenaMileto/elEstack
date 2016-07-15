@@ -484,6 +484,9 @@ void enviarDirecParaEscribirUMC(char* UMC_1, t_direccion* direccion, int valor){
 		memcpy(UMC_1+12, &valor , 4);
 		log_info(log,"Quiero escribir en la direccion: %d %d %d %d\n",((int*)(UMC_1))[0],((int*)(UMC_1))[1],((int*)(UMC_1))[2],((int*)(UMC_1))[3]);
 		enviar(umc, 2, 16, UMC_1);
+		t_paquete * paquetin;
+		paquetin = recibir(umc);
+		liberar_paquete(paquetin);
 
 }
 
