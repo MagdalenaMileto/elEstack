@@ -577,6 +577,9 @@ void dibujarPantalla(void){
 	t_proceso *proceso;
 	int i;int a=1;int x;
 
+	pthread_mutex_lock(&mutex_config);
+
+
 	gotoxy(30,5);
 	printf("║Cola New");
 	pthread_mutex_lock(&mcola_new);
@@ -654,7 +657,7 @@ void dibujarPantalla(void){
 	}
 	pthread_mutex_unlock(&mcola_exit);
 
-
+	pthread_mutex_unlock(&mutex_config);
 	//colas_ios[i]->elements
 	fflush(stdout);
 
