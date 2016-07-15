@@ -42,10 +42,6 @@ typedef struct __attribute__((packed)){
 	int idProcesoQueLoOcupa;
 }pagina;
 
-typedef struct __attribute__((packed)){
-	int cantPagsUsando;
-	int idProceso;
-}proceso;
 
 int	abrirConfiguracion();
 void crearArchivo();
