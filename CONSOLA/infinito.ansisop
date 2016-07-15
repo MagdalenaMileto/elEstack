@@ -1,0 +1,10 @@
+#!/usr/bin/ansisop
+begin	
+	:etiqueta
+	
+	#Ciclar indefinidamente
+	goto etiqueta
+
+end
+
+
