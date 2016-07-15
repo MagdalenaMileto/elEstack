@@ -392,7 +392,7 @@ void avanzar_victima(t_list * lista_clock,
 	}
 	victima->puntero = false;
 
-	log_info(log, string_from_format("Pongo el puntero viejo en falso"));
+	log_info(log, string_from_format("Pongo el puntero viejo en falso.\n"));
 }
 
 bool de_una_entrada(t_list * lista) {

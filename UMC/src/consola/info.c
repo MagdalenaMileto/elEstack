@@ -21,7 +21,7 @@ void mostrar_estado_interno() {
 
 		int cantidad_total = cantidad_fallas + cantidad_aciertos;
 
-		printf("La TLB tiene %d aciertos y %d fallos sobre %d pedidos \n",
+		printf("La TLB tiene %d aciertos y %d fallos sobre %d pedidos \n\n",
 				cantidad_aciertos, cantidad_fallas, cantidad_total);
 
 		if (cantidad_total != 0) {
