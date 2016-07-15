@@ -43,19 +43,12 @@ int main(int argc,char **argv){
 	t_paquete* paquete_recibido;
 
 	levantar_configuraciones();
-
-
-
 	umc = conectarConUmc();
-
 	nucleo = conectarConNucleo();
 
 	t_paquete* datos_kernel=recibir(nucleo);
 	asignar_datos_de_nucleo(datos_kernel);
 	liberar_paquete(datos_kernel);
-
-
-
 
 	while(sigusr1_desactivado){
 		log_info(log,"sigusr1: %d", sigusr1_desactivado);
@@ -65,14 +58,11 @@ int main(int argc,char **argv){
 		int quantum_aux=quantum;
 		log_info(log,"Esperando Pcb\n");
 
-
-		//Recibo quantum
 		datos_kernel=recibir(nucleo);
 		asignar_datos_de_nucleo(datos_kernel);
 		liberar_paquete(datos_kernel);
 
 		paquete_recibido = recibir(nucleo);
-		//sleep(4);
 		log_info(log,"Deserializando PCB\n");
 		pcb = desserializarPCB(paquete_recibido->data);
 		log_info(log,"Recibi PCB del nucleo con el program counter en: %d y SizeContextoActual en %d\n", pcb->pc, pcb->sizeContextoActual);
@@ -89,15 +79,11 @@ int main(int argc,char **argv){
 			t_direccion* datos_para_umc = malloc(12);
 			crearEstructuraParaUMC(pcb, tamanioPag, datos_para_umc);
 			log_info(log, "Direccion= Pag:%d Offset:%d Size:%d\n", datos_para_umc->pagina, datos_para_umc->offset, datos_para_umc->size);
-
-
-
 			log_info(log, "Pido instruccion\n");
 			char* sentencia=leer(datos_para_umc->pagina,datos_para_umc->offset, datos_para_umc->size);
 			if(sentencia==NULL){
 				programaAbortado=1;
 				log_info(log,"Cambiando flag programaAbortado a %d\n", programaAbortado);
-				//break;
 			}else{
 			log_info(log, "Recibi instruccion de UMC con tamanio %d\n",  datos_para_umc->size);
 			char* barra_cero="\0";
@@ -107,8 +93,6 @@ int main(int argc,char **argv){
 
 			log_info(log,"Recibi sentencia: %s\n", depurarSentencia(sentencia));
 			analizadorLinea(depurarSentencia(sentencia), &primitivas, &primitivas_kernel);
-			//liberar_paquete(instruccion);
-			//free(lecturaUMC);
 			free(datos_para_umc);
 			free(sentencia);
 
@@ -122,8 +106,9 @@ int main(int argc,char **argv){
 				serializado = serializarPCB(pcb);
 				if(!sigusr1_desactivado){
 					log_info(log,"mande el flag");
-					int algo;enviar(nucleo,399,sizeof(int),algo);
-usleep(300*1000);				
+					int algo;
+					enviar(nucleo,399,sizeof(int),algo);
+					usleep(300*1000);
 }
 				enviar(nucleo, 340, ((t_pcb*)serializado)->sizeTotal, serializado);
 				free(serializado);
@@ -181,11 +166,9 @@ void asignar_datos_de_nucleo(t_paquete *datos_kernel){
 	tamanioPag = ((t_datos_kernel*)(datos_kernel->data))->TAMPAG;
 	quantum_sleep = ((t_datos_kernel*)(datos_kernel->data))->QUANTUM_SLEEP;
 	stack_size=	((t_datos_kernel*)(datos_kernel->data))->STACK_SIZE;
-	//printf("Quantum: %d TamPag: %d Quantum Sleep: %d Stack size: %d Var Max: %d\n", quantum, tamanioPag, quantum_sleep, stack_size, var_max);
-
 	log_info(log,"Quantum: %d TamPag: %d Quantum Sleep: %d Stack size: %d Var Max: %d\n", quantum, tamanioPag, quantum_sleep, stack_size, var_max);
-
 }
+
 void sig_handler(int signo) {
 	sigusr1_desactivado = 0;
 	log_info(log,"Se detecto señal SIGUSR1, la CPU se cerrara al finalizar\n");
@@ -197,15 +180,10 @@ char* leer(int pagina,int offset, int tamanio)
 	if((tamanio+offset)<=tamanioPag){
 
 					char * lecturaUMC2= malloc(12);
-
 					t_direccion *datos_para_umc2=malloc(sizeof(t_direccion));
-
 					datos_para_umc2->offset=offset;
-
 					datos_para_umc2->pagina=pagina;
-
 					datos_para_umc2->size=tamanio;
-
 					enviarDirecParaLeerUMC(lecturaUMC2, datos_para_umc2);
 
 					t_paquete* instruccion2;
@@ -219,10 +197,8 @@ char* leer(int pagina,int offset, int tamanio)
 					free(lecturaUMC2);
 					free(datos_para_umc2);
 					liberar_paquete(instruccion2);
-					return sentencia2;
-
-	}else{
-
+					return sentencia2;}
+	else{
 		char* lectura1 = leer(pagina,offset,(tamanioPag-offset));
 		if(lectura1==NULL) return NULL;
 		char* lectura2 = leer(pagina+1,0,tamanio-(tamanioPag-offset));
@@ -236,7 +212,6 @@ char* leer(int pagina,int offset, int tamanio)
 		return nuevo;
 	}
 }
-
 
 int conectarConUmc(){
 		int umc = conectar_a(config_cpu.IP_UMC, config_cpu.PUERTO_UMC);
@@ -256,7 +231,6 @@ int conectarConUmc(){
 return umc;
 }
 
-
 int conectarConNucleo(){
 		int nucleo = conectar_a(config_cpu.IP_NUCLEO , config_cpu.PUERTO_NUCLEO);
 		if(nucleo==-1){
@@ -264,15 +238,6 @@ int conectarConNucleo(){
 			exit (EXIT_FAILURE);
 		}
 		log_info(log,"CPU: Conecta bien nucleo %d\n", nucleo);
-		/*bool estado = realizar_handshake(nucleo);
-		if (!estado) {
-			log_info(log,"CPU:Handshake invalido con nucleo\n");
-			exit(EXIT_FAILURE);
-		}
-		else{
-			log_info(log,"CPU:Handshake exitoso con nucleo\n");
-		}
-		*/
 return nucleo;
 }
 
@@ -290,7 +255,6 @@ void crearEstructuraParaUMC (t_pcb* pcb, int tamPag, t_direccion* informacion){
 	return;
 }
 
-
 void levantar_configuraciones() {
 
 	t_config * archivo_configuracion = config_create("CPU.confg");
@@ -298,7 +262,6 @@ void levantar_configuraciones() {
 	config_cpu.IP_NUCLEO = config_get_string_value(archivo_configuracion, "IP_NUCLEO");
 	config_cpu.PUERTO_UMC = config_get_string_value(archivo_configuracion, "PUERTO_UMC");
 	config_cpu.IP_UMC = config_get_string_value(archivo_configuracion, "IP_UMC");
-	//config_destroy(archivo_configuracion);
 }
 
 
