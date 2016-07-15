@@ -21,7 +21,7 @@ t_entrada_tabla_de_paginas * buscar_pagina_tabla_de_paginas(int pid,
 			filtrar_por_proceso_y_pagina);
 	pthread_mutex_unlock(&semaforo_mutex_tabla_de_paginas);
 
-	log_info(log, "Se encontró la página en la tabla de páginas");
+	log_info(log, "Se encontró la página en la tabla de páginas.\n");
 
 	return pagina_encontrada;
 
