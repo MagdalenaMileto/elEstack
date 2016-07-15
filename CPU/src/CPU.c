@@ -10,6 +10,7 @@
 #define ARCHIVOLOG "CPU.log"
 CONF_CPU config_cpu;
 int sigusr1_desactivado;
+int flag=0;
 
 AnSISOP_funciones primitivas = {
 		.AnSISOP_definirVariable		= definirVariable,
@@ -60,10 +61,13 @@ int main(int argc,char **argv){
 		int quantum_aux=quantum;
 		log_info(log,"Esperando Pcb\n");
 
+		while(sigusr1_desactivado){
+		flag=1;
 		datos_kernel=recibir(nucleo);
 		asignar_datos_de_nucleo(datos_kernel);
 		liberar_paquete(datos_kernel);
-
+		flag=0;
+		}
 		paquete_recibido = recibir(nucleo);
 		log_info(log,"Deserializando PCB\n");
 		pcb = desserializarPCB(paquete_recibido->data);
@@ -153,7 +157,6 @@ int main(int argc,char **argv){
 
 log_info(log,"Se cierra por senial SIGUSR1\n");
 printf("SALI BIEN\n");
-//liberar_paquete(datos_kernel);
 
 int algo2;enviar(nucleo,4,sizeof(int),algo2);
 close(nucleo);
@@ -176,10 +179,12 @@ void asignar_datos_de_nucleo(t_paquete *datos_kernel){
 void sig_handler(int signo) {
 	sigusr1_desactivado = 0;
 	log_info(log,"Se detecto señal SIGUSR1, la CPU se cerrara al finalizar\n");
+	if(flag==1) exit(0);
 	return;
 }
 void sig_handler2(int signo) {
 	sigusr1_desactivado = 0;
+	if(flag==1) exit(0);
 	programaAbortado=1;
 
 	log_info(log,"Se detecto señal sig int CRT C.\n");
