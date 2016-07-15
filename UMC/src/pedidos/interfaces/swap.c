@@ -56,7 +56,7 @@ void swap_finalizar_proceso(int pid) {
 void * swap_leer(int pid, int numero_pagina) {
 
 	pthread_mutex_lock(&semaforo_mutex_swap);
-	log_info(log,"Se envia el pedido de lectura al swap con el pid %d y pagina %d\n", pid, pagina);
+	log_info(log,"Se envia el pedido de lectura al swap con el pid %d y pagina %d\n", pid, numero_pagina);
 	int * pid_proceso = malloc(sizeof(int));
 	*pid_proceso = pid;
 
