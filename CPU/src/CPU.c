@@ -123,7 +123,7 @@ int main(int argc,char **argv){
 				if(!sigusr1_desactivado){
 					log_info(log,"mande el flag");
 					int algo;enviar(nucleo,399,sizeof(int),algo);
-sleep(300);				
+usleep(300*1000);				
 }
 				enviar(nucleo, 340, ((t_pcb*)serializado)->sizeTotal, serializado);
 				free(serializado);
@@ -136,7 +136,7 @@ sleep(300);
 				serializado = serializarPCB(pcb);
 				if(!sigusr1_desactivado){
 					log_info(log,"mande el flag");
-					int algo;enviar(nucleo,399,sizeof(int),algo);sleep(300);
+					int algo;enviar(nucleo,399,sizeof(int),algo);usleep(1000*300);
 				}
 				enviar(nucleo, 370, ((t_pcb*)serializado)->sizeTotal, serializado);
 				free(serializado);
@@ -153,7 +153,7 @@ sleep(300);
 				if(!sigusr1_desactivado){
 					log_info(log,"mande el flag");
 					int algo;enviar(nucleo,399,sizeof(int),algo);
-					sleep(300);
+					usleep(300*1000);
 				}
 				enviar(nucleo, 304, ((t_pcb*)serializado)->sizeTotal, serializado);
 				free(serializado);
