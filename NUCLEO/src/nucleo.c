@@ -913,6 +913,7 @@ void *hilo_CONEXION_CPU(void *socket) {
 
 		case 399:
 			flag=1;
+			log_info(logger,"NUCLEO: **LLego el 399");
 			break;
 
 		case -1:
