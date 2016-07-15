@@ -19,10 +19,12 @@ void atender_cpu(void * parametro_hilo) {
 
 	while (!cerrar) {
 		paquete_nuevo = recibir(socket_cpu);
-
+		log_info(log,"recibi de CPU");
+		log_info(log,"Codigo recibi CPU:%d",paquete_nuevo->codigo_operacion);
 		switch (paquete_nuevo->codigo_operacion) {
 
 		case -1:
+			log_info(log,"Evento desconexion CPU");
 			//	printf("Evento desconexion cpu\n");
 			//no se si deberias hacer un free de parametro hilo u otras cosas
 			return;
