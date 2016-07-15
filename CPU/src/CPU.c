@@ -120,10 +120,11 @@ int main(int argc,char **argv){
 				log_info(log, "El programa salió por bloqueo\n");
 				log_info(log, "PC= %d\n", pcb->pc);
 				serializado = serializarPCB(pcb);
-				if(sigusr1_desactivado==0){
+				if(!sigusr1_desactivado){
 					log_info(log,"mande el flag");
 					int algo;enviar(nucleo,399,sizeof(int),algo);
-				}
+usleep(300*1000);				
+}
 				enviar(nucleo, 340, ((t_pcb*)serializado)->sizeTotal, serializado);
 				free(serializado);
 				destruirPCB(pcb);
@@ -133,9 +134,9 @@ int main(int argc,char **argv){
 				log_info(log, "El programa aborto\n");
 				log_info(log, "El pcb que sale por aborto tiene pid %d\n",pcb->pid);
 				serializado = serializarPCB(pcb);
-				if(sigusr1_desactivado==0){
+				if(!sigusr1_desactivado){
 					log_info(log,"mande el flag");
-					int algo;enviar(nucleo,399,sizeof(int),algo);
+					int algo;enviar(nucleo,399,sizeof(int),algo);usleep(1000*300);
 				}
 				enviar(nucleo, 370, ((t_pcb*)serializado)->sizeTotal, serializado);
 				free(serializado);
@@ -145,13 +146,14 @@ int main(int argc,char **argv){
 
 			if((quantum_aux==0) &&!programaFinalizado&&!programaBloqueado&&!programaAbortado){
 
-				log_info(log,"Saliendo por fin de quantum\n");
-				log_info(log,"SizeContextoActual antes: %d\n", pcb->sizeContextoActual);
+				log_info(log,"**Saliendo por fin de quantum\n");
+				log_info(log,"**SizeContextoActual antes: %d\n", pcb->sizeContextoActual);
 				serializado = serializarPCB(pcb);
 				log_info(log,"SizeContextoActual despues: %d\n", pcb->sizeContextoActual);
-				if(sigusr1_desactivado==0){
+				if(!sigusr1_desactivado){
 					log_info(log,"mande el flag");
 					int algo;enviar(nucleo,399,sizeof(int),algo);
+					usleep(300*1000);
 				}
 				enviar(nucleo, 304, ((t_pcb*)serializado)->sizeTotal, serializado);
 				free(serializado);
