@@ -1,0 +1,101 @@
+#!/bin/sh
+DEPLOY_FOLDER="/home/utnso/elAlgoritmoDelRitmo"
+
+# Instalar las dependencias
+
+echo Instalando Cspec
+cd tp-2016-1c-El-algoritmo-del-ritmo/cspec/cspec
+sudo make install
+cd
+echo 
+echo 
+echo 
+echo Instalando Commons
+cd tp-2016-1c-El-algoritmo-del-ritmo/so-commons-library/so-commons-library
+sudo make install
+cd
+echo 
+echo 
+echo 
+echo Parser ansisop
+cd tp-2016-1c-El-algoritmo-del-ritmo/ansisop-parser/ansisop-parser/parser
+sudo make install
+cd
+echo 
+echo 
+echo 
+echo Instalando librerias globales
+cd tp-2016-1c-El-algoritmo-del-ritmo/"Sockets Maggie"
+sudo make install
+cd
+echo 
+echo 
+echo 
+echo Dependencias instaladas
+echo 
+echo 
+echo 
+echo Creando directorio del tp
+rm -rf $DEPLOY_FOLDER
+mkdir $DEPLOY_FOLDER
+echo Directorio creado
+echo 
+echo 
+echo 
+echo Copiando Consola
+cd ../
+cp -rf CONSOLA $DEPLOY_FOLDER
+cd  CONSOLA
+make
+echo Copiado y compilado exitoso
+cd -
+echo 
+echo 
+echo 
+echo Copiando Cpu
+cp -rf CPU $DEPLOY_FOLDER
+cd  CPU
+make
+echo Copiado exitoso
+cd -
+echo 
+echo 
+echo 
+echo Copiando Nucleo
+cp -rf NUCLEO $DEPLOY_FOLDER
+cd  NUCLEO
+make
+echo Copiado exitoso
+cd -
+echo 
+echo 
+echo 
+echo Copiando Swap
+cp -rf SWAP $DEPLOY_FOLDER
+cd  SWAP
+make
+echo Copiado exitoso
+cd -
+echo 
+echo 
+echo 
+echo Copiando UMC
+cp -rf UMC $DEPLOY_FOLDER
+cd  UMC
+make
+echo Copiado exitoso
+cd -
+echo 
+echo 
+echo 
+echo Copiando scripts ANSISOP
+cp -rf scripts-ansisop $DEPLOY_FOLDER
+chmod +777 *
+echo Copiado exitoso
+echo 
+echo 
+echo 
+echo Quitandole permisos root a los archivos
+chown -R utnso:utnso $DEPLOY_FOLDER
+echo Permisos fixeados
+echo Fin del deploy
