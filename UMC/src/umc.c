@@ -32,7 +32,7 @@ void inicializar_semaforos() {
 	pthread_mutex_init(&semaforo_mutex_marcos, NULL);
 	pthread_mutex_init(&semaforo_mutex_stats_tlb, NULL);
 	pthread_mutex_init(&semaforo_mutex_stats_swap, NULL);
-	log_info(log, "Se inicializan los semaforos.\n");
+	log_info(log, "\x1b[32mSe inicializan con éxito los semaforos.\n\x1b[0m");
 }
 
 void levantar_configuraciones() {
@@ -53,7 +53,8 @@ void levantar_configuraciones() {
 	intervalo_info = config_get_int_value(archivo_configuracion,
 			"INTERVALO_INFORMACION");
 
-	log_info(log, "Se levantan con exito las configuraciones.\n");
+	log_info(log,
+			"\x1b[32mSe levantan con exito las configuraciones.\n\x1b[0m");
 
 }
 
@@ -64,7 +65,7 @@ void comunicarse_con_el_swap() {
 	escrituras_swap = list_create();
 	lecturas_swap = list_create();
 
-	log_info(log, "Conexion con SWAP.\n");
+	log_info(log, "\x1b[32mConexion con SWAP exitosa.\n\x1b[0m");
 
 }
 
@@ -80,7 +81,7 @@ void esperar_al_nucleo() {
 
 	enviar(socket_nucleo, 13, sizeof(int), &tamanio_marco);
 
-	log_info(log, "Conexion con Nucleo.\n");
+	log_info(log, "\x1b[32mConexion con Nucleo exitosa.\n\x1b[0m");
 }
 
 void atender_conexiones() {
@@ -103,7 +104,7 @@ void atender_conexiones() {
 					(void *) nuevo_socket_cpu);
 		} else {
 
-			printf("Conexión no autenticada en el socket %d.\n",
+			printf("\x1b[32mConexión no autenticada en el socket %d.\n\x1b[0m",
 					*nuevo_socket_cpu);
 		}
 
@@ -123,7 +124,8 @@ void solicitar_bloque_memoria() {
 	fallos_tlb = list_create();
 
 	if (memoria == NULL) {
-		error_show("No se pudo otorgar la memoria solicitada.\n");
+		error_show(
+				"\x1b[31mNo se pudo otorgar la memoria solicitada.\n\x1b[0m");
 		exit(EXIT_FAILURE);
 	}
 
@@ -158,11 +160,11 @@ void crear_log() {
 
 void registrar_senial_cierre() {
 
-	log_info(log, "Se registra la senial de interrupcion.\n");
+	log_info(log, "\x1b[31mSe registra la senial de interrupcion.\n\x1b[0m");
 
 	void cerrar_umc(int senal) {
 
-		log_info(log, "Se cierra la UMC.\n");
+		log_info(log, "\x1b[31mSe cierra la UMC.\n\x1b[0m");
 
 		exit(EXIT_FAILURE);
 

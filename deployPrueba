@@ -27,7 +27,6 @@ echo
 echo Instalando librerias globales
 cd tp-2016-1c-El-algoritmo-del-ritmo/"Sockets Maggie"
 sudo make install
-cd
 echo 
 echo 
 echo 
