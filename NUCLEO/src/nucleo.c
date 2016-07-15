@@ -876,7 +876,7 @@ void *hilo_HANDLER_CONEXIONES_CONSOLA(void *arg) {
 void *hilo_CONEXION_CPU(void *socket) {
 	t_proceso* proceso;t_paquete * elPaquete;
 	t_paquete * elPaquete2;
-
+	int flag =0;
 	//Handshake
 	t_datos_kernel datos_kernel;
 	//TODO remover esto que ya lo hacer en otro lado
@@ -910,6 +910,10 @@ void *hilo_CONEXION_CPU(void *socket) {
 
 
 		switch (elPaquete->codigo_operacion) {
+
+		case 399:
+			flag=1;
+			break;
 
 		case -1:
 			log_info(logger,"NUCLEO: ABORTO CPU, TERMINAR %d",list_size(cola_exec->elements));
@@ -962,8 +966,12 @@ void *hilo_CONEXION_CPU(void *socket) {
 				abortar(proceso);
 			}
 			//printf("Pasa por aqui");
+			if(flag==0){
 			queue_push(cola_CPU_libres, (void*)*(int*)socket);
 			sem_post(&sem_cpu);
+			}else{
+				log_info(logger,"NUCLEO:Se va a cerrar CPU \n");
+			}
 			//printf("Pasa por alla\n");
 
 			break;
@@ -994,8 +1002,15 @@ void *hilo_CONEXION_CPU(void *socket) {
 			destruirCONTEXTO(proceso->pcb);
 			queue_push(cola_exit, proceso);
 			pthread_mutex_unlock(&mcola_exit);
+
+			if(flag==0){
 			queue_push(cola_CPU_libres, (void*)*(int*)socket);
 			sem_post(&sem_cpu);
+			}else{
+				log_info(logger,"NUCLEO:Se va a cerrar CPU \n");
+			}
+
+
 			pthread_mutex_lock(&umcm);
 			enviar(umc, 6, sizeof(int), &proceso->pcb->pid);
 			pthread_mutex_unlock(&umcm);
@@ -1031,8 +1046,12 @@ void *hilo_CONEXION_CPU(void *socket) {
 							abortar(proceso);
 						}
 
+			if(flag==0){
 			queue_push(cola_CPU_libres, (void*)*(int*)socket);
 			sem_post(&sem_cpu);
+			}else{
+				log_info(logger,"NUCLEO:Se va a cerrar CPU \n");
+			}
 
 			break;
 
@@ -1057,8 +1076,12 @@ void *hilo_CONEXION_CPU(void *socket) {
 
 				if(proceso->abortado==false){
 						bloqueoSemaforo(proceso,elPaquete->data);
+						if(flag==0){
 						queue_push(cola_CPU_libres, (void*)*(int*)socket);
 						sem_post(&sem_cpu);
+						}else{
+							log_info(logger,"NUCLEO:Se va a cerrar CPU \n");
+						}
 				}else{
 					log_info(logger,"\x1b[3%dmNUCLEO: Recibi proceso %d por fin de quantum, abortado \x1b[0m", ((proceso->pcb->pid)%6+1),proceso->pcb->pid);
 						abortar(proceso);

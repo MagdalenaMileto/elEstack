@@ -120,6 +120,9 @@ int main(int argc,char **argv){
 				log_info(log, "El programa salió por bloqueo\n");
 				log_info(log, "PC= %d\n", pcb->pc);
 				serializado = serializarPCB(pcb);
+				if(sigusr1_desactivado==0){
+					int algo;enviar(nucleo,399,sizeof(int),algo);
+				}
 				enviar(nucleo, 340, ((t_pcb*)serializado)->sizeTotal, serializado);
 				free(serializado);
 				destruirPCB(pcb);
@@ -129,6 +132,9 @@ int main(int argc,char **argv){
 				log_info(log, "El programa aborto\n");
 				log_info(log, "El pcb que sale por aborto tiene pid %d\n",pcb->pid);
 				serializado = serializarPCB(pcb);
+				if(sigusr1_desactivado==0){
+					int algo;enviar(nucleo,399,sizeof(int),algo);
+				}
 				enviar(nucleo, 370, ((t_pcb*)serializado)->sizeTotal, serializado);
 				free(serializado);
 				destruirPCB(pcb);
@@ -141,6 +147,9 @@ int main(int argc,char **argv){
 				log_info(log,"SizeContextoActual antes: %d\n", pcb->sizeContextoActual);
 				serializado = serializarPCB(pcb);
 				log_info(log,"SizeContextoActual despues: %d\n", pcb->sizeContextoActual);
+				if(sigusr1_desactivado==0){
+					int algo;enviar(nucleo,399,sizeof(int),algo);
+				}
 				enviar(nucleo, 304, ((t_pcb*)serializado)->sizeTotal, serializado);
 				free(serializado);
 				destruirPCB(pcb);
