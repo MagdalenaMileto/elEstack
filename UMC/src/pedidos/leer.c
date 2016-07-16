@@ -3,7 +3,7 @@
 void * leer_una_pagina(int pid, int numero_pagina, int offset, int tamanio) {
 
 	log_info(log,
-			"Llega una peticion de lectura por parte de una CPUs, cuyo proceso es %d, la pagina deseada es %d con el offset %d.\n",
+			"\x1b[33mLlega una peticion de lectura por parte de una CPUs, cuyo proceso es %d, la pagina deseada es %d con el offset %d.\n\x1b[0m",
 			pid, numero_pagina, offset);
 
 	t_entrada_tabla_de_paginas * pagina_encontrada;

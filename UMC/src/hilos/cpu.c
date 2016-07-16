@@ -23,7 +23,7 @@ void atender_cpu(void * parametro_hilo) {
 		switch (paquete_nuevo->codigo_operacion) {
 
 		case -1:
-			log_info(log,"Evento desconexion CPU");
+			log_info(log, "\x1b[31mEvento desconexion CPU\n\x1b[0m");
 
 			return;
 			break;
@@ -38,21 +38,24 @@ void atender_cpu(void * parametro_hilo) {
 			void * contenido = leer_una_pagina(pid_actual, numero_pagina,
 					offset, tamanio);
 
-			char * texto_falla = string_from_format("No hay lugar disponible!");
+			char * texto_falla = string_from_format(
+					"\x1b[31mNo hay lugar disponible!\x1b[0m");
 			int tamanio_mensaje_falla = string_length(texto_falla) + 1;
 
 			if (string_equals_ignore_case(contenido, texto_falla)) {
 
 				enviar(socket_cpu, 7, tamanio_mensaje_falla, contenido);
 
-				log_info(log, "Se envia sin exito a la CPU el proceso %d.\n",
+				log_info(log,
+						"\x1b[31mSe avisa que no hubo exito exito a la CPU, el proceso es el %d.\n\x1b[0m",
 						pid_actual);
 
 			} else {
 
 				enviar(socket_cpu, 6, tamanio, contenido);
 
-				log_info(log, "Se envia con exito a la CPU el proceso %d.\n",
+				log_info(log,
+						"\x1b[32mSe envia con exito a la CPU el proceso %d.\n\x1b[0m",
 						pid_actual);
 
 			}

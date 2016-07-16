@@ -4,7 +4,7 @@ void escribir_una_pagina(int pid, int numero_pagina, int offset, int tamanio,
 		void * buffer) {
 
 	log_info(log,
-			"Llega una peticion de escritura por parte de una de las CPUs, donde la pagina solicitada a escribir es la %d, el proceso es %d y su offset %d.\n",
+			"\x1b[33mLlega una peticion de escritura por parte de una de las CPUs, donde la pagina solicitada a escribir es la %d, el proceso es %d y su offset %d.\n\x1b[0m",
 			numero_pagina, pid, offset);
 
 	t_entrada_tabla_de_paginas * pagina_encontrada;

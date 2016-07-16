@@ -21,12 +21,13 @@ void mostrar_estado_interno() {
 
 		int cantidad_total = cantidad_fallas + cantidad_aciertos;
 
-		printf("La TLB tiene %d aciertos y %d fallos sobre %d pedidos \n\n",
+		printf(
+				"\x1b[35mLa TLB tiene %d aciertos y %d fallos sobre %d pedidos \n\n\x1b[0m",
 				cantidad_aciertos, cantidad_fallas, cantidad_total);
 
 		if (cantidad_total != 0) {
 
-			printf("La tasa	de acierto es %.1f\%\n\n",
+			printf("\x1b[35mLa tasa	de acierto es %.1f\%\n\n\x1b[0m",
 					(cantidad_aciertos / (float) cantidad_total) * 100);
 
 		}
