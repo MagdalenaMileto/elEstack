@@ -4,28 +4,28 @@ DEPLOY_FOLDER="/home/utnso/elAlgoritmoDelRitmo"
 # Instalar las dependencias
 
 echo Instalando Cspec
-cd tp-2016-1c-El-algoritmo-del-ritmo/cspec/cspec
+cd /mnt/pendrive/tp-2016-1c-El-algoritmo-del-ritmo/cspec
 sudo make install
 cd
 echo 
 echo 
 echo 
 echo Instalando Commons
-cd tp-2016-1c-El-algoritmo-del-ritmo/so-commons-library/so-commons-library
+cd /mnt/pendrive/tp-2016-1c-El-algoritmo-del-ritmo/so-commons-library
 sudo make install
 cd
 echo 
 echo 
 echo 
 echo Parser ansisop
-cd tp-2016-1c-El-algoritmo-del-ritmo/ansisop-parser/ansisop-parser/parser
+cd /mnt/pendrive/tp-2016-1c-El-algoritmo-del-ritmo/ansisop-parser/parser
 sudo make install
 cd
 echo 
 echo 
 echo 
 echo Instalando librerias globales
-cd tp-2016-1c-El-algoritmo-del-ritmo/"Sockets Maggie"
+cd /mnt/pendrive/tp-2016-1c-El-algoritmo-del-ritmo/"Sockets Maggie"
 sudo make install
 echo 
 echo 
@@ -42,7 +42,7 @@ echo
 echo 
 echo 
 echo Copiando Consola
-cd ../
+cd /mnt/pendrive/tp-2016-1c-El-algoritmo-del-ritmo
 cp -rf CONSOLA $DEPLOY_FOLDER
 cd  CONSOLA
 make
@@ -89,6 +89,8 @@ echo
 echo 
 echo Copiando scripts ANSISOP
 cp -rf scripts-ansisop $DEPLOY_FOLDER
+cd scripts-ansisop
+cd scripts
 chmod +777 *
 echo Copiado exitoso
 echo 

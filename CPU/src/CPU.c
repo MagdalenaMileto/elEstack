@@ -61,13 +61,13 @@ int main(int argc,char **argv){
 		int quantum_aux=quantum;
 		log_info(log,"Esperando Pcb\n");
 
-		while(sigusr1_desactivado){
+		//while(sigusr1_desactivado){
 		flag=1;
 		datos_kernel=recibir(nucleo);
 		asignar_datos_de_nucleo(datos_kernel);
 		liberar_paquete(datos_kernel);
 		flag=0;
-		}
+		//}
 		paquete_recibido = recibir(nucleo);
 		log_info(log,"Deserializando PCB\n");
 		pcb = desserializarPCB(paquete_recibido->data);
