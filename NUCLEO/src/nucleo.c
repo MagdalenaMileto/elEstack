@@ -168,6 +168,7 @@ int main() {
 						//printf("EVENTO\n");
 						if (strcmp(event->name, CONFIG_NUCLEO_SIMPLE) == 0){
 							log_info(logger, "NUCLEO: cambio el archivo config");
+							usleep(300*1000);
 							get_config_nucleo(config_nucleo);//Crea y setea el config del kernel
 						}
 					}
@@ -1498,15 +1499,24 @@ void get_config_nucleo ()
 	 *
 	 */
 	config_nucleo->PUERTO_PROG = config_get_string_value(fnucleo, "PUERTO_PROG");
+	config_nucleo->PUERTO_PROG = config_get_string_value(fnucleo, "PUERTO_PROG");
 
 	config_nucleo->PUERTO_CPU = config_get_string_value(fnucleo, "PUERTO_CPU");
+	config_nucleo->PUERTO_CPU = config_get_string_value(fnucleo, "PUERTO_CPU");
+	config_nucleo->QUANTUM = config_get_int_value(fnucleo, "QUANTUM");
 	config_nucleo->QUANTUM = config_get_int_value(fnucleo, "QUANTUM");
 	config_nucleo->QUANTUM_SLEEP = config_get_int_value(fnucleo, "QUANTUM_SLEEP");
+	config_nucleo->QUANTUM_SLEEP = config_get_int_value(fnucleo, "QUANTUM_SLEEP");
 	config_nucleo->IO_IDS = config_get_array_value(fnucleo, "IO_IDS");
+	config_nucleo->IO_IDS = config_get_array_value(fnucleo, "IO_IDS");
+
+
 	config_nucleo->IO_SLEEP = config_get_array_value(fnucleo, "IO_SLEEP");
 	config_nucleo->IO_SLEEP = config_get_array_value(fnucleo, "IO_SLEEP");
 
 	config_nucleo->SEM_IDS = config_get_array_value(fnucleo, "SEM_IDS");
+	config_nucleo->SEM_IDS = config_get_array_value(fnucleo, "SEM_IDS");
+	config_nucleo->SEM_INIT = config_get_array_value(fnucleo, "SEM_INIT");
 	config_nucleo->SEM_INIT = config_get_array_value(fnucleo, "SEM_INIT");
 
 	//printf("COSOx %d %d %d\n",strlen((char*)config_nucleo->IO_SLEEP),strlen((char*)config_nucleo->IO_IDS),strlen((char*)config_nucleo->SEM_INIT));
@@ -1514,10 +1524,14 @@ void get_config_nucleo ()
 
 
 	config_nucleo->SHARED_VARS = config_get_array_value(fnucleo, "SHARED_VARS");
+	config_nucleo->SHARED_VARS = config_get_array_value(fnucleo, "SHARED_VARS");
+	config_nucleo->STACK_SIZE = config_get_int_value(fnucleo, "STACK_SIZE");
 	config_nucleo->STACK_SIZE = config_get_int_value(fnucleo, "STACK_SIZE");
 	//HASTA ACA LO QUE PIDE EL ENUNCIADO
 
 	config_nucleo->IP_UMC = config_get_string_value(fnucleo, "IP_UMC");
+	config_nucleo->IP_UMC = config_get_string_value(fnucleo, "IP_UMC");
+	config_nucleo->PUERTO_UMC = config_get_string_value(fnucleo, "PUERTO_UMC");
 	config_nucleo->PUERTO_UMC = config_get_string_value(fnucleo, "PUERTO_UMC");
 	config_nucleo->VALOR_SHARED_VARS = convertirConfig0(config_nucleo->SHARED_VARS);
 	//Iniciar en 0
