@@ -9,7 +9,10 @@
 bool swap_inicializar_proceso(int pid, int cantidad_paginas, char * codigo) {
 
 	pthread_mutex_lock(&semaforo_mutex_swap);
-	log_info(log,"Se envia el pedido de inicialización del pid %d (%d paginas) al swap.\n", pid, cantidad_paginas);
+	log_info(log,
+			"x1b[34mSe envia el pedido de inicialización del pid %d (%d paginas) al swap.\n\x1b[0m",
+			pid, cantidad_paginas);
+
 	int tamanio_codigo = string_length(codigo);
 	int tamanio_paquete = (sizeof(int) * 2) + tamanio_codigo;
 	void * data = malloc(tamanio_paquete);
@@ -24,12 +27,12 @@ bool swap_inicializar_proceso(int pid, int cantidad_paginas, char * codigo) {
 
 	bool resultado = respuesta->codigo_operacion == SWAP_EXITO;
 
-	log_info(log, "Respuesta del swap recibida\n");
+	log_info(log, "x1b[34mRespuesta del swap recibida, el proceso se inicializo con exito\n\x1b[0m");
 
 	liberar_paquete(respuesta);
-	
+
 	free(data);
-	
+
 	pthread_mutex_unlock(&semaforo_mutex_swap);
 
 	return resultado;
@@ -39,7 +42,7 @@ bool swap_inicializar_proceso(int pid, int cantidad_paginas, char * codigo) {
 void swap_finalizar_proceso(int pid) {
 
 	pthread_mutex_lock(&semaforo_mutex_swap);
-	log_info(log,"Se envia el pedido de finalización al swap\n");
+	log_info(log, "Se envia el pedido de finalización al swap\n");
 	enviar(socket_swap, SWAP_FINALIZAR, sizeof(int), (void *) &pid);
 
 	log_info(log,
@@ -52,7 +55,9 @@ void swap_finalizar_proceso(int pid) {
 void * swap_leer(int pid, int numero_pagina) {
 
 	pthread_mutex_lock(&semaforo_mutex_swap);
-	log_info(log,"Se envia el pedido de lectura al swap con el pid %d y pagina %d\n", pid, numero_pagina);
+	log_info(log,
+			"Se envia el pedido de lectura al swap con el pid %d y pagina %d\n",
+			pid, numero_pagina);
 	int * pid_proceso = malloc(sizeof(int));
 	*pid_proceso = pid;
 
@@ -81,7 +86,7 @@ void * swap_leer(int pid, int numero_pagina) {
 void swap_escribir(t_entrada_tabla_de_paginas * entrada) {
 
 	pthread_mutex_lock(&semaforo_mutex_swap);
-	log_info(log,"Se envia el pedido de escritura al swap");
+	log_info(log, "Se envia el pedido de escritura al swap");
 	int * pid_proceso = malloc(sizeof(int));
 	*pid_proceso = entrada->pid;
 

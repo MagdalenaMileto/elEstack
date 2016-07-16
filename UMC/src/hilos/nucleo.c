@@ -24,7 +24,8 @@ void atender_nucleo() {
 			memcpy(&paginas_requeridas, paquete_nuevo->data + sizeof(int),
 					sizeof(int));
 
-			log_info(log, "Las paginas requeridas son %d.\n",
+			log_info(log,
+					"x1b[34mLlega un nuevo proceso, las paginas requeridas son %d.\n\x1b[0m",
 					paginas_requeridas);
 
 			memcpy(&tamanio_codigo, paquete_nuevo->data + sizeof(int) * 2,
@@ -35,25 +36,24 @@ void atender_nucleo() {
 			memcpy(codigo, paquete_nuevo->data + sizeof(int) * 3,
 					tamanio_codigo);
 
-			//pthread_mutex_lock(&semaforo_mutex_tabla_de_paginas);
-
 			if (puede_iniciar_proceso(pid, paginas_requeridas, codigo)) {
-
 
 				inicializar_programa(pid, paginas_requeridas);
 
-				log_info(log, "Se pudo inicializar el proceso de pid %d.\n", pid);
+				log_info(log,
+						"x1b[34mSe pudo inicializar el proceso con el pid %d.\n\x1b[0m",
+						pid);
 
 				enviar(socket_nucleo, EXITO, sizeof(int), &pid);
 
 			} else {
 
-				log_info(log, "No se pudo inicializar el proceso de pid %d.\n", pid);
+				log_info(log,
+						"x1b[34mNo se pudo inicializar el proceso con el pid %d.\n\x1b[0m",
+						pid);
 
 				enviar(socket_nucleo, FRACASO, sizeof(int), &pid);
 			}
-
-			//pthread_mutex_unlock(&semaforo_mutex_tabla_de_paginas);
 
 			free(codigo);
 
