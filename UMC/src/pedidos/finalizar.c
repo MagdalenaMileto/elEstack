@@ -3,7 +3,7 @@
 void finalizar_proceso(int pid) {
 
 	log_info(log,
-			"x1b[34mSe envia una peticion para finalizar el proceso %d\n\x1b[0m",
+			"\x1b[36mSe envia una peticion para finalizar el proceso %d\n\x1b[0m",
 			pid);
 
 	swap_finalizar_proceso(pid);
@@ -30,7 +30,7 @@ void finalizar_proceso(int pid) {
 	pthread_mutex_unlock(&semaforo_mutex_stats_tlb);
 
 	log_info(log,
-			"x1b[35mEste proceso tuvo %d aciertos y %d fallas a la tlb.\n\x1b[0m",
+			"\x1b[35mEste proceso tuvo %d aciertos y %d fallas a la tlb.\n\x1b[0m",
 			cantidad_aciertos, cantidad_fallas);
 
 	pthread_mutex_lock(&semaforo_mutex_stats_swap);
@@ -39,7 +39,7 @@ void finalizar_proceso(int pid) {
 	pthread_mutex_unlock(&semaforo_mutex_stats_swap);
 
 	log_info(log,
-			"x1b[35mEste proceso tuvo %d escrituras y %d lecturas al swap.\n\x1b[0m",
+			"\x1b[35mEste proceso tuvo %d escrituras y %d lecturas al swap.\n\x1b[0m",
 			cantidad_escrituras, cantidad_lecturas);
 }
 

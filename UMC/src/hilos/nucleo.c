@@ -25,7 +25,7 @@ void atender_nucleo() {
 					sizeof(int));
 
 			log_info(log,
-					"x1b[34mLlega un nuevo proceso, las paginas requeridas son %d.\n\x1b[0m",
+					"\x1b[36mLlega un nuevo proceso, las paginas requeridas son %d.\n\x1b[0m",
 					paginas_requeridas);
 
 			memcpy(&tamanio_codigo, paquete_nuevo->data + sizeof(int) * 2,
@@ -41,7 +41,7 @@ void atender_nucleo() {
 				inicializar_programa(pid, paginas_requeridas);
 
 				log_info(log,
-						"x1b[34mSe pudo inicializar el proceso con el pid %d.\n\x1b[0m",
+						"\x1b[36mSe pudo inicializar el proceso con el pid %d.\n\x1b[0m",
 						pid);
 
 				enviar(socket_nucleo, EXITO, sizeof(int), &pid);
@@ -49,7 +49,7 @@ void atender_nucleo() {
 			} else {
 
 				log_info(log,
-						"x1b[34mNo se pudo inicializar el proceso con el pid %d.\n\x1b[0m",
+						"\x1b[36mNo se pudo inicializar el proceso con el pid %d.\n\x1b[0m",
 						pid);
 
 				enviar(socket_nucleo, FRACASO, sizeof(int), &pid);
