@@ -43,7 +43,8 @@ bool swap_inicializar_proceso(int pid, int cantidad_paginas, char * codigo) {
 void swap_finalizar_proceso(int pid) {
 
 	pthread_mutex_lock(&semaforo_mutex_swap);
-	log_info(log, "\x1b[36mSe envia el pedido de finalización al swap\n\x1b[0m");
+	log_info(log,
+			"\x1b[36mSe envia el pedido de finalización al swap\n\x1b[0m");
 	enviar(socket_swap, SWAP_FINALIZAR, sizeof(int), (void *) &pid);
 
 	log_info(log,

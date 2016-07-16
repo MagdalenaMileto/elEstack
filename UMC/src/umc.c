@@ -104,7 +104,7 @@ void atender_conexiones() {
 					(void *) nuevo_socket_cpu);
 		} else {
 
-			printf("\x1b[32mConexión no autenticada en el socket %d.\n\x1b[0m",
+			printf("\x1b[31mConexión no autenticada en el socket %d.\n\x1b[0m",
 					*nuevo_socket_cpu);
 		}
 
@@ -160,7 +160,7 @@ void crear_log() {
 
 void registrar_senial_cierre() {
 
-	log_info(log, "\x1b[31mSe registra la senial de interrupcion.\n\x1b[0m");
+	log_info(log, "\x1b[32mSe registra la senial de interrupcion.\n\x1b[0m");
 
 	void cerrar_umc(int senal) {
 
