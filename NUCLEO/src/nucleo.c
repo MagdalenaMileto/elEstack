@@ -148,7 +148,7 @@ int main() {
 	//INOTIFY STUFF
 	int file_descriptor = inotify_init();
 	if (file_descriptor < 0) perror("inotify_init");
-	int watch_descriptor = inotify_add_watch(file_descriptor, CONFIG_PATH , IN_CLOSE_WRITE);
+	int watch_descriptor = inotify_add_watch(file_descriptor, CONFIG_PATH , IN_MODIFY);
 	char buffer[1000];
 	//while(1){}
 	while(1){
@@ -160,7 +160,7 @@ int main() {
 		while (offset < length) {
 			struct inotify_event *event = (struct inotify_event *) &buffer[offset];
 			if (event->len) {
-				if (event->mask & IN_CLOSE_WRITE) {
+				if (event->mask & IN_MODIFY) {
 					if (!(event->mask & IN_ISDIR)) {
 
 					//CAMBIAR ESTO PARA ENTREGA FINAL
@@ -168,7 +168,7 @@ int main() {
 						//printf("EVENTO\n");
 						if (strcmp(event->name, CONFIG_NUCLEO_SIMPLE) == 0){
 							log_info(logger, "NUCLEO: cambio el archivo config");
-							usleep(300*1000);
+							usleep(500*1000);
 							get_config_nucleo(config_nucleo);//Crea y setea el config del kernel
 						}
 					}
