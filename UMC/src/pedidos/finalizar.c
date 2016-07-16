@@ -2,7 +2,9 @@
 
 void finalizar_proceso(int pid) {
 
-	log_info(log, "Se envia una peticion para finalizar el proceso %d\n", pid);
+	log_info(log,
+			"x1b[34mSe envia una peticion para finalizar el proceso %d\n\x1b[0m",
+			pid);
 
 	swap_finalizar_proceso(pid);
 
@@ -11,7 +13,6 @@ void finalizar_proceso(int pid) {
 	pthread_mutex_lock(&semaforo_mutex_tabla_de_paginas);
 	eliminar_proceso_tabla_de_paginas(pid);
 	pthread_mutex_unlock(&semaforo_mutex_tabla_de_paginas);
-
 
 	bool coincide_pid(void * elemento) {
 
@@ -28,7 +29,8 @@ void finalizar_proceso(int pid) {
 	cantidad_fallas = list_count_satisfying(fallos_tlb, coincide_pid);
 	pthread_mutex_unlock(&semaforo_mutex_stats_tlb);
 
-	log_info(log, "Este proceso tuvo %d aciertos y %d fallas a la tlb.\n",
+	log_info(log,
+			"x1b[32mEste proceso tuvo %d aciertos y %d fallas a la tlb.\n\x1b[0m",
 			cantidad_aciertos, cantidad_fallas);
 
 	pthread_mutex_lock(&semaforo_mutex_stats_swap);
@@ -36,7 +38,8 @@ void finalizar_proceso(int pid) {
 	cantidad_escrituras = list_count_satisfying(escrituras_swap, coincide_pid);
 	pthread_mutex_unlock(&semaforo_mutex_stats_swap);
 
-	log_info(log, "Este proceso tuvo %d escrituras y %d lecturas al swap.\n",
+	log_info(log,
+			"x1b[32mEste proceso tuvo %d escrituras y %d lecturas al swap.\n\x1b[0m",
 			cantidad_escrituras, cantidad_lecturas);
 }
 

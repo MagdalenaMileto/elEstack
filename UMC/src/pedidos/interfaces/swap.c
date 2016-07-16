@@ -27,7 +27,8 @@ bool swap_inicializar_proceso(int pid, int cantidad_paginas, char * codigo) {
 
 	bool resultado = respuesta->codigo_operacion == SWAP_EXITO;
 
-	log_info(log, "x1b[34mRespuesta del swap recibida, el proceso se inicializo con exito\n\x1b[0m");
+	log_info(log,
+			"x1b[34mRespuesta del swap recibida, el proceso se inicializo con exito\n\x1b[0m");
 
 	liberar_paquete(respuesta);
 
@@ -42,11 +43,11 @@ bool swap_inicializar_proceso(int pid, int cantidad_paginas, char * codigo) {
 void swap_finalizar_proceso(int pid) {
 
 	pthread_mutex_lock(&semaforo_mutex_swap);
-	log_info(log, "Se envia el pedido de finalización al swap\n");
+	log_info(log, "x1b[34mSe envia el pedido de finalización al swap\n\x1b[0m");
 	enviar(socket_swap, SWAP_FINALIZAR, sizeof(int), (void *) &pid);
 
 	log_info(log,
-			"\x1b[33mSe envia exitosamente la peticion de finalizacion del proceso %d al swap\n\x1b[0m",
+			"\x1b[34mSe envia exitosamente la peticion de finalizacion del proceso %d al swap\n\x1b[0m",
 			pid);
 
 	pthread_mutex_unlock(&semaforo_mutex_swap);
