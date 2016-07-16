@@ -83,13 +83,13 @@ cp -rf UMC $DEPLOY_FOLDER
 cd  UMC
 make
 echo Copiado exitoso
-cd 
+cd -
 echo 
 echo 
 echo 
 echo Copiando scripts ANSISOP
 cp -rf scripts-ansisop $DEPLOY_FOLDER
-cd /mnt/pendrive/tp-2016-1c-El-algoritmo-del-ritmo/scripts-ansisop
+cd scripts-ansisop
 cd scripts
 chmod +777 *
 echo Copiado exitoso
